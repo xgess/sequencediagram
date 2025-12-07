@@ -1,0 +1,20 @@
+{
+  "name": "sequence-diagram",
+  "version": "0.1.0",
+  "description": "Hermetic browser-based sequence diagram tool",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "jsdom": "^24.0.0",
+    "vitest": "^2.0.0"
+  },
+  "keywords": [
+    "sequence-diagram",
+    "svg",
+    "uml"
+  ],
+  "license": "MIT"
+}
