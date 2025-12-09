@@ -45,6 +45,12 @@ function parseLine(line, lineNumber) {
     return participant;
   }
 
+  // Try parsing as message
+  const message = parseMessage(trimmed, lineNumber);
+  if (message) {
+    return message;
+  }
+
   // Unrecognized line - skip for now
   // TODO(Phase1): Add error node creation in BACKLOG-048
   return null;
@@ -73,6 +79,37 @@ function parseParticipant(line, lineNumber) {
     alias: name,
     displayName: name,
     style: {},
+    sourceLineStart: lineNumber,
+    sourceLineEnd: lineNumber
+  };
+}
+
+/**
+ * Parse a message between participants
+ * Syntax: From->To:Label or From->>To:Label etc.
+ * @param {string} line - Trimmed source line
+ * @param {number} lineNumber - 1-indexed line number
+ * @returns {Object|null} Message AST node or null
+ */
+function parseMessage(line, lineNumber) {
+  // Match: From ARROW To : Label
+  // Arrow types: -> ->> --> -->>
+  // Use [^\s\-] for 'from' to avoid consuming dashes that are part of the arrow
+  const match = line.match(/^([^\s\-]+)(-->>|-->|->>|->)([^\s:]+):(.*)$/);
+  if (!match) {
+    return null;
+  }
+
+  const [, from, arrowType, to, label] = match;
+
+  return {
+    id: generateId('message'),
+    type: 'message',
+    from,
+    to,
+    arrowType,
+    label: label.trim(),
+    style: null,
     sourceLineStart: lineNumber,
     sourceLineEnd: lineNumber
   };

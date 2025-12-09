@@ -68,8 +68,72 @@ describe('Parser', () => {
     });
   });
 
+  describe('message (BACKLOG-008)', () => {
+    it('should parse basic sync message (->)', () => {
+      const ast = parse('Alice->Bob:Hello');
+      const messages = ast.filter(n => n.type === 'message');
+      expect(messages).toHaveLength(1);
+      expect(messages[0].from).toBe('Alice');
+      expect(messages[0].to).toBe('Bob');
+      expect(messages[0].arrowType).toBe('->');
+      expect(messages[0].label).toBe('Hello');
+    });
+
+    it('should generate valid ID for message', () => {
+      const ast = parse('Alice->Bob:Hello');
+      const message = ast.find(n => n.type === 'message');
+      expect(message.id).toMatch(/^m_[a-z0-9]{8}$/);
+    });
+
+    it('should parse async message (->>)', () => {
+      const ast = parse('Alice->>Bob:Async');
+      const message = ast.find(n => n.type === 'message');
+      expect(message.arrowType).toBe('->>');
+    });
+
+    it('should parse return message (-->)', () => {
+      const ast = parse('Bob-->Alice:Response');
+      const message = ast.find(n => n.type === 'message');
+      expect(message.arrowType).toBe('-->');
+      expect(message.from).toBe('Bob');
+      expect(message.to).toBe('Alice');
+    });
+
+    it('should parse async return message (-->>)', () => {
+      const ast = parse('Bob-->>Alice:Async Response');
+      const message = ast.find(n => n.type === 'message');
+      expect(message.arrowType).toBe('-->>');
+    });
+
+    it('should parse message with spaces in label', () => {
+      const ast = parse('Alice->Bob:Hello World!');
+      const message = ast.find(n => n.type === 'message');
+      expect(message.label).toBe('Hello World!');
+    });
+
+    it('should parse message with empty label', () => {
+      const ast = parse('Alice->Bob:');
+      const message = ast.find(n => n.type === 'message');
+      expect(message.label).toBe('');
+    });
+
+    it('should set correct line numbers', () => {
+      const ast = parse('participant Alice\nparticipant Bob\nAlice->Bob:Hi');
+      const message = ast.find(n => n.type === 'message');
+      expect(message.sourceLineStart).toBe(3);
+      expect(message.sourceLineEnd).toBe(3);
+    });
+
+    it('should parse multiple messages', () => {
+      const ast = parse('Alice->Bob:Hello\nBob-->Alice:Hi');
+      const messages = ast.filter(n => n.type === 'message');
+      expect(messages).toHaveLength(2);
+      expect(messages[0].label).toBe('Hello');
+      expect(messages[1].label).toBe('Hi');
+    });
+  });
+
   // TODO(Phase1): Add parser tests as features are implemented
-  // - BACKLOG-008: Basic message
   // - BACKLOG-014: Participant styling
   // - BACKLOG-017: Participant alias
   // - BACKLOG-031: Fragments
