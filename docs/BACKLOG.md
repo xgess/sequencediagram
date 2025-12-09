@@ -18,42 +18,45 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 
 ### Slice 0: Foundation
 
-## BACKLOG-001: Project setup and directory structure
-**Phase:** 1.0  
-**Dependencies:** None  
-**Description:** Create the complete directory structure per ARCHITECTURE.md, add package.json with Vitest, create placeholder files for all Phase 1 modules.  
+## BACKLOG-001: Project setup and directory structure ✅
+**Phase:** 1.0
+**Dependencies:** None
+**Status:** Complete (commit 639f86e)
+**Description:** Create the complete directory structure per ARCHITECTURE.md, add package.json with Vitest, create placeholder files for all Phase 1 modules.
 **Acceptance Criteria:**
-- Directory structure matches ARCHITECTURE.md
-- package.json with Vitest and jsdom configured
-- Empty module files: parser.js, renderer.js, serializer.js, main.js
-- tests/ directory with placeholder test files
-- public/index.html and styles.css created
-- Can run `npm test` (even with no tests yet)
+- Directory structure matches ARCHITECTURE.md ✅
+- package.json with Vitest and jsdom configured ✅
+- Empty module files: parser.js, renderer.js, serializer.js, main.js ✅
+- tests/ directory with placeholder test files ✅
+- public/index.html and styles.css created ✅
+- Can run `npm test` (even with no tests yet) ✅
 
-## BACKLOG-002: AST node type definitions and ID generation
-**Phase:** 1.0  
-**Dependencies:** BACKLOG-001  
-**Description:** Implement AST node schemas from DESIGN.md. Create `generateId()` function for UUID generation with type prefixes.  
+## BACKLOG-002: AST node type definitions and ID generation ✅
+**Phase:** 1.0
+**Dependencies:** BACKLOG-001
+**Status:** Complete (included in BACKLOG-001 commit)
+**Description:** Implement AST node schemas from DESIGN.md. Create `generateId()` function for UUID generation with type prefixes.
 **Acceptance Criteria:**
-- `nodes.js` exports node type constants and schema documentation
-- `generateId(type)` returns format: `{prefix}_{8-random-chars}`
-- Unit tests verify ID uniqueness and format
-- Collision detection (regenerate if duplicate in same parse)
+- `nodes.js` exports node type constants and schema documentation ✅
+- `generateId(type)` returns format: `{prefix}_{8-random-chars}` ✅
+- Unit tests verify ID uniqueness and format ✅
+- Collision detection (regenerate if duplicate in same parse) - deferred, not needed yet
 
 
 ---
 
 ### Slice 1: Minimal End-to-End
 
-## BACKLOG-003: Test harness HTML page
-**Phase:** 1.0  
-**Dependencies:** BACKLOG-001  
-**Description:** Create minimal HTML test harness per DESIGN.md Phase 1 UI: textarea, render button, error div, SVG container.  
+## BACKLOG-003: Test harness HTML page ✅
+**Phase:** 1.0
+**Dependencies:** BACKLOG-001
+**Status:** Complete (included in BACKLOG-001 commit)
+**Description:** Create minimal HTML test harness per DESIGN.md Phase 1 UI: textarea, render button, error div, SVG container.
 **Acceptance Criteria:**
-- public/index.html has textarea, button, error div, SVG element
-- Basic CSS layout: two-column with editor left, diagram right
-- Loads main.js as ES module
-- Button click logs to console (placeholder for wiring)
+- public/index.html has textarea, button, error div, SVG element ✅
+- Basic CSS layout: two-column with editor left, diagram right ✅
+- Loads main.js as ES module ✅
+- Button click logs to console (placeholder for wiring) ✅
 
 ## BACKLOG-004: Parse basic participant declaration (no styling)
 **Phase:** 1.1  
