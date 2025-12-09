@@ -38,6 +38,13 @@ function parseAt(lines, lineIndex, ast) {
     return { nextLine: lineIndex + 1 };
   }
 
+  // Try parsing as comment (// or #)
+  const comment = parseComment(trimmed, lineNumber);
+  if (comment) {
+    ast.push(comment);
+    return { nextLine: lineIndex + 1 };
+  }
+
   // Try parsing as fragment (alt, loop, etc.)
   if (isFragmentStart(trimmed)) {
     const result = parseFragment(lines, lineIndex, ast);
@@ -61,6 +68,26 @@ function parseAt(lines, lineIndex, ast) {
   // Unrecognized line - skip for now
   // TODO(Phase1): Add error node creation in BACKLOG-048
   return { nextLine: lineIndex + 1 };
+}
+
+/**
+ * Parse a comment line
+ * Syntax: // comment or # comment
+ * @param {string} line - Trimmed source line
+ * @param {number} lineNumber - 1-indexed line number
+ * @returns {Object|null} Comment AST node or null
+ */
+function parseComment(line, lineNumber) {
+  if (line.startsWith('//') || line.startsWith('#')) {
+    return {
+      id: generateId('comment'),
+      type: 'comment',
+      text: line,
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
+  }
+  return null;
 }
 
 /**
@@ -137,6 +164,15 @@ function parseFragment(lines, startLine, ast) {
 
     // Skip empty lines inside fragment
     if (!line) {
+      i++;
+      continue;
+    }
+
+    // Try parsing as comment (inside fragment)
+    const comment = parseComment(line, i + 1);
+    if (comment) {
+      ast.push(comment);
+      currentEntries.push(comment.id);
       i++;
       continue;
     }

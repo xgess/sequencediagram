@@ -402,5 +402,60 @@ end`;
     });
   });
 
+  describe('comment parsing (BACKLOG-038)', () => {
+    it('should parse // comment', () => {
+      const ast = parse('// This is a comment');
+      expect(ast).toHaveLength(1);
+      expect(ast[0].type).toBe('comment');
+      expect(ast[0].text).toBe('// This is a comment');
+    });
+
+    it('should parse # comment', () => {
+      const ast = parse('# This is a comment');
+      expect(ast).toHaveLength(1);
+      expect(ast[0].type).toBe('comment');
+      expect(ast[0].text).toBe('# This is a comment');
+    });
+
+    it('should generate valid ID for comment', () => {
+      const ast = parse('// comment');
+      expect(ast[0].id).toMatch(/^c_[a-z0-9]{8}$/);
+    });
+
+    it('should set sourceLineStart and sourceLineEnd', () => {
+      const ast = parse('// comment');
+      expect(ast[0].sourceLineStart).toBe(1);
+      expect(ast[0].sourceLineEnd).toBe(1);
+    });
+
+    it('should parse comments interspersed with other nodes', () => {
+      const ast = parse('participant Alice\n// Comment here\nAlice->Bob:Hello');
+      expect(ast).toHaveLength(3);
+      expect(ast[0].type).toBe('participant');
+      expect(ast[1].type).toBe('comment');
+      expect(ast[2].type).toBe('message');
+    });
+
+    it('should parse comments inside fragments', () => {
+      const ast = parse('alt success\n// Inside fragment\nAlice->Bob:OK\nend');
+      const fragment = ast.find(n => n.type === 'fragment');
+      const comment = ast.find(n => n.type === 'comment');
+      expect(comment).not.toBeNull();
+      expect(fragment.entries).toContain(comment.id);
+    });
+
+    it('should parse empty comment', () => {
+      const ast = parse('//');
+      expect(ast).toHaveLength(1);
+      expect(ast[0].type).toBe('comment');
+      expect(ast[0].text).toBe('//');
+    });
+
+    it('should preserve comment with trailing spaces', () => {
+      const ast = parse('// comment with spaces   ');
+      expect(ast[0].text).toBe('// comment with spaces');
+    });
+  });
+
   // TODO(Phase1): Add parser tests as features are implemented
 });

@@ -427,14 +427,15 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Serializer outputs styling ✅
 - Round-trip test passes ✅
 
-## BACKLOG-038: Parse single-line comments
-**Phase:** 1.7  
-**Dependencies:** BACKLOG-004  
-**Description:** Parse `// comment` and `# comment` as comment nodes in AST.  
+## BACKLOG-038: Parse single-line comments ✅
+**Phase:** 1.7
+**Dependencies:** BACKLOG-004
+**Status:** Complete
+**Description:** Parse `// comment` and `# comment` as comment nodes in AST.
 **Acceptance Criteria:**
-- Creates node with type='comment', text='// comment'
-- Preserves position in AST
-- Test case with comments interspersed with other nodes
+- Creates node with type='comment', text='// comment' ✅
+- Preserves position in AST ✅
+- Test case with comments interspersed with other nodes ✅
 
 ## BACKLOG-039: Parse blank lines
 **Phase:** 1.7  

@@ -365,5 +365,40 @@ describe('Serializer', () => {
     });
   });
 
+  describe('comment serialization (BACKLOG-038)', () => {
+    it('should serialize // comment', () => {
+      const ast = parse('// This is a comment');
+      const text = serialize(ast);
+      expect(text).toBe('// This is a comment');
+    });
+
+    it('should serialize # comment', () => {
+      const ast = parse('# This is a comment');
+      const text = serialize(ast);
+      expect(text).toBe('# This is a comment');
+    });
+
+    it('should serialize comments interspersed with other nodes', () => {
+      const ast = parse('participant Alice\n// Comment\nAlice->Bob:Hello');
+      const text = serialize(ast);
+      expect(text).toBe('participant Alice\n// Comment\nAlice->Bob:Hello');
+    });
+
+    it('should serialize comments inside fragments with indentation', () => {
+      const ast = parse('alt success\n// Inside fragment\nAlice->Bob:OK\nend');
+      const text = serialize(ast);
+      expect(text).toBe('alt success\n  // Inside fragment\n  Alice->Bob:OK\nend');
+    });
+
+    it('should round-trip comment', () => {
+      const input = '// This is a comment';
+      const ast1 = parse(input);
+      const serialized = serialize(ast1);
+      const ast2 = parse(serialized);
+      expect(ast2[0].type).toBe('comment');
+      expect(ast2[0].text).toBe(ast1[0].text);
+    });
+  });
+
   // TODO(Phase1): Add serializer tests as features are implemented
 });
