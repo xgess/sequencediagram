@@ -437,14 +437,15 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Preserves position in AST ✅
 - Test case with comments interspersed with other nodes ✅
 
-## BACKLOG-039: Parse blank lines
-**Phase:** 1.7  
-**Dependencies:** BACKLOG-004  
-**Description:** Parse blank lines as blankline nodes in AST to preserve grouping.  
+## BACKLOG-039: Parse blank lines ✅
+**Phase:** 1.7
+**Dependencies:** BACKLOG-004
+**Status:** Complete
+**Description:** Parse blank lines as blankline nodes in AST to preserve grouping.
 **Acceptance Criteria:**
-- Creates node with type='blankline'
-- sourceLineStart/End track position
-- Test case with blank lines
+- Creates node with type='blankline' ✅
+- sourceLineStart/End track position ✅
+- Test case with blank lines ✅
 
 ## BACKLOG-040: Serialize comments and blank lines
 **Phase:** 1.7  

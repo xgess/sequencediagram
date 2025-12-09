@@ -365,6 +365,34 @@ describe('Serializer', () => {
     });
   });
 
+  describe('blank line serialization (BACKLOG-039)', () => {
+    it('should serialize blank line as empty line', () => {
+      const ast = parse('participant Alice\n\nparticipant Bob');
+      const text = serialize(ast);
+      expect(text).toBe('participant Alice\n\nparticipant Bob');
+    });
+
+    it('should serialize multiple blank lines', () => {
+      const ast = parse('participant Alice\n\n\nparticipant Bob');
+      const text = serialize(ast);
+      expect(text).toBe('participant Alice\n\n\nparticipant Bob');
+    });
+
+    it('should serialize blank lines inside fragments', () => {
+      const ast = parse('alt success\nAlice->Bob:OK\n\nBob-->Alice:Done\nend');
+      const text = serialize(ast);
+      expect(text).toBe('alt success\n  Alice->Bob:OK\n\n  Bob-->Alice:Done\nend');
+    });
+
+    it('should round-trip blank lines', () => {
+      const input = 'participant Alice\n\nparticipant Bob';
+      const ast1 = parse(input);
+      const serialized = serialize(ast1);
+      const ast2 = parse(serialized);
+      expect(ast2.filter(n => n.type === 'blankline').length).toBe(1);
+    });
+  });
+
   describe('comment serialization (BACKLOG-038)', () => {
     it('should serialize // comment', () => {
       const ast = parse('// This is a comment');

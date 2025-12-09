@@ -33,8 +33,14 @@ function parseAt(lines, lineIndex, ast) {
   const lineNumber = lineIndex + 1; // 1-indexed for source tracking
   const trimmed = line.trim();
 
-  // Skip empty lines
+  // Parse blank lines as blankline nodes
   if (!trimmed) {
+    ast.push({
+      id: generateId('blankline'),
+      type: 'blankline',
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    });
     return { nextLine: lineIndex + 1 };
   }
 
@@ -162,8 +168,16 @@ function parseFragment(lines, startLine, ast) {
       continue;
     }
 
-    // Skip empty lines inside fragment
+    // Parse blank lines inside fragment
     if (!line) {
+      const blankline = {
+        id: generateId('blankline'),
+        type: 'blankline',
+        sourceLineStart: i + 1,
+        sourceLineEnd: i + 1
+      };
+      ast.push(blankline);
+      currentEntries.push(blankline.id);
       i++;
       continue;
     }

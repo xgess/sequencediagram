@@ -6,14 +6,16 @@ import { parse } from '../src/ast/parser.js';
 
 describe('Parser', () => {
   describe('empty input', () => {
-    it('should return empty AST for empty input', () => {
+    it('should return single blankline node for empty input', () => {
       const ast = parse('');
-      expect(ast).toEqual([]);
+      expect(ast).toHaveLength(1);
+      expect(ast[0].type).toBe('blankline');
     });
 
-    it('should return empty AST for whitespace-only input', () => {
+    it('should return blankline nodes for whitespace-only input', () => {
       const ast = parse('   \n  \n   ');
-      expect(ast).toEqual([]);
+      expect(ast).toHaveLength(3);
+      expect(ast.every(n => n.type === 'blankline')).toBe(true);
     });
   });
 
@@ -399,6 +401,43 @@ end`;
       const fragment = ast.find(n => n.type === 'fragment');
       expect(fragment.elseClauses[0].style).toBeNull();
       expect(fragment.elseClauses[0].condition).toBe('failure');
+    });
+  });
+
+  describe('blank line parsing (BACKLOG-039)', () => {
+    it('should parse blank line as blankline node', () => {
+      const ast = parse('\n');
+      const blanklines = ast.filter(n => n.type === 'blankline');
+      expect(blanklines.length).toBeGreaterThan(0);
+    });
+
+    it('should generate valid ID for blankline', () => {
+      const ast = parse('\n');
+      const blankline = ast.find(n => n.type === 'blankline');
+      expect(blankline.id).toMatch(/^bl_[a-z0-9]{8}$/);
+    });
+
+    it('should set sourceLineStart and sourceLineEnd', () => {
+      const ast = parse('participant Alice\n\nAlice->Bob:Hi');
+      const blankline = ast.find(n => n.type === 'blankline');
+      expect(blankline.sourceLineStart).toBe(2);
+      expect(blankline.sourceLineEnd).toBe(2);
+    });
+
+    it('should preserve blank lines between nodes', () => {
+      const ast = parse('participant Alice\n\nparticipant Bob');
+      expect(ast).toHaveLength(3);
+      expect(ast[0].type).toBe('participant');
+      expect(ast[1].type).toBe('blankline');
+      expect(ast[2].type).toBe('participant');
+    });
+
+    it('should parse blank lines inside fragments', () => {
+      const ast = parse('alt success\nAlice->Bob:OK\n\nBob-->Alice:Done\nend');
+      const fragment = ast.find(n => n.type === 'fragment');
+      const blankline = ast.find(n => n.type === 'blankline');
+      expect(blankline).not.toBeNull();
+      expect(fragment.entries).toContain(blankline.id);
     });
   });
 

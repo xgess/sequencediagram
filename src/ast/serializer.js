@@ -60,6 +60,8 @@ function serializeNode(node, nodeById, indent) {
       return serializeFragment(node, nodeById, indent);
     case 'comment':
       return indentStr(indent) + node.text;
+    case 'blankline':
+      return '';
     default:
       return null;
   }
