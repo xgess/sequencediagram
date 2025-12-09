@@ -135,6 +135,43 @@ describe('Renderer', () => {
     });
   });
 
+  describe('lifelines (BACKLOG-011)', () => {
+    it('should render lifeline for each participant', () => {
+      const ast = parse('participant Alice\nparticipant Bob');
+      const svg = render(ast);
+
+      const lifelines = svg.querySelectorAll('.lifeline');
+      expect(lifelines).toHaveLength(2);
+    });
+
+    it('should have lifelines group before participants (for z-order)', () => {
+      const ast = parse('participant Alice\nAlice->Alice:Self');
+      const svg = render(ast);
+
+      const groups = Array.from(svg.querySelectorAll('g[id]'));
+      const lifelinesIndex = groups.findIndex(g => g.id === 'lifelines');
+      const participantsIndex = groups.findIndex(g => g.id === 'participants');
+
+      expect(lifelinesIndex).toBeLessThan(participantsIndex);
+    });
+
+    it('should have dashed stroke on lifelines', () => {
+      const ast = parse('participant Alice');
+      const svg = render(ast);
+
+      const lifeline = svg.querySelector('.lifeline');
+      expect(lifeline.getAttribute('stroke-dasharray')).toBe('5,5');
+    });
+
+    it('should set data-participant attribute', () => {
+      const ast = parse('participant Alice');
+      const svg = render(ast);
+
+      const lifeline = svg.querySelector('.lifeline');
+      expect(lifeline.getAttribute('data-participant')).toBe('Alice');
+    });
+  });
+
   // TODO(Phase1): Add renderer tests as features are implemented
   // - BACKLOG-033: Render fragment
 });
