@@ -438,5 +438,45 @@ describe('Renderer', () => {
     });
   });
 
+  describe('blank line layout (BACKLOG-041)', () => {
+    it('should add extra spacing for blank lines', () => {
+      // Without blank line
+      const ast1 = parse('participant Alice\nparticipant Bob\nAlice->Bob:First\nBob-->Alice:Second');
+      const svg1 = render(ast1);
+      const messages1 = svg1.querySelectorAll('.message');
+      const y1First = parseFloat(messages1[0].querySelector('line').getAttribute('y1'));
+      const y1Second = parseFloat(messages1[1].querySelector('line').getAttribute('y1'));
+      const spacing1 = y1Second - y1First;
+
+      // With blank line
+      const ast2 = parse('participant Alice\nparticipant Bob\nAlice->Bob:First\n\nBob-->Alice:Second');
+      const svg2 = render(ast2);
+      const messages2 = svg2.querySelectorAll('.message');
+      const y2First = parseFloat(messages2[0].querySelector('line').getAttribute('y1'));
+      const y2Second = parseFloat(messages2[1].querySelector('line').getAttribute('y1'));
+      const spacing2 = y2Second - y2First;
+
+      // Spacing with blank line should be greater
+      expect(spacing2).toBeGreaterThan(spacing1);
+    });
+
+    it('should add spacing for blank lines inside fragments', () => {
+      // Without blank line
+      const ast1 = parse('participant Alice\nparticipant Bob\nalt test\nAlice->Bob:First\nBob-->Alice:Second\nend');
+      const svg1 = render(ast1);
+      const fragment1 = svg1.querySelector('.fragment-box');
+      const height1 = parseFloat(fragment1.getAttribute('height'));
+
+      // With blank line
+      const ast2 = parse('participant Alice\nparticipant Bob\nalt test\nAlice->Bob:First\n\nBob-->Alice:Second\nend');
+      const svg2 = render(ast2);
+      const fragment2 = svg2.querySelector('.fragment-box');
+      const height2 = parseFloat(fragment2.getAttribute('height'));
+
+      // Fragment with blank line should be taller
+      expect(height2).toBeGreaterThan(height1);
+    });
+  });
+
   // TODO(Phase1): Add renderer tests as features are implemented
 });

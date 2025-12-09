@@ -447,24 +447,26 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - sourceLineStart/End track position ✅
 - Test case with blank lines ✅
 
-## BACKLOG-040: Serialize comments and blank lines
-**Phase:** 1.7  
-**Dependencies:** BACKLOG-038, BACKLOG-039  
-**Description:** Output comments and blank lines in their AST position.  
+## BACKLOG-040: Serialize comments and blank lines ✅
+**Phase:** 1.7
+**Dependencies:** BACKLOG-038, BACKLOG-039
+**Status:** Complete (implemented as part of BACKLOG-038 and BACKLOG-039)
+**Description:** Output comments and blank lines in their AST position.
 **Acceptance Criteria:**
-- Comments output verbatim
-- Blank lines output as empty line
-- Position preserved in serialized text
-- Round-trip test passes
+- Comments output verbatim ✅
+- Blank lines output as empty line ✅
+- Position preserved in serialized text ✅
+- Round-trip test passes ✅
 
-## BACKLOG-041: Layout handling for blank lines
-**Phase:** 1.7  
-**Dependencies:** BACKLOG-039  
-**Description:** Add extra vertical space (20px) for blank line nodes.  
+## BACKLOG-041: Layout handling for blank lines ✅
+**Phase:** 1.7
+**Dependencies:** BACKLOG-039
+**Status:** Complete
+**Description:** Add extra vertical space (20px) for blank line nodes.
 **Acceptance Criteria:**
-- Blank lines increase currentY without rendering anything
-- Visual grouping effect in diagram
-- Test case shows spacing
+- Blank lines increase currentY without rendering anything ✅
+- Visual grouping effect in diagram ✅
+- Test case shows spacing ✅
 
 ## BACKLOG-042: Parse title directive
 **Phase:** 1.7  

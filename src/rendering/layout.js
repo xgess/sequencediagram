@@ -9,6 +9,7 @@ const PARTICIPANT_START_X = 50;
 const PARTICIPANT_START_Y = 50;
 const MESSAGE_START_Y = 130; // Below participants
 const MESSAGE_SPACING = 50;
+const BLANKLINE_SPACING = 20;
 const FRAGMENT_PADDING = 30;
 const MARGIN = 50;
 
@@ -66,6 +67,15 @@ export function calculateLayout(ast) {
 
     // Skip entries that are part of a fragment (they'll be laid out by the fragment)
     if (fragmentEntries.has(node.id)) continue;
+
+    // Skip comments (they don't affect layout)
+    if (node.type === 'comment') continue;
+
+    // Handle blank lines - add spacing
+    if (node.type === 'blankline') {
+      currentY += BLANKLINE_SPACING;
+      continue;
+    }
 
     if (node.type === 'message') {
       const fromLayout = participantLayout.get(node.from);
@@ -130,6 +140,14 @@ export function calculateLayout(ast) {
 function layoutEntry(entryId, nodeById, participantLayout, layout, currentY) {
   const entry = nodeById.get(entryId);
   if (!entry) return currentY;
+
+  // Skip comments (they don't affect layout)
+  if (entry.type === 'comment') return currentY;
+
+  // Handle blank lines - add spacing
+  if (entry.type === 'blankline') {
+    return currentY + BLANKLINE_SPACING;
+  }
 
   if (entry.type === 'message') {
     const fromLayout = participantLayout.get(entry.from);
