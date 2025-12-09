@@ -478,28 +478,30 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Can contain text markup (deferred to BACKLOG-045)
 - Test case added ✅
 
-## BACKLOG-043: Render title
-**Phase:** 1.7  
-**Dependencies:** BACKLOG-042  
-**Description:** Render title at top of diagram.  
+## BACKLOG-043: Render title ✅
+**Phase:** 1.7
+**Dependencies:** BACKLOG-042
+**Status:** Complete
+**Description:** Render title at top of diagram.
 **Acceptance Criteria:**
-- Text element at y=20, centered horizontally
-- Larger font size (18px)
-- Renders text markup if present
-- Adjusts diagram start Y to accommodate title
+- Text element at y=25, centered horizontally ✅
+- Larger font size (18px) ✅
+- Renders text markup if present (deferred to BACKLOG-046)
+- Adjusts diagram start Y to accommodate title ✅
 
 
 ---
 
 ### Slice 8: Text Markup
 
-## BACKLOG-044: Serialize title
-**Phase:** 1.7  
-**Dependencies:** BACKLOG-042  
-**Description:** Output `title Text` as first non-comment line.  
+## BACKLOG-044: Serialize title ✅
+**Phase:** 1.7
+**Dependencies:** BACKLOG-042
+**Status:** Complete (implemented as part of BACKLOG-042)
+**Description:** Output `title Text` as first non-comment line.
 **Acceptance Criteria:**
-- Title appears at top of output
-- Round-trip test passes
+- Title appears at top of output ✅
+- Round-trip test passes ✅
 
 ## BACKLOG-045: Parse basic text markup tokens
 **Phase:** 1.8  

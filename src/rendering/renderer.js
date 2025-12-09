@@ -45,10 +45,16 @@ export function render(ast) {
   participantsGroup.setAttribute('id', 'participants');
   svg.appendChild(participantsGroup);
 
+  // Title group (at the top)
+  const titleGroup = document.createElementNS(SVG_NS, 'g');
+  titleGroup.setAttribute('id', 'title');
+  svg.appendChild(titleGroup);
+
   // Get elements from AST
   const participants = ast.filter(node => node.type === 'participant');
   const messages = ast.filter(node => node.type === 'message');
   const fragments = ast.filter(node => node.type === 'fragment');
+  const titleDirective = ast.find(node => node.type === 'directive' && node.directiveType === 'title');
 
   // Calculate final height for lifelines
   const height = Math.max(totalHeight, 160);
@@ -102,11 +108,37 @@ export function render(ast) {
     }
   });
 
+  // Render title if present
+  if (titleDirective) {
+    const titleEl = renderTitle(titleDirective, width);
+    titleGroup.appendChild(titleEl);
+  }
+
   svg.setAttribute('width', width);
   svg.setAttribute('height', height);
   svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
 
   return svg;
+}
+
+/**
+ * Render a title at the top of the diagram
+ * @param {Object} directive - Title directive node
+ * @param {number} diagramWidth - Total diagram width
+ * @returns {SVGTextElement} Title text element
+ */
+function renderTitle(directive, diagramWidth) {
+  const text = document.createElementNS(SVG_NS, 'text');
+  text.setAttribute('class', 'diagram-title');
+  text.setAttribute('data-node-id', directive.id);
+  text.setAttribute('x', diagramWidth / 2);
+  text.setAttribute('y', 25);
+  text.setAttribute('text-anchor', 'middle');
+  text.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, sans-serif');
+  text.setAttribute('font-size', '18');
+  text.setAttribute('font-weight', 'bold');
+  text.textContent = directive.value;
+  return text;
 }
 
 /**

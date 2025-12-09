@@ -7,6 +7,7 @@ const PARTICIPANT_HEIGHT = 60;
 const PARTICIPANT_SPACING = 150;
 const PARTICIPANT_START_X = 50;
 const PARTICIPANT_START_Y = 50;
+const TITLE_HEIGHT = 30; // Extra space when title present
 const MESSAGE_START_Y = 130; // Below participants
 const MESSAGE_SPACING = 50;
 const BLANKLINE_SPACING = 20;
@@ -22,6 +23,10 @@ export function calculateLayout(ast) {
   const layout = new Map();
   const participantMap = buildParticipantMap(ast);
 
+  // Check for title directive
+  const titleDirective = ast.find(n => n.type === 'directive' && n.directiveType === 'title');
+  const titleOffset = titleDirective ? TITLE_HEIGHT : 0;
+
   // Calculate participant positions
   const participantLayout = new Map();
   const participants = ast.filter(n => n.type === 'participant');
@@ -29,7 +34,7 @@ export function calculateLayout(ast) {
     const x = PARTICIPANT_START_X + (index * PARTICIPANT_SPACING);
     participantLayout.set(p.alias, {
       x,
-      y: PARTICIPANT_START_Y,
+      y: PARTICIPANT_START_Y + titleOffset,
       width: PARTICIPANT_WIDTH,
       height: PARTICIPANT_HEIGHT,
       centerX: x + PARTICIPANT_WIDTH / 2
@@ -59,7 +64,7 @@ export function calculateLayout(ast) {
   }
 
   // Calculate positions for messages and fragments
-  let currentY = MESSAGE_START_Y;
+  let currentY = MESSAGE_START_Y + titleOffset;
 
   for (const node of ast) {
     // Skip participants (already handled)
@@ -68,8 +73,8 @@ export function calculateLayout(ast) {
     // Skip entries that are part of a fragment (they'll be laid out by the fragment)
     if (fragmentEntries.has(node.id)) continue;
 
-    // Skip comments (they don't affect layout)
-    if (node.type === 'comment') continue;
+    // Skip comments and directives (they don't affect layout)
+    if (node.type === 'comment' || node.type === 'directive') continue;
 
     // Handle blank lines - add spacing
     if (node.type === 'blankline') {

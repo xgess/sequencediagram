@@ -478,5 +478,57 @@ describe('Renderer', () => {
     });
   });
 
+  describe('title rendering (BACKLOG-043)', () => {
+    it('should render title text', () => {
+      const ast = parse('title My Diagram\nparticipant Alice');
+      const svg = render(ast);
+
+      const title = svg.querySelector('.diagram-title');
+      expect(title).not.toBeNull();
+      expect(title.textContent).toBe('My Diagram');
+    });
+
+    it('should set data-node-id on title', () => {
+      const ast = parse('title Test\nparticipant Alice');
+      const svg = render(ast);
+
+      const title = svg.querySelector('.diagram-title');
+      expect(title.getAttribute('data-node-id')).toMatch(/^d_[a-z0-9]{8}$/);
+    });
+
+    it('should center title horizontally', () => {
+      const ast = parse('title Centered\nparticipant Alice');
+      const svg = render(ast);
+
+      const title = svg.querySelector('.diagram-title');
+      expect(title.getAttribute('text-anchor')).toBe('middle');
+    });
+
+    it('should have title group in SVG', () => {
+      const ast = parse('title Test\nparticipant Alice');
+      const svg = render(ast);
+
+      const titleGroup = svg.querySelector('#title');
+      expect(titleGroup).not.toBeNull();
+    });
+
+    it('should push participants down when title present', () => {
+      // Without title
+      const ast1 = parse('participant Alice');
+      const svg1 = render(ast1);
+      const rect1 = svg1.querySelector('.participant rect');
+      const y1 = parseFloat(rect1.getAttribute('y'));
+
+      // With title
+      const ast2 = parse('title Test\nparticipant Alice');
+      const svg2 = render(ast2);
+      const rect2 = svg2.querySelector('.participant rect');
+      const y2 = parseFloat(rect2.getAttribute('y'));
+
+      // With title should be lower
+      expect(y2).toBeGreaterThan(y1);
+    });
+  });
+
   // TODO(Phase1): Add renderer tests as features are implemented
 });
