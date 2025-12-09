@@ -7,12 +7,36 @@
  * @returns {string} Serialized text
  */
 export function serialize(ast) {
+  // Build node lookup by ID
+  const nodeById = new Map();
+  for (const node of ast) {
+    nodeById.set(node.id, node);
+  }
+
+  // Track which entries are inside fragments (so we skip them at top level)
+  const fragmentEntries = new Set();
+  for (const node of ast) {
+    if (node.type === 'fragment') {
+      for (const entryId of node.entries) {
+        fragmentEntries.add(entryId);
+      }
+      for (const elseClause of node.elseClauses) {
+        for (const entryId of elseClause.entries) {
+          fragmentEntries.add(entryId);
+        }
+      }
+    }
+  }
+
   const lines = [];
 
   for (const node of ast) {
-    const line = serializeNode(node);
-    if (line !== null) {
-      lines.push(line);
+    // Skip entries that are inside fragments (they'll be serialized by the fragment)
+    if (fragmentEntries.has(node.id)) continue;
+
+    const serialized = serializeNode(node, nodeById, 0);
+    if (serialized !== null) {
+      lines.push(serialized);
     }
   }
 
@@ -22,17 +46,30 @@ export function serialize(ast) {
 /**
  * Serialize a single AST node to text
  * @param {Object} node - AST node
- * @returns {string|null} Serialized line or null
+ * @param {Map} nodeById - Node lookup map
+ * @param {number} indent - Current indentation level
+ * @returns {string|null} Serialized line(s) or null
  */
-function serializeNode(node) {
+function serializeNode(node, nodeById, indent) {
   switch (node.type) {
     case 'participant':
-      return serializeParticipant(node);
+      return indentStr(indent) + serializeParticipant(node);
     case 'message':
-      return serializeMessage(node);
+      return indentStr(indent) + serializeMessage(node);
+    case 'fragment':
+      return serializeFragment(node, nodeById, indent);
     default:
       return null;
   }
+}
+
+/**
+ * Get indentation string
+ * @param {number} level - Indentation level
+ * @returns {string} Indentation spaces
+ */
+function indentStr(level) {
+  return '  '.repeat(level);
 }
 
 /**
@@ -124,4 +161,58 @@ function serializeParticipantStyle(style) {
  */
 function serializeMessage(node) {
   return `${node.from}${node.arrowType}${node.to}:${node.label}`;
+}
+
+/**
+ * Serialize a fragment node
+ * @param {Object} node - Fragment AST node
+ * @param {Map} nodeById - Node lookup map
+ * @param {number} indent - Current indentation level
+ * @returns {string} Serialized fragment
+ */
+function serializeFragment(node, nodeById, indent) {
+  const lines = [];
+  const prefix = indentStr(indent);
+
+  // Opening line: fragmentType condition
+  let opening = node.fragmentType;
+  if (node.condition) {
+    opening += ' ' + node.condition;
+  }
+  lines.push(prefix + opening);
+
+  // Serialize main entries
+  for (const entryId of node.entries) {
+    const entry = nodeById.get(entryId);
+    if (entry) {
+      const serialized = serializeNode(entry, nodeById, indent + 1);
+      if (serialized !== null) {
+        lines.push(serialized);
+      }
+    }
+  }
+
+  // Serialize else clauses
+  for (const elseClause of node.elseClauses) {
+    let elseLine = 'else';
+    if (elseClause.condition) {
+      elseLine += ' ' + elseClause.condition;
+    }
+    lines.push(prefix + elseLine);
+
+    for (const entryId of elseClause.entries) {
+      const entry = nodeById.get(entryId);
+      if (entry) {
+        const serialized = serializeNode(entry, nodeById, indent + 1);
+        if (serialized !== null) {
+          lines.push(serialized);
+        }
+      }
+    }
+  }
+
+  // Closing line
+  lines.push(prefix + 'end');
+
+  return lines.join('\n');
 }

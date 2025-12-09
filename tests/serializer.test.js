@@ -228,6 +228,59 @@ describe('Serializer', () => {
     });
   });
 
+  describe('fragment serialization (BACKLOG-036)', () => {
+    it('should serialize basic alt fragment', () => {
+      const ast = parse('alt success\nend');
+      const text = serialize(ast);
+      expect(text).toBe('alt success\nend');
+    });
+
+    it('should serialize alt fragment with message', () => {
+      const ast = parse('alt success\nAlice->Bob:OK\nend');
+      const text = serialize(ast);
+      expect(text).toBe('alt success\n  Alice->Bob:OK\nend');
+    });
+
+    it('should serialize alt fragment with else clause', () => {
+      const ast = parse('alt success\nAlice->Bob:OK\nelse failure\nAlice->Bob:Error\nend');
+      const text = serialize(ast);
+      expect(text).toBe('alt success\n  Alice->Bob:OK\nelse failure\n  Alice->Bob:Error\nend');
+    });
+
+    it('should serialize loop fragment', () => {
+      const ast = parse('loop 10 times\nAlice->Bob:Ping\nend');
+      const text = serialize(ast);
+      expect(text).toBe('loop 10 times\n  Alice->Bob:Ping\nend');
+    });
+
+    it('should serialize nested fragments', () => {
+      const ast = parse('alt outer\nloop inner\nAlice->Bob:Hi\nend\nend');
+      const text = serialize(ast);
+      expect(text).toBe('alt outer\n  loop inner\n    Alice->Bob:Hi\n  end\nend');
+    });
+
+    it('should serialize participants before fragments', () => {
+      const input = 'participant Alice\nparticipant Bob\nalt success\nAlice->Bob:OK\nend';
+      const ast = parse(input);
+      const text = serialize(ast);
+      expect(text).toBe('participant Alice\nparticipant Bob\nalt success\n  Alice->Bob:OK\nend');
+    });
+
+    it('should round-trip fragment with else', () => {
+      const input = 'alt success\n  Alice->Bob:OK\nelse failure\n  Alice->Bob:Error\nend';
+      const ast1 = parse(input);
+      const serialized = serialize(ast1);
+      const ast2 = parse(serialized);
+
+      const fragment1 = ast1.find(n => n.type === 'fragment');
+      const fragment2 = ast2.find(n => n.type === 'fragment');
+
+      expect(fragment2.fragmentType).toBe(fragment1.fragmentType);
+      expect(fragment2.condition).toBe(fragment1.condition);
+      expect(fragment2.entries.length).toBe(fragment1.entries.length);
+      expect(fragment2.elseClauses.length).toBe(fragment1.elseClauses.length);
+    });
+  });
+
   // TODO(Phase1): Add serializer tests as features are implemented
-  // - BACKLOG-036: Serialize fragment
 });
