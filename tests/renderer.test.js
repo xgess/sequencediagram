@@ -172,6 +172,45 @@ describe('Renderer', () => {
     });
   });
 
+  describe('SVG dimensions (BACKLOG-013)', () => {
+    it('should set viewBox matching width and height', () => {
+      const ast = parse('participant Alice\nparticipant Bob\nAlice->Bob:Hello');
+      const svg = render(ast);
+
+      const width = svg.getAttribute('width');
+      const height = svg.getAttribute('height');
+      const viewBox = svg.getAttribute('viewBox');
+
+      expect(viewBox).toBe(`0 0 ${width} ${height}`);
+    });
+
+    it('should increase height with more messages', () => {
+      const ast1 = parse('participant Alice\nparticipant Bob\nAlice->Bob:One');
+      const ast2 = parse('participant Alice\nparticipant Bob\nAlice->Bob:One\nBob->Alice:Two\nAlice->Bob:Three');
+
+      const svg1 = render(ast1);
+      const svg2 = render(ast2);
+
+      const height1 = parseInt(svg1.getAttribute('height'));
+      const height2 = parseInt(svg2.getAttribute('height'));
+
+      expect(height2).toBeGreaterThan(height1);
+    });
+
+    it('should increase width with more participants', () => {
+      const ast1 = parse('participant Alice\nparticipant Bob');
+      const ast2 = parse('participant Alice\nparticipant Bob\nparticipant Carol\nparticipant Dave');
+
+      const svg1 = render(ast1);
+      const svg2 = render(ast2);
+
+      const width1 = parseInt(svg1.getAttribute('width'));
+      const width2 = parseInt(svg2.getAttribute('width'));
+
+      expect(width2).toBeGreaterThan(width1);
+    });
+  });
+
   // TODO(Phase1): Add renderer tests as features are implemented
   // - BACKLOG-033: Render fragment
 });
