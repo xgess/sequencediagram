@@ -11,49 +11,179 @@ import { generateId } from './nodes.js';
 export function parse(text) {
   const lines = text.split('\n');
   const ast = [];
+  let i = 0;
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const lineNumber = i + 1; // 1-indexed
-
-    const node = parseLine(line, lineNumber);
-    if (node) {
-      ast.push(node);
-    }
+  while (i < lines.length) {
+    const result = parseAt(lines, i, ast);
+    i = result.nextLine;
   }
 
   return ast;
 }
 
 /**
- * Parse a single line into an AST node
- * @param {string} line - Source line
- * @param {number} lineNumber - 1-indexed line number
- * @returns {Object|null} AST node or null for empty/unrecognized lines
+ * Parse starting at a given line index
+ * @param {string[]} lines - All lines
+ * @param {number} lineIndex - Current line index (0-indexed)
+ * @param {Array} ast - AST array to append nodes to
+ * @returns {{nextLine: number}} Next line to process
  */
-function parseLine(line, lineNumber) {
+function parseAt(lines, lineIndex, ast) {
+  const line = lines[lineIndex];
+  const lineNumber = lineIndex + 1; // 1-indexed for source tracking
   const trimmed = line.trim();
 
-  // Skip empty lines for now
+  // Skip empty lines
   if (!trimmed) {
-    return null;
+    return { nextLine: lineIndex + 1 };
+  }
+
+  // Try parsing as fragment (alt, loop, etc.)
+  if (isFragmentStart(trimmed)) {
+    const result = parseFragment(lines, lineIndex, ast);
+    return { nextLine: result.endLine + 1 };
   }
 
   // Try parsing as participant
   const participant = parseParticipant(trimmed, lineNumber);
   if (participant) {
-    return participant;
+    ast.push(participant);
+    return { nextLine: lineIndex + 1 };
   }
 
   // Try parsing as message
   const message = parseMessage(trimmed, lineNumber);
   if (message) {
-    return message;
+    ast.push(message);
+    return { nextLine: lineIndex + 1 };
   }
 
   // Unrecognized line - skip for now
   // TODO(Phase1): Add error node creation in BACKLOG-048
-  return null;
+  return { nextLine: lineIndex + 1 };
+}
+
+/**
+ * Check if a line starts a fragment
+ * @param {string} trimmed - Trimmed line
+ * @returns {boolean}
+ */
+function isFragmentStart(trimmed) {
+  return /^(alt|loop|opt|par|break|critical|ref|seq|strict|neg|ignore|consider|assert|region|group)\b/.test(trimmed);
+}
+
+/**
+ * Parse a fragment (alt, loop, etc.)
+ * @param {string[]} lines - All lines
+ * @param {number} startLine - Starting line index (0-indexed)
+ * @param {Array} ast - AST array to append child nodes to
+ * @returns {{endLine: number}} Ending line index
+ */
+function parseFragment(lines, startLine, ast) {
+  const firstLine = lines[startLine].trim();
+  const match = firstLine.match(/^(alt|loop|opt|par|break|critical|ref|seq|strict|neg|ignore|consider|assert|region|group)\s*(.*)/);
+
+  const fragmentType = match[1];
+  const condition = match[2] || '';
+
+  const fragmentId = generateId('fragment');
+  const entries = [];
+  const elseClauses = [];
+  let currentEntries = entries;
+  let currentElseCondition = null;
+
+  let i = startLine + 1;
+  const fragmentStartLine = startLine + 1; // 1-indexed
+
+  while (i < lines.length) {
+    const line = lines[i].trim();
+
+    if (line === 'end') {
+      // Fragment complete
+      const fragmentNode = {
+        id: fragmentId,
+        type: 'fragment',
+        fragmentType,
+        condition,
+        entries,
+        elseClauses,
+        style: null,
+        sourceLineStart: fragmentStartLine,
+        sourceLineEnd: i + 1 // 1-indexed
+      };
+      ast.push(fragmentNode);
+      return { endLine: i };
+    }
+
+    if (line.startsWith('else')) {
+      // Start a new else clause
+      const elseMatch = line.match(/^else\s*(.*)/);
+      const elseCondition = elseMatch ? elseMatch[1] : '';
+
+      const newElseClause = {
+        condition: elseCondition,
+        entries: [],
+        style: null
+      };
+      elseClauses.push(newElseClause);
+      currentEntries = newElseClause.entries;
+      i++;
+      continue;
+    }
+
+    // Skip empty lines inside fragment
+    if (!line) {
+      i++;
+      continue;
+    }
+
+    // Check for nested fragment
+    if (isFragmentStart(line)) {
+      const result = parseFragment(lines, i, ast);
+      // The nested fragment was added to ast, get its ID
+      const nestedFragment = ast[ast.length - 1];
+      currentEntries.push(nestedFragment.id);
+      i = result.endLine + 1;
+      continue;
+    }
+
+    // Try parsing as participant (inside fragment)
+    const participant = parseParticipant(line, i + 1);
+    if (participant) {
+      ast.push(participant);
+      currentEntries.push(participant.id);
+      i++;
+      continue;
+    }
+
+    // Try parsing as message
+    const message = parseMessage(line, i + 1);
+    if (message) {
+      ast.push(message);
+      currentEntries.push(message.id);
+      i++;
+      continue;
+    }
+
+    // Unrecognized line inside fragment - skip
+    i++;
+  }
+
+  // Missing 'end' - create fragment anyway with what we have
+  // TODO(Phase1): Create error node for unclosed fragment in BACKLOG-048
+  const fragmentNode = {
+    id: fragmentId,
+    type: 'fragment',
+    fragmentType,
+    condition,
+    entries,
+    elseClauses,
+    style: null,
+    sourceLineStart: fragmentStartLine,
+    sourceLineEnd: i // End of file
+  };
+  ast.push(fragmentNode);
+  return { endLine: i - 1 };
 }
 
 /**

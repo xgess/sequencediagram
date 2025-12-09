@@ -232,6 +232,98 @@ describe('Parser', () => {
     });
   });
 
+  describe('fragment parsing (BACKLOG-031)', () => {
+    it('should parse basic alt fragment', () => {
+      const ast = parse('alt success\nend');
+      const fragment = ast.find(n => n.type === 'fragment');
+      expect(fragment).not.toBeNull();
+      expect(fragment.fragmentType).toBe('alt');
+      expect(fragment.condition).toBe('success');
+      expect(fragment.entries).toEqual([]);
+      expect(fragment.elseClauses).toEqual([]);
+    });
+
+    it('should generate valid ID for fragment', () => {
+      const ast = parse('alt success\nend');
+      const fragment = ast.find(n => n.type === 'fragment');
+      expect(fragment.id).toMatch(/^f_[a-z0-9]{8}$/);
+    });
+
+    it('should parse alt fragment with message inside', () => {
+      const ast = parse('alt success\nAlice->Bob:OK\nend');
+      const fragment = ast.find(n => n.type === 'fragment');
+      const message = ast.find(n => n.type === 'message');
+
+      expect(fragment.entries).toHaveLength(1);
+      expect(fragment.entries[0]).toBe(message.id);
+    });
+
+    it('should parse alt fragment with else clause', () => {
+      const ast = parse('alt success\nAlice->Bob:OK\nelse failure\nAlice->Bob:Error\nend');
+      const fragment = ast.find(n => n.type === 'fragment');
+      const messages = ast.filter(n => n.type === 'message');
+
+      expect(fragment.entries).toHaveLength(1);
+      expect(fragment.elseClauses).toHaveLength(1);
+      expect(fragment.elseClauses[0].condition).toBe('failure');
+      expect(fragment.elseClauses[0].entries).toHaveLength(1);
+      expect(fragment.elseClauses[0].entries[0]).toBe(messages[1].id);
+    });
+
+    it('should parse alt fragment with multiple else clauses', () => {
+      const ast = parse('alt case1\nAlice->Bob:One\nelse case2\nAlice->Bob:Two\nelse case3\nAlice->Bob:Three\nend');
+      const fragment = ast.find(n => n.type === 'fragment');
+
+      expect(fragment.entries).toHaveLength(1);
+      expect(fragment.elseClauses).toHaveLength(2);
+      expect(fragment.elseClauses[0].condition).toBe('case2');
+      expect(fragment.elseClauses[1].condition).toBe('case3');
+    });
+
+    it('should parse loop fragment', () => {
+      const ast = parse('loop 10 times\nAlice->Bob:Ping\nend');
+      const fragment = ast.find(n => n.type === 'fragment');
+
+      expect(fragment.fragmentType).toBe('loop');
+      expect(fragment.condition).toBe('10 times');
+      expect(fragment.entries).toHaveLength(1);
+    });
+
+    it('should parse nested fragments', () => {
+      const ast = parse('alt outer\nloop inner\nAlice->Bob:Hi\nend\nend');
+      const fragments = ast.filter(n => n.type === 'fragment');
+
+      expect(fragments).toHaveLength(2);
+      const outer = fragments.find(f => f.fragmentType === 'alt');
+      const inner = fragments.find(f => f.fragmentType === 'loop');
+
+      expect(outer.entries).toContain(inner.id);
+    });
+
+    it('should set sourceLineStart and sourceLineEnd', () => {
+      const ast = parse('alt success\nAlice->Bob:OK\nend');
+      const fragment = ast.find(n => n.type === 'fragment');
+
+      expect(fragment.sourceLineStart).toBe(1);
+      expect(fragment.sourceLineEnd).toBe(3);
+    });
+
+    it('should handle fragment with participants and messages', () => {
+      const input = `participant Alice
+participant Bob
+alt success
+Alice->Bob:Request
+Bob-->Alice:Response
+end`;
+      const ast = parse(input);
+      const fragment = ast.find(n => n.type === 'fragment');
+      const messages = ast.filter(n => n.type === 'message');
+
+      expect(fragment.entries).toHaveLength(2);
+      expect(fragment.entries).toContain(messages[0].id);
+      expect(fragment.entries).toContain(messages[1].id);
+    });
+  });
+
   // TODO(Phase1): Add parser tests as features are implemented
-  // - BACKLOG-031: Fragments
 });
