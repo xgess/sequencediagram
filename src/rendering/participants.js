@@ -11,6 +11,7 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
  */
 export function renderParticipant(node, layoutInfo) {
   const { x, y, width, height } = layoutInfo;
+  const style = node.style || {};
 
   const group = document.createElementNS(SVG_NS, 'g');
   group.setAttribute('data-node-id', node.id);
@@ -22,9 +23,17 @@ export function renderParticipant(node, layoutInfo) {
   rect.setAttribute('y', y);
   rect.setAttribute('width', width);
   rect.setAttribute('height', height);
-  rect.setAttribute('fill', 'white');
-  rect.setAttribute('stroke', 'black');
-  rect.setAttribute('stroke-width', '1');
+
+  // Apply styling with defaults
+  rect.setAttribute('fill', style.fill || 'white');
+  rect.setAttribute('stroke', style.border || 'black');
+  rect.setAttribute('stroke-width', style.borderWidth !== undefined ? style.borderWidth : 1);
+
+  // Apply dashed border style if specified
+  if (style.borderStyle === 'dashed') {
+    rect.setAttribute('stroke-dasharray', '5,5');
+  }
+
   group.appendChild(rect);
 
   // Create text label

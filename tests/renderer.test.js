@@ -211,6 +211,58 @@ describe('Renderer', () => {
     });
   });
 
+  describe('participant styling (BACKLOG-015)', () => {
+    it('should apply fill color to participant rect', () => {
+      const ast = parse('participant Alice #lightblue');
+      const svg = render(ast);
+
+      const rect = svg.querySelector('.participant rect');
+      expect(rect.getAttribute('fill')).toBe('#lightblue');
+    });
+
+    it('should apply border color to participant rect', () => {
+      const ast = parse('participant Alice #white #red');
+      const svg = render(ast);
+
+      const rect = svg.querySelector('.participant rect');
+      expect(rect.getAttribute('stroke')).toBe('#red');
+    });
+
+    it('should apply border width to participant rect', () => {
+      const ast = parse('participant Alice #white #black;3');
+      const svg = render(ast);
+
+      const rect = svg.querySelector('.participant rect');
+      expect(rect.getAttribute('stroke-width')).toBe('3');
+    });
+
+    it('should apply dashed border style', () => {
+      const ast = parse('participant Alice #white #black;1;dashed');
+      const svg = render(ast);
+
+      const rect = svg.querySelector('.participant rect');
+      expect(rect.getAttribute('stroke-dasharray')).toBe('5,5');
+    });
+
+    it('should use defaults when no styling specified', () => {
+      const ast = parse('participant Alice');
+      const svg = render(ast);
+
+      const rect = svg.querySelector('.participant rect');
+      expect(rect.getAttribute('fill')).toBe('white');
+      expect(rect.getAttribute('stroke')).toBe('black');
+      expect(rect.getAttribute('stroke-width')).toBe('1');
+    });
+
+    it('should handle zero border width', () => {
+      const ast = parse('participant Alice #yellow ;0');
+      const svg = render(ast);
+
+      const rect = svg.querySelector('.participant rect');
+      expect(rect.getAttribute('stroke-width')).toBe('0');
+    });
+  });
+
   // TODO(Phase1): Add renderer tests as features are implemented
   // - BACKLOG-033: Render fragment
 });
