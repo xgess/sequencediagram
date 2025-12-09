@@ -307,6 +307,70 @@ describe('Renderer', () => {
     });
   });
 
+  describe('actor rendering (BACKLOG-027)', () => {
+    it('should render actor with stick figure elements', () => {
+      const ast = parse('actor User');
+      const svg = render(ast);
+
+      const participant = svg.querySelector('.participant');
+      expect(participant).not.toBeNull();
+
+      // Should have circle (head)
+      const circle = participant.querySelector('circle');
+      expect(circle).not.toBeNull();
+
+      // Should have lines (body, arms, legs)
+      const lines = participant.querySelectorAll('line');
+      expect(lines.length).toBeGreaterThanOrEqual(4);
+
+      // Should have text label
+      const text = participant.querySelector('text');
+      expect(text).not.toBeNull();
+      expect(text.textContent).toBe('User');
+    });
+
+    it('should render actor with styling', () => {
+      const ast = parse('actor User #lightblue #red');
+      const svg = render(ast);
+
+      const circle = svg.querySelector('.participant circle');
+      expect(circle.getAttribute('fill')).toBe('#lightblue');
+      expect(circle.getAttribute('stroke')).toBe('#red');
+    });
+  });
+
+  describe('database rendering (BACKLOG-029)', () => {
+    it('should render database with cylinder elements', () => {
+      const ast = parse('database DB');
+      const svg = render(ast);
+
+      const participant = svg.querySelector('.participant');
+      expect(participant).not.toBeNull();
+
+      // Should have ellipse (top of cylinder)
+      const ellipse = participant.querySelector('ellipse');
+      expect(ellipse).not.toBeNull();
+
+      // Should have path (bottom curve)
+      const path = participant.querySelector('path');
+      expect(path).not.toBeNull();
+
+      // Should have text label
+      const text = participant.querySelector('text');
+      expect(text).not.toBeNull();
+      expect(text.textContent).toBe('DB');
+    });
+
+    it('should render database with styling', () => {
+      const ast = parse('database DB #yellow #blue');
+      const svg = render(ast);
+
+      const ellipse = svg.querySelector('.participant ellipse');
+      expect(ellipse.getAttribute('fill')).toBe('#yellow');
+      expect(ellipse.getAttribute('stroke')).toBe('#blue');
+    });
+  });
+
   // TODO(Phase1): Add renderer tests as features are implemented
   // - BACKLOG-033: Render fragment
 });
