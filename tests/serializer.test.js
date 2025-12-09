@@ -126,6 +126,44 @@ describe('Serializer', () => {
     });
   });
 
+  describe('participant styling serialization (BACKLOG-016)', () => {
+    it('should serialize participant with fill color', () => {
+      const ast = parse('participant Alice #lightblue');
+      const text = serialize(ast);
+      expect(text).toBe('participant Alice #lightblue');
+    });
+
+    it('should serialize participant with fill and border', () => {
+      const ast = parse('participant Alice #lightblue #green');
+      const text = serialize(ast);
+      expect(text).toBe('participant Alice #lightblue #green');
+    });
+
+    it('should serialize participant with full styling', () => {
+      const ast = parse('participant Alice #lightblue #green;3;dashed');
+      const text = serialize(ast);
+      expect(text).toBe('participant Alice #lightblue #green;3;dashed');
+    });
+
+    it('should serialize participant with border width only', () => {
+      const ast = parse('participant Alice ;2');
+      const text = serialize(ast);
+      expect(text).toBe('participant Alice ;2');
+    });
+
+    it('should round-trip styled participant', () => {
+      const input = 'participant Alice #pink #blue;2;dashed';
+      const ast1 = parse(input);
+      const serialized = serialize(ast1);
+      const ast2 = parse(serialized);
+
+      expect(ast2[0].style.fill).toBe('#pink');
+      expect(ast2[0].style.border).toBe('#blue');
+      expect(ast2[0].style.borderWidth).toBe(2);
+      expect(ast2[0].style.borderStyle).toBe('dashed');
+    });
+  });
+
   // TODO(Phase1): Add serializer tests as features are implemented
   // - BACKLOG-036: Serialize fragment
 });

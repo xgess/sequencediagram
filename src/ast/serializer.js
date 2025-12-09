@@ -41,9 +41,60 @@ function serializeNode(node) {
  * @returns {string} Serialized participant declaration
  */
 function serializeParticipant(node) {
-  // For now, just output: participantType name
-  // alias syntax and styling will be added in later backlog items
-  return `${node.participantType} ${node.alias}`;
+  let output = `${node.participantType} ${node.alias}`;
+
+  // Add styling if present
+  const styleStr = serializeParticipantStyle(node.style);
+  if (styleStr) {
+    output += ' ' + styleStr;
+  }
+
+  return output;
+}
+
+/**
+ * Serialize participant style object to string
+ * @param {Object} style - Style object
+ * @returns {string} Style string or empty string
+ */
+function serializeParticipantStyle(style) {
+  if (!style || Object.keys(style).length === 0) {
+    return '';
+  }
+
+  let parts = [];
+
+  // Add fill color
+  if (style.fill) {
+    parts.push(style.fill);
+  }
+
+  // Add border styling
+  const hasBorderColor = style.border !== undefined;
+  const hasBorderWidth = style.borderWidth !== undefined;
+  const hasBorderStyle = style.borderStyle !== undefined;
+
+  if (hasBorderColor || hasBorderWidth || hasBorderStyle) {
+    let borderPart = '';
+
+    if (hasBorderColor) {
+      borderPart += style.border;
+    }
+
+    if (hasBorderWidth || hasBorderStyle) {
+      borderPart += ';';
+      if (hasBorderWidth) {
+        borderPart += style.borderWidth;
+      }
+      if (hasBorderStyle) {
+        borderPart += ';' + style.borderStyle;
+      }
+    }
+
+    parts.push(borderPart);
+  }
+
+  return parts.join(' ');
 }
 
 /**
