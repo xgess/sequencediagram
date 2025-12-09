@@ -8,12 +8,42 @@ import { render } from './rendering/renderer.js';
 // App state
 let currentAst = [];
 
+// DOM element references
+let sourceTextarea;
+let diagramContainer;
+let errorsDiv;
+let renderButton;
+
 /**
  * Initialize the application
  */
 export function init() {
-  // TODO(Phase1): Wire up UI elements
+  // Get DOM elements
+  sourceTextarea = document.getElementById('source');
+  diagramContainer = document.getElementById('diagram-pane');
+  errorsDiv = document.getElementById('errors');
+  renderButton = document.getElementById('render-btn');
+
+  if (!sourceTextarea || !diagramContainer || !renderButton) {
+    console.error('Required DOM elements not found');
+    return;
+  }
+
+  // Wire up render button
+  renderButton.addEventListener('click', handleRender);
+
+  // Add sample text
+  sourceTextarea.value = 'participant Alice\nparticipant Bob\ndatabase DB';
+
   console.log('Sequence Diagram Tool initialized');
+}
+
+/**
+ * Handle render button click
+ */
+function handleRender() {
+  const text = sourceTextarea.value;
+  updateFromText(text);
 }
 
 /**
@@ -21,9 +51,31 @@ export function init() {
  * @param {string} text - Source text
  */
 export function updateFromText(text) {
+  // Clear previous errors
+  errorsDiv.textContent = '';
+
+  // Parse text to AST
   currentAst = parse(text);
+
+  // Log AST for debugging
+  console.log('AST:', currentAst);
+
+  // Render AST to SVG
   const svg = render(currentAst);
-  // TODO(Phase1): Insert SVG into DOM
+
+  // Replace diagram in container
+  const existingSvg = diagramContainer.querySelector('svg');
+  if (existingSvg) {
+    existingSvg.remove();
+  }
+  diagramContainer.appendChild(svg);
+
+  // Check for errors in AST
+  const errors = currentAst.filter(node => node.type === 'error');
+  if (errors.length > 0) {
+    errorsDiv.textContent = `${errors.length} error(s) found`;
+  }
+
   return svg;
 }
 
