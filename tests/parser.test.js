@@ -133,8 +133,56 @@ describe('Parser', () => {
     });
   });
 
+  describe('participant styling (BACKLOG-014)', () => {
+    it('should parse participant with fill color', () => {
+      const ast = parse('participant Alice #lightblue');
+      expect(ast[0].style.fill).toBe('#lightblue');
+    });
+
+    it('should parse participant with fill and border color', () => {
+      const ast = parse('participant Alice #lightblue #green');
+      expect(ast[0].style.fill).toBe('#lightblue');
+      expect(ast[0].style.border).toBe('#green');
+    });
+
+    it('should parse participant with full styling', () => {
+      const ast = parse('participant Alice #lightblue #green;3;dashed');
+      expect(ast[0].style.fill).toBe('#lightblue');
+      expect(ast[0].style.border).toBe('#green');
+      expect(ast[0].style.borderWidth).toBe(3);
+      expect(ast[0].style.borderStyle).toBe('dashed');
+    });
+
+    it('should parse participant with border width only', () => {
+      const ast = parse('participant Alice ;2');
+      expect(ast[0].style.fill).toBeUndefined();
+      expect(ast[0].style.borderWidth).toBe(2);
+    });
+
+    it('should parse participant with fill and border width', () => {
+      const ast = parse('participant Alice #pink ;3');
+      expect(ast[0].style.fill).toBe('#pink');
+      expect(ast[0].style.borderWidth).toBe(3);
+    });
+
+    it('should parse participant with no border (width 0)', () => {
+      const ast = parse('participant Alice #yellow ;0');
+      expect(ast[0].style.fill).toBe('#yellow');
+      expect(ast[0].style.borderWidth).toBe(0);
+    });
+
+    it('should handle hex colors with digits', () => {
+      const ast = parse('participant Alice #ff0000');
+      expect(ast[0].style.fill).toBe('#ff0000');
+    });
+
+    it('should handle solid border style', () => {
+      const ast = parse('participant Alice #white #black;1;solid');
+      expect(ast[0].style.borderStyle).toBe('solid');
+    });
+  });
+
   // TODO(Phase1): Add parser tests as features are implemented
-  // - BACKLOG-014: Participant styling
   // - BACKLOG-017: Participant alias
   // - BACKLOG-031: Fragments
 });

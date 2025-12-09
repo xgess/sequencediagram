@@ -58,19 +58,21 @@ function parseLine(line, lineNumber) {
 
 /**
  * Parse a participant declaration
- * Syntax: participant Name
+ * Syntax: participant Name [#fill] [#border;width;style]
  * @param {string} line - Trimmed source line
  * @param {number} lineNumber - 1-indexed line number
  * @returns {Object|null} Participant AST node or null
  */
 function parseParticipant(line, lineNumber) {
-  // Match: participant Name
-  const match = line.match(/^(participant|actor|database)\s+(\S+)$/);
+  // Match: participantType Name [styling]
+  // Name can't contain # or whitespace to distinguish from styling
+  const match = line.match(/^(participant|actor|database)\s+([^\s#]+)(.*)$/);
   if (!match) {
     return null;
   }
 
-  const [, participantType, name] = match;
+  const [, participantType, name, styleStr] = match;
+  const style = parseParticipantStyle(styleStr.trim());
 
   return {
     id: generateId('participant'),
@@ -78,10 +80,49 @@ function parseParticipant(line, lineNumber) {
     participantType,
     alias: name,
     displayName: name,
-    style: {},
+    style,
     sourceLineStart: lineNumber,
     sourceLineEnd: lineNumber
   };
+}
+
+/**
+ * Parse participant styling string
+ * Syntax: #fill #border;width;style or just #fill or ;width etc.
+ * @param {string} styleStr - Style string (e.g., "#lightblue #green;3;dashed")
+ * @returns {Object} Style object
+ */
+function parseParticipantStyle(styleStr) {
+  const style = {};
+
+  if (!styleStr) {
+    return style;
+  }
+
+  // Match fill color: #color (but not followed by border params)
+  // Match border: #color;width;style or just ;width or ;width;style
+  const fillMatch = styleStr.match(/^(#[^\s#;]+)/);
+  if (fillMatch) {
+    style.fill = fillMatch[1];
+    styleStr = styleStr.slice(fillMatch[0].length).trim();
+  }
+
+  // Match border styling: #color;width;style or ;width;style or ;width
+  const borderMatch = styleStr.match(/^(#[^\s;]+)?;?(\d+)?;?(solid|dashed)?/);
+  if (borderMatch) {
+    const [, borderColor, borderWidth, borderStyle] = borderMatch;
+    if (borderColor) {
+      style.border = borderColor;
+    }
+    if (borderWidth !== undefined) {
+      style.borderWidth = parseInt(borderWidth, 10);
+    }
+    if (borderStyle) {
+      style.borderStyle = borderStyle;
+    }
+  }
+
+  return style;
 }
 
 /**
