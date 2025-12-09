@@ -371,6 +371,72 @@ describe('Renderer', () => {
     });
   });
 
+  describe('fragment rendering (BACKLOG-033)', () => {
+    it('should render fragment with box and label', () => {
+      const ast = parse('participant Alice\nparticipant Bob\nalt success\nAlice->Bob:OK\nend');
+      const svg = render(ast);
+
+      const fragment = svg.querySelector('.fragment');
+      expect(fragment).not.toBeNull();
+      expect(fragment.getAttribute('data-node-id')).toMatch(/^f_[a-z0-9]{8}$/);
+
+      // Should have main box
+      const box = fragment.querySelector('.fragment-box');
+      expect(box).not.toBeNull();
+
+      // Should have label box
+      const labelBox = fragment.querySelector('.fragment-label-box');
+      expect(labelBox).not.toBeNull();
+
+      // Should have fragment type label
+      const label = fragment.querySelector('.fragment-label');
+      expect(label).not.toBeNull();
+      expect(label.textContent).toBe('alt');
+    });
+
+    it('should render fragment condition', () => {
+      const ast = parse('participant Alice\nparticipant Bob\nalt my condition\nAlice->Bob:OK\nend');
+      const svg = render(ast);
+
+      const condition = svg.querySelector('.fragment-condition');
+      expect(condition).not.toBeNull();
+      expect(condition.textContent).toBe('[my condition]');
+    });
+
+    it('should render else clause divider', () => {
+      const ast = parse('participant Alice\nparticipant Bob\nalt success\nAlice->Bob:OK\nelse failure\nAlice->Bob:Error\nend');
+      const svg = render(ast);
+
+      const divider = svg.querySelector('.fragment-divider');
+      expect(divider).not.toBeNull();
+
+      const elseLabel = svg.querySelector('.fragment-else-label');
+      expect(elseLabel).not.toBeNull();
+      expect(elseLabel.textContent).toContain('else');
+    });
+
+    it('should render loop fragment', () => {
+      const ast = parse('participant Alice\nparticipant Bob\nloop 10 times\nAlice->Bob:Ping\nend');
+      const svg = render(ast);
+
+      const label = svg.querySelector('.fragment-label');
+      expect(label.textContent).toBe('loop');
+
+      const condition = svg.querySelector('.fragment-condition');
+      expect(condition.textContent).toBe('[10 times]');
+    });
+
+    it('should have fragments group before lifelines (for z-order)', () => {
+      const ast = parse('participant Alice\nparticipant Bob\nalt test\nAlice->Bob:Hi\nend');
+      const svg = render(ast);
+
+      const groups = Array.from(svg.querySelectorAll('g[id]'));
+      const fragmentsIndex = groups.findIndex(g => g.id === 'fragments');
+      const lifelinesIndex = groups.findIndex(g => g.id === 'lifelines');
+
+      expect(fragmentsIndex).toBeLessThan(lifelinesIndex);
+    });
+  });
+
   // TODO(Phase1): Add renderer tests as features are implemented
-  // - BACKLOG-033: Render fragment
 });

@@ -3,6 +3,7 @@
 
 import { renderParticipant } from './participants.js';
 import { renderMessage } from './messages.js';
+import { renderFragment } from './fragments.js';
 import { calculateLayout } from './layout.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -26,7 +27,12 @@ export function render(ast) {
   svg.appendChild(defs);
 
   // Create container groups (order matters for z-index)
-  // Lifelines go first (behind everything)
+  // Fragments go first (behind everything else but after lifelines)
+  const fragmentsGroup = document.createElementNS(SVG_NS, 'g');
+  fragmentsGroup.setAttribute('id', 'fragments');
+  svg.appendChild(fragmentsGroup);
+
+  // Lifelines next
   const lifelinesGroup = document.createElementNS(SVG_NS, 'g');
   lifelinesGroup.setAttribute('id', 'lifelines');
   svg.appendChild(lifelinesGroup);
@@ -42,11 +48,21 @@ export function render(ast) {
   // Get elements from AST
   const participants = ast.filter(node => node.type === 'participant');
   const messages = ast.filter(node => node.type === 'message');
+  const fragments = ast.filter(node => node.type === 'fragment');
 
   // Calculate final height for lifelines
   const height = Math.max(totalHeight, 160);
 
-  // Render lifelines (behind everything)
+  // Render fragments first (as background boxes)
+  fragments.forEach(fragment => {
+    const layoutInfo = layout.get(fragment.id);
+    if (layoutInfo) {
+      const fragmentEl = renderFragment(fragment, layoutInfo);
+      fragmentsGroup.appendChild(fragmentEl);
+    }
+  });
+
+  // Render lifelines (behind messages but above fragments)
   participants.forEach(participant => {
     const layoutInfo = layout.get(participant.id);
     if (layoutInfo) {
@@ -73,10 +89,18 @@ export function render(ast) {
     }
   });
 
-  // Set SVG dimensions
-  const width = participants.length > 0
+  // Set SVG dimensions (account for fragments that might extend the width)
+  let width = participants.length > 0
     ? Math.max(...Array.from(participantLayout.values()).map(p => p.x + p.width)) + MARGIN
     : 300;
+
+  // Include fragment widths
+  fragments.forEach(fragment => {
+    const layoutInfo = layout.get(fragment.id);
+    if (layoutInfo) {
+      width = Math.max(width, layoutInfo.x + layoutInfo.width + MARGIN);
+    }
+  });
 
   svg.setAttribute('width', width);
   svg.setAttribute('height', height);
