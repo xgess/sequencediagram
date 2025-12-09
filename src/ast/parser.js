@@ -81,10 +81,12 @@ function isFragmentStart(trimmed) {
  */
 function parseFragment(lines, startLine, ast) {
   const firstLine = lines[startLine].trim();
-  const match = firstLine.match(/^(alt|loop|opt|par|break|critical|ref|seq|strict|neg|ignore|consider|assert|region|group)\s*(.*)/);
+  // Match fragment type, optional styling, and optional condition
+  // Syntax: fragmentType[#operatorColor] [#fill] [#border;width;style] [condition]
+  const match = firstLine.match(/^(alt|loop|opt|par|break|critical|ref|seq|strict|neg|ignore|consider|assert|region|group)(#[^\s#]+)?(.*)$/);
 
   const fragmentType = match[1];
-  const condition = match[2] || '';
+  const { style, condition } = parseFragmentStyleAndCondition(match[2] || '', match[3] || '');
 
   const fragmentId = generateId('fragment');
   const entries = [];
@@ -107,7 +109,7 @@ function parseFragment(lines, startLine, ast) {
         condition,
         entries,
         elseClauses,
-        style: null,
+        style,
         sourceLineStart: fragmentStartLine,
         sourceLineEnd: i + 1 // 1-indexed
       };
@@ -117,13 +119,15 @@ function parseFragment(lines, startLine, ast) {
 
     if (line.startsWith('else')) {
       // Start a new else clause
+      // Syntax: else [#fill] [#border;width;style] [condition]
       const elseMatch = line.match(/^else\s*(.*)/);
-      const elseCondition = elseMatch ? elseMatch[1] : '';
+      const elseRest = elseMatch ? elseMatch[1] : '';
+      const { style: elseStyle, condition: elseCondition } = parseElseStyleAndCondition(elseRest);
 
       const newElseClause = {
         condition: elseCondition,
         entries: [],
-        style: null
+        style: elseStyle
       };
       elseClauses.push(newElseClause);
       currentEntries = newElseClause.entries;
@@ -178,7 +182,7 @@ function parseFragment(lines, startLine, ast) {
     condition,
     entries,
     elseClauses,
-    style: null,
+    style,
     sourceLineStart: fragmentStartLine,
     sourceLineEnd: i // End of file
   };
@@ -246,6 +250,89 @@ function unescapeString(str) {
     .replace(/\\"/g, '"')
     .replace(/\\n/g, '\n')
     .replace(/\\\\/g, '\\');
+}
+
+/**
+ * Parse else clause style and condition from the remaining text
+ * Syntax: [#fill] [#border;width;style] [condition]
+ * @param {string} rest - Remaining text after "else"
+ * @returns {{style: Object|null, condition: string}}
+ */
+function parseElseStyleAndCondition(rest) {
+  const style = {};
+  rest = rest.trim();
+
+  // Match fill color (a # followed by non-space, non-# chars, not followed by ;)
+  const fillMatch = rest.match(/^(#[^\s#;]+)(?:\s|$)/);
+  if (fillMatch) {
+    style.fill = fillMatch[1];
+    rest = rest.slice(fillMatch[0].length).trim();
+  }
+
+  // Match border styling: #color;width;style or #color;width or #color
+  // Only if it has a semicolon (to distinguish from fill-only)
+  const borderMatch = rest.match(/^(#[^\s;]+)(;(\d+)?(;(solid|dashed))?)?(?:\s|$)/);
+  if (borderMatch && borderMatch[0].includes(';')) {
+    style.border = borderMatch[1];
+    if (borderMatch[3] !== undefined) {
+      style.borderWidth = parseInt(borderMatch[3], 10);
+    }
+    if (borderMatch[5]) {
+      style.borderStyle = borderMatch[5];
+    }
+    rest = rest.slice(borderMatch[0].length).trim();
+  }
+
+  const condition = rest;
+  return { style: Object.keys(style).length > 0 ? style : null, condition };
+}
+
+/**
+ * Parse fragment style and condition from the remaining text
+ * Syntax: [#operatorColor] [#fill] [#border;width;style] [condition]
+ * @param {string} operatorColorStr - Operator color (e.g., "#yellow")
+ * @param {string} rest - Remaining text after fragment type
+ * @returns {{style: Object, condition: string}}
+ */
+function parseFragmentStyleAndCondition(operatorColorStr, rest) {
+  const style = {};
+  rest = rest.trim();
+
+  // Handle operator color (attached to fragment type)
+  if (operatorColorStr) {
+    style.operatorColor = operatorColorStr;
+  }
+
+  // Now parse rest which may contain: [#fill] [#border;width;style] [condition]
+  // Match fill color (a # followed by non-space, non-# chars, not followed by ;)
+  const fillMatch = rest.match(/^(#[^\s#;]+)(?:\s|$)/);
+  if (fillMatch) {
+    style.fill = fillMatch[1];
+    rest = rest.slice(fillMatch[0].length).trim();
+  }
+
+  // Match border styling: #color;width;style or #color;width or #color
+  // Only if it has a semicolon (to distinguish from fill-only)
+  const borderMatch = rest.match(/^(#[^\s;]+)(;(\d+)?(;(solid|dashed))?)?(?:\s|$)/);
+  if (borderMatch && borderMatch[0].includes(';')) {
+    // This is border styling (has semicolon)
+    style.border = borderMatch[1];
+    if (borderMatch[3] !== undefined) {
+      style.borderWidth = parseInt(borderMatch[3], 10);
+    }
+    if (borderMatch[5]) {
+      style.borderStyle = borderMatch[5];
+    }
+    rest = rest.slice(borderMatch[0].length).trim();
+  } else if (borderMatch && !fillMatch) {
+    // If no fill was matched yet, the first color is fill, check if there's a second one
+    // This case is handled above, so we just continue
+  }
+
+  // What remains is the condition
+  const condition = rest;
+
+  return { style: Object.keys(style).length > 0 ? style : null, condition };
 }
 
 /**

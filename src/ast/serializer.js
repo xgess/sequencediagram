@@ -155,6 +155,78 @@ function serializeParticipantStyle(style) {
 }
 
 /**
+ * Serialize fragment style object to string
+ * Note: operator color is attached directly to fragment type (no space)
+ * @param {Object} style - Style object
+ * @returns {string} Style string or empty string
+ */
+function serializeFragmentStyle(style) {
+  if (!style || Object.keys(style).length === 0) {
+    return '';
+  }
+
+  let result = '';
+
+  // Operator color is attached directly (no space)
+  if (style.operatorColor) {
+    result += style.operatorColor;
+  }
+
+  // Fill and border are space-separated
+  const fillBorder = serializeElseStyle(style);
+  if (fillBorder) {
+    result += ' ' + fillBorder;
+  }
+
+  return result;
+}
+
+/**
+ * Serialize else clause style object to string
+ * @param {Object} style - Style object
+ * @returns {string} Style string or empty string
+ */
+function serializeElseStyle(style) {
+  if (!style || Object.keys(style).length === 0) {
+    return '';
+  }
+
+  let parts = [];
+
+  // Add fill color
+  if (style.fill) {
+    parts.push(style.fill);
+  }
+
+  // Add border styling
+  const hasBorderColor = style.border !== undefined;
+  const hasBorderWidth = style.borderWidth !== undefined;
+  const hasBorderStyle = style.borderStyle !== undefined;
+
+  if (hasBorderColor || hasBorderWidth || hasBorderStyle) {
+    let borderPart = '';
+
+    if (hasBorderColor) {
+      borderPart += style.border;
+    }
+
+    if (hasBorderWidth || hasBorderStyle) {
+      borderPart += ';';
+      if (hasBorderWidth) {
+        borderPart += style.borderWidth;
+      }
+      if (hasBorderStyle) {
+        borderPart += ';' + style.borderStyle;
+      }
+    }
+
+    parts.push(borderPart);
+  }
+
+  return parts.join(' ');
+}
+
+/**
  * Serialize a message node
  * @param {Object} node - Message AST node
  * @returns {string} Serialized message
@@ -174,8 +246,16 @@ function serializeFragment(node, nodeById, indent) {
   const lines = [];
   const prefix = indentStr(indent);
 
-  // Opening line: fragmentType condition
+  // Opening line: fragmentType[#operatorColor] [#fill] [#border;width;style] [condition]
   let opening = node.fragmentType;
+
+  // Add styling
+  const styleStr = serializeFragmentStyle(node.style);
+  if (styleStr) {
+    opening += styleStr;
+  }
+
+  // Add condition (with space separator if there's content)
   if (node.condition) {
     opening += ' ' + node.condition;
   }
@@ -195,6 +275,14 @@ function serializeFragment(node, nodeById, indent) {
   // Serialize else clauses
   for (const elseClause of node.elseClauses) {
     let elseLine = 'else';
+
+    // Add else clause styling
+    const elseStyleStr = serializeElseStyle(elseClause.style);
+    if (elseStyleStr) {
+      elseLine += ' ' + elseStyleStr;
+    }
+
+    // Add else condition
     if (elseClause.condition) {
       elseLine += ' ' + elseClause.condition;
     }

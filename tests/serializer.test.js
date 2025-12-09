@@ -282,5 +282,88 @@ describe('Serializer', () => {
     });
   });
 
+  describe('fragment styling serialization (BACKLOG-037)', () => {
+    it('should serialize fragment with operator color', () => {
+      const ast = parse('alt#yellow condition\nend');
+      const text = serialize(ast);
+      expect(text).toBe('alt#yellow condition\nend');
+    });
+
+    it('should serialize fragment with operator and fill color', () => {
+      const ast = parse('alt#yellow #green condition\nend');
+      const text = serialize(ast);
+      expect(text).toBe('alt#yellow #green condition\nend');
+    });
+
+    it('should serialize fragment with full styling', () => {
+      const ast = parse('alt#yellow #green #red;2;dashed condition\nend');
+      const text = serialize(ast);
+      expect(text).toBe('alt#yellow #green #red;2;dashed condition\nend');
+    });
+
+    it('should serialize fragment with fill only', () => {
+      const ast = parse('alt #lightblue condition\nend');
+      const text = serialize(ast);
+      expect(text).toBe('alt #lightblue condition\nend');
+    });
+
+    it('should serialize fragment with no styling', () => {
+      const ast = parse('alt condition\nend');
+      const text = serialize(ast);
+      expect(text).toBe('alt condition\nend');
+    });
+
+    it('should serialize loop fragment with styling', () => {
+      const ast = parse('loop#cyan #pink 10 times\nend');
+      const text = serialize(ast);
+      expect(text).toBe('loop#cyan #pink 10 times\nend');
+    });
+
+    it('should serialize else clause with styling', () => {
+      const ast = parse('alt success\nAlice->Bob:OK\nelse #pink #yellow;5;dashed failure\nAlice->Bob:Error\nend');
+      const text = serialize(ast);
+      expect(text).toBe('alt success\n  Alice->Bob:OK\nelse #pink #yellow;5;dashed failure\n  Alice->Bob:Error\nend');
+    });
+
+    it('should serialize else clause with fill only', () => {
+      const ast = parse('alt success\nAlice->Bob:OK\nelse #lightblue not success\nAlice->Bob:Error\nend');
+      const text = serialize(ast);
+      expect(text).toBe('alt success\n  Alice->Bob:OK\nelse #lightblue not success\n  Alice->Bob:Error\nend');
+    });
+
+    it('should round-trip fragment with full styling', () => {
+      const input = 'alt#yellow #green #red;2;dashed condition\n  Alice->Bob:OK\nend';
+      const ast1 = parse(input);
+      const serialized = serialize(ast1);
+      const ast2 = parse(serialized);
+
+      const fragment1 = ast1.find(n => n.type === 'fragment');
+      const fragment2 = ast2.find(n => n.type === 'fragment');
+
+      expect(fragment2.style.operatorColor).toBe(fragment1.style.operatorColor);
+      expect(fragment2.style.fill).toBe(fragment1.style.fill);
+      expect(fragment2.style.border).toBe(fragment1.style.border);
+      expect(fragment2.style.borderWidth).toBe(fragment1.style.borderWidth);
+      expect(fragment2.style.borderStyle).toBe(fragment1.style.borderStyle);
+      expect(fragment2.condition).toBe(fragment1.condition);
+    });
+
+    it('should round-trip else clause with styling', () => {
+      const input = 'alt success\n  Alice->Bob:OK\nelse #pink #yellow;5;dashed failure\n  Alice->Bob:Error\nend';
+      const ast1 = parse(input);
+      const serialized = serialize(ast1);
+      const ast2 = parse(serialized);
+
+      const fragment1 = ast1.find(n => n.type === 'fragment');
+      const fragment2 = ast2.find(n => n.type === 'fragment');
+
+      expect(fragment2.elseClauses[0].style.fill).toBe(fragment1.elseClauses[0].style.fill);
+      expect(fragment2.elseClauses[0].style.border).toBe(fragment1.elseClauses[0].style.border);
+      expect(fragment2.elseClauses[0].style.borderWidth).toBe(fragment1.elseClauses[0].style.borderWidth);
+      expect(fragment2.elseClauses[0].style.borderStyle).toBe(fragment1.elseClauses[0].style.borderStyle);
+      expect(fragment2.elseClauses[0].condition).toBe(fragment1.elseClauses[0].condition);
+    });
+  });
+
   // TODO(Phase1): Add serializer tests as features are implemented
 });

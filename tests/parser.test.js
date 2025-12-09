@@ -325,5 +325,82 @@ end`;
     });
   });
 
+  describe('fragment styling (BACKLOG-037)', () => {
+    it('should parse fragment with operator color', () => {
+      const ast = parse('alt#yellow condition\nend');
+      const fragment = ast.find(n => n.type === 'fragment');
+      expect(fragment.style.operatorColor).toBe('#yellow');
+      expect(fragment.condition).toBe('condition');
+    });
+
+    it('should parse fragment with operator and fill color', () => {
+      const ast = parse('alt#yellow #green condition\nend');
+      const fragment = ast.find(n => n.type === 'fragment');
+      expect(fragment.style.operatorColor).toBe('#yellow');
+      expect(fragment.style.fill).toBe('#green');
+      expect(fragment.condition).toBe('condition');
+    });
+
+    it('should parse fragment with full styling', () => {
+      const ast = parse('alt#yellow #green #red;2;dashed condition\nend');
+      const fragment = ast.find(n => n.type === 'fragment');
+      expect(fragment.style.operatorColor).toBe('#yellow');
+      expect(fragment.style.fill).toBe('#green');
+      expect(fragment.style.border).toBe('#red');
+      expect(fragment.style.borderWidth).toBe(2);
+      expect(fragment.style.borderStyle).toBe('dashed');
+      expect(fragment.condition).toBe('condition');
+    });
+
+    it('should parse fragment with fill only', () => {
+      const ast = parse('alt #lightblue condition\nend');
+      const fragment = ast.find(n => n.type === 'fragment');
+      expect(fragment.style.fill).toBe('#lightblue');
+      expect(fragment.style.operatorColor).toBeUndefined();
+      expect(fragment.condition).toBe('condition');
+    });
+
+    it('should parse fragment with no styling', () => {
+      const ast = parse('alt condition\nend');
+      const fragment = ast.find(n => n.type === 'fragment');
+      expect(fragment.style).toBeNull();
+      expect(fragment.condition).toBe('condition');
+    });
+
+    it('should parse loop fragment with styling', () => {
+      const ast = parse('loop#cyan #pink 10 times\nend');
+      const fragment = ast.find(n => n.type === 'fragment');
+      expect(fragment.fragmentType).toBe('loop');
+      expect(fragment.style.operatorColor).toBe('#cyan');
+      expect(fragment.style.fill).toBe('#pink');
+      expect(fragment.condition).toBe('10 times');
+    });
+
+    it('should parse else clause with styling', () => {
+      const ast = parse('alt success\nAlice->Bob:OK\nelse #pink #yellow;5;dashed failure\nAlice->Bob:Error\nend');
+      const fragment = ast.find(n => n.type === 'fragment');
+      expect(fragment.elseClauses).toHaveLength(1);
+      expect(fragment.elseClauses[0].style.fill).toBe('#pink');
+      expect(fragment.elseClauses[0].style.border).toBe('#yellow');
+      expect(fragment.elseClauses[0].style.borderWidth).toBe(5);
+      expect(fragment.elseClauses[0].style.borderStyle).toBe('dashed');
+      expect(fragment.elseClauses[0].condition).toBe('failure');
+    });
+
+    it('should parse else clause with fill only', () => {
+      const ast = parse('alt success\nAlice->Bob:OK\nelse #lightblue not success\nAlice->Bob:Error\nend');
+      const fragment = ast.find(n => n.type === 'fragment');
+      expect(fragment.elseClauses[0].style.fill).toBe('#lightblue');
+      expect(fragment.elseClauses[0].condition).toBe('not success');
+    });
+
+    it('should parse else clause without styling', () => {
+      const ast = parse('alt success\nAlice->Bob:OK\nelse failure\nAlice->Bob:Error\nend');
+      const fragment = ast.find(n => n.type === 'fragment');
+      expect(fragment.elseClauses[0].style).toBeNull();
+      expect(fragment.elseClauses[0].condition).toBe('failure');
+    });
+  });
+
   // TODO(Phase1): Add parser tests as features are implemented
 });

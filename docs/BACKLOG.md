@@ -415,16 +415,17 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 
 ### Slice 7: Comments and Metadata
 
-## BACKLOG-037: Fragment styling
-**Phase:** 1.6  
-**Dependencies:** BACKLOG-033  
-**Description:** Parse and render fragment styling: `alt#operator #fill #border;width;style condition`.  
+## BACKLOG-037: Fragment styling ✅
+**Phase:** 1.6
+**Dependencies:** BACKLOG-033
+**Status:** Complete
+**Description:** Parse and render fragment styling: `alt#operator #fill #border;width;style condition`.
 **Acceptance Criteria:**
-- Parses fragment styling
-- style object has operatorColor, fill, border, borderWidth, borderStyle
-- Renderer applies styling to fragment box and label corner
-- Serializer outputs styling
-- Round-trip test passes
+- Parses fragment styling ✅
+- style object has operatorColor, fill, border, borderWidth, borderStyle ✅
+- Renderer applies styling to fragment box and label corner ✅
+- Serializer outputs styling ✅
+- Round-trip test passes ✅
 
 ## BACKLOG-038: Parse single-line comments
 **Phase:** 1.7  
