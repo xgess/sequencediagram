@@ -59,12 +59,32 @@ function parseLine(line, lineNumber) {
 /**
  * Parse a participant declaration
  * Syntax: participant Name [#fill] [#border;width;style]
+ *         participant "Display Name" as Alias [styling]
  * @param {string} line - Trimmed source line
  * @param {number} lineNumber - 1-indexed line number
  * @returns {Object|null} Participant AST node or null
  */
 function parseParticipant(line, lineNumber) {
-  // Match: participantType Name [styling]
+  // Try quoted display name with alias first: participant "Display Name" as Alias [styling]
+  const quotedMatch = line.match(/^(participant|actor|database)\s+"((?:[^"\\]|\\.)*)"\s+as\s+([^\s#]+)(.*)$/);
+  if (quotedMatch) {
+    const [, participantType, displayNameRaw, alias, styleStr] = quotedMatch;
+    const displayName = unescapeString(displayNameRaw);
+    const style = parseParticipantStyle(styleStr.trim());
+
+    return {
+      id: generateId('participant'),
+      type: 'participant',
+      participantType,
+      alias,
+      displayName,
+      style,
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
+  }
+
+  // Simple syntax: participantType Name [styling]
   // Name can't contain # or whitespace to distinguish from styling
   const match = line.match(/^(participant|actor|database)\s+([^\s#]+)(.*)$/);
   if (!match) {
@@ -84,6 +104,18 @@ function parseParticipant(line, lineNumber) {
     sourceLineStart: lineNumber,
     sourceLineEnd: lineNumber
   };
+}
+
+/**
+ * Unescape a quoted string (handle \" and \n)
+ * @param {string} str - Raw string content
+ * @returns {string} Unescaped string
+ */
+function unescapeString(str) {
+  return str
+    .replace(/\\"/g, '"')
+    .replace(/\\n/g, '\n')
+    .replace(/\\\\/g, '\\');
 }
 
 /**

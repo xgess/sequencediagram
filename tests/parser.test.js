@@ -182,7 +182,56 @@ describe('Parser', () => {
     });
   });
 
+  describe('participant alias (BACKLOG-017)', () => {
+    it('should parse quoted display name with alias', () => {
+      const ast = parse('participant "Web Server" as WS');
+      expect(ast[0].displayName).toBe('Web Server');
+      expect(ast[0].alias).toBe('WS');
+    });
+
+    it('should parse multiline display name', () => {
+      const ast = parse('participant "Line1\\nLine2" as A');
+      expect(ast[0].displayName).toBe('Line1\nLine2');
+      expect(ast[0].alias).toBe('A');
+    });
+
+    it('should parse escaped quotes in display name', () => {
+      const ast = parse('participant "My \\"DB\\"" as DB');
+      expect(ast[0].displayName).toBe('My "DB"');
+      expect(ast[0].alias).toBe('DB');
+    });
+
+    it('should parse alias with styling', () => {
+      const ast = parse('participant "Web Server" as WS #lightblue');
+      expect(ast[0].displayName).toBe('Web Server');
+      expect(ast[0].alias).toBe('WS');
+      expect(ast[0].style.fill).toBe('#lightblue');
+    });
+
+    it('should parse alias with full styling', () => {
+      const ast = parse('participant "My Service" as MS #pink #blue;2;dashed');
+      expect(ast[0].displayName).toBe('My Service');
+      expect(ast[0].alias).toBe('MS');
+      expect(ast[0].style.fill).toBe('#pink');
+      expect(ast[0].style.border).toBe('#blue');
+      expect(ast[0].style.borderWidth).toBe(2);
+      expect(ast[0].style.borderStyle).toBe('dashed');
+    });
+
+    it('should use alias for simple participant (no quotes)', () => {
+      const ast = parse('participant Alice');
+      expect(ast[0].displayName).toBe('Alice');
+      expect(ast[0].alias).toBe('Alice');
+    });
+
+    it('should parse actor with alias', () => {
+      const ast = parse('actor "External User" as EU');
+      expect(ast[0].participantType).toBe('actor');
+      expect(ast[0].displayName).toBe('External User');
+      expect(ast[0].alias).toBe('EU');
+    });
+  });
+
   // TODO(Phase1): Add parser tests as features are implemented
-  // - BACKLOG-017: Participant alias
   // - BACKLOG-031: Fragments
 });
