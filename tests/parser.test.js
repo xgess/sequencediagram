@@ -496,5 +496,41 @@ end`;
     });
   });
 
+  describe('title directive parsing (BACKLOG-042)', () => {
+    it('should parse title directive', () => {
+      const ast = parse('title My Diagram');
+      const directive = ast.find(n => n.type === 'directive');
+      expect(directive).not.toBeNull();
+      expect(directive.directiveType).toBe('title');
+      expect(directive.value).toBe('My Diagram');
+    });
+
+    it('should generate valid ID for directive', () => {
+      const ast = parse('title Test');
+      const directive = ast.find(n => n.type === 'directive');
+      expect(directive.id).toMatch(/^d_[a-z0-9]{8}$/);
+    });
+
+    it('should set sourceLineStart and sourceLineEnd', () => {
+      const ast = parse('title Test');
+      const directive = ast.find(n => n.type === 'directive');
+      expect(directive.sourceLineStart).toBe(1);
+      expect(directive.sourceLineEnd).toBe(1);
+    });
+
+    it('should parse title with special characters', () => {
+      const ast = parse('title My "Special" Diagram!');
+      const directive = ast.find(n => n.type === 'directive');
+      expect(directive.value).toBe('My "Special" Diagram!');
+    });
+
+    it('should parse title with participants', () => {
+      const ast = parse('title My Diagram\nparticipant Alice');
+      expect(ast).toHaveLength(2);
+      expect(ast[0].type).toBe('directive');
+      expect(ast[1].type).toBe('participant');
+    });
+  });
+
   // TODO(Phase1): Add parser tests as features are implemented
 });

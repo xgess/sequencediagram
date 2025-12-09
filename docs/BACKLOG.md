@@ -468,14 +468,15 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Visual grouping effect in diagram ✅
 - Test case shows spacing ✅
 
-## BACKLOG-042: Parse title directive
-**Phase:** 1.7  
-**Dependencies:** BACKLOG-004  
-**Description:** Parse `title My Diagram` into directive node.  
+## BACKLOG-042: Parse title directive ✅
+**Phase:** 1.7
+**Dependencies:** BACKLOG-004
+**Status:** Complete
+**Description:** Parse `title My Diagram` into directive node.
 **Acceptance Criteria:**
-- Creates node with type='directive', directiveType='title', value='My Diagram'
-- Can contain text markup
-- Test case added
+- Creates node with type='directive', directiveType='title', value='My Diagram' ✅
+- Can contain text markup (deferred to BACKLOG-045)
+- Test case added ✅
 
 ## BACKLOG-043: Render title
 **Phase:** 1.7  

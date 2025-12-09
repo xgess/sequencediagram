@@ -62,6 +62,8 @@ function serializeNode(node, nodeById, indent) {
       return indentStr(indent) + node.text;
     case 'blankline':
       return '';
+    case 'directive':
+      return indentStr(indent) + serializeDirective(node);
     default:
       return null;
   }
@@ -228,6 +230,18 @@ function serializeElseStyle(style) {
   }
 
   return parts.join(' ');
+}
+
+/**
+ * Serialize a directive node
+ * @param {Object} node - Directive AST node
+ * @returns {string} Serialized directive
+ */
+function serializeDirective(node) {
+  if (node.directiveType === 'title') {
+    return `title ${node.value}`;
+  }
+  return '';
 }
 
 /**

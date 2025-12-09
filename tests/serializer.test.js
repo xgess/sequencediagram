@@ -428,5 +428,35 @@ describe('Serializer', () => {
     });
   });
 
+  describe('title directive serialization (BACKLOG-042, BACKLOG-044)', () => {
+    it('should serialize title directive', () => {
+      const ast = parse('title My Diagram');
+      const text = serialize(ast);
+      expect(text).toBe('title My Diagram');
+    });
+
+    it('should serialize title with special characters', () => {
+      const ast = parse('title My "Special" Diagram!');
+      const text = serialize(ast);
+      expect(text).toBe('title My "Special" Diagram!');
+    });
+
+    it('should serialize title with participants', () => {
+      const ast = parse('title My Diagram\nparticipant Alice');
+      const text = serialize(ast);
+      expect(text).toBe('title My Diagram\nparticipant Alice');
+    });
+
+    it('should round-trip title directive', () => {
+      const input = 'title My Diagram';
+      const ast1 = parse(input);
+      const serialized = serialize(ast1);
+      const ast2 = parse(serialized);
+      const directive = ast2.find(n => n.type === 'directive');
+      expect(directive.directiveType).toBe('title');
+      expect(directive.value).toBe('My Diagram');
+    });
+  });
+
   // TODO(Phase1): Add serializer tests as features are implemented
 });

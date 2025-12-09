@@ -51,6 +51,13 @@ function parseAt(lines, lineIndex, ast) {
     return { nextLine: lineIndex + 1 };
   }
 
+  // Try parsing as directive (title, etc.)
+  const directive = parseDirective(trimmed, lineNumber);
+  if (directive) {
+    ast.push(directive);
+    return { nextLine: lineIndex + 1 };
+  }
+
   // Try parsing as fragment (alt, loop, etc.)
   if (isFragmentStart(trimmed)) {
     const result = parseFragment(lines, lineIndex, ast);
@@ -74,6 +81,29 @@ function parseAt(lines, lineIndex, ast) {
   // Unrecognized line - skip for now
   // TODO(Phase1): Add error node creation in BACKLOG-048
   return { nextLine: lineIndex + 1 };
+}
+
+/**
+ * Parse a directive line
+ * Syntax: title Text
+ * @param {string} line - Trimmed source line
+ * @param {number} lineNumber - 1-indexed line number
+ * @returns {Object|null} Directive AST node or null
+ */
+function parseDirective(line, lineNumber) {
+  // Match title directive
+  const titleMatch = line.match(/^title\s+(.+)$/);
+  if (titleMatch) {
+    return {
+      id: generateId('directive'),
+      type: 'directive',
+      directiveType: 'title',
+      value: titleMatch[1],
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
+  }
+  return null;
 }
 
 /**
