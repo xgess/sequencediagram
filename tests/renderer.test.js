@@ -263,6 +263,50 @@ describe('Renderer', () => {
     });
   });
 
+  describe('multiline participant names (BACKLOG-018)', () => {
+    it('should render single line name as text content', () => {
+      const ast = parse('participant Alice');
+      const svg = render(ast);
+
+      const text = svg.querySelector('.participant text');
+      expect(text.textContent).toBe('Alice');
+      expect(text.querySelectorAll('tspan')).toHaveLength(0);
+    });
+
+    it('should render multiline name with tspans', () => {
+      const ast = parse('participant "Line1\\nLine2" as A');
+      const svg = render(ast);
+
+      const text = svg.querySelector('.participant text');
+      const tspans = text.querySelectorAll('tspan');
+      expect(tspans).toHaveLength(2);
+      expect(tspans[0].textContent).toBe('Line1');
+      expect(tspans[1].textContent).toBe('Line2');
+    });
+
+    it('should render three-line name with three tspans', () => {
+      const ast = parse('participant "A\\nB\\nC" as ABC');
+      const svg = render(ast);
+
+      const tspans = svg.querySelectorAll('.participant text tspan');
+      expect(tspans).toHaveLength(3);
+      expect(tspans[0].textContent).toBe('A');
+      expect(tspans[1].textContent).toBe('B');
+      expect(tspans[2].textContent).toBe('C');
+    });
+
+    it('should center multiline text horizontally', () => {
+      const ast = parse('participant "Web\\nServer" as WS');
+      const svg = render(ast);
+
+      const tspans = svg.querySelectorAll('.participant text tspan');
+      // All tspans should have the same x (centered)
+      const x1 = tspans[0].getAttribute('x');
+      const x2 = tspans[1].getAttribute('x');
+      expect(x1).toBe(x2);
+    });
+  });
+
   // TODO(Phase1): Add renderer tests as features are implemented
   // - BACKLOG-033: Render fragment
 });
