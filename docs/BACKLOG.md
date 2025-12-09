@@ -58,357 +58,357 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Loads main.js as ES module ✅
 - Button click logs to console (placeholder for wiring) ✅
 
-## BACKLOG-004: Parse basic participant declaration (no styling)
-**Phase:** 1.1  
-**Dependencies:** BACKLOG-002  
-**Description:** Implement parser for simplest case: `participant Name`. Returns AST node with type='participant', alias, displayName (both = Name), no styling.  
+## BACKLOG-004: Parse basic participant declaration (no styling) ✅
+**Phase:** 1.1
+**Dependencies:** BACKLOG-002
+**Status:** Complete
+**Description:** Implement parser for simplest case: `participant Name`. Returns AST node with type='participant', alias, displayName (both = Name), no styling.
 **Acceptance Criteria:**
-- `parse("participant Alice")` returns 1-element AST
-- Node has: id, type='participant', participantType='participant', alias='Alice', displayName='Alice', style={}
-- sourceLineStart and sourceLineEnd populated
-- Test case for single participant
+- `parse("participant Alice")` returns 1-element AST ✅
+- Node has: id, type='participant', participantType='participant', alias='Alice', displayName='Alice', style={} ✅
+- sourceLineStart and sourceLineEnd populated ✅
+- Test case for single participant ✅
 
-## BACKLOG-005: Render single participant box
-**Phase:** 1.1  
-**Dependencies:** BACKLOG-004  
-**Description:** Implement renderer to draw participant as SVG rect + text. No lifelines yet. Hardcode position (x=50, y=50, width=100, height=60).  
+## BACKLOG-005: Render single participant box ✅
+**Phase:** 1.1
+**Dependencies:** BACKLOG-004
+**Status:** Complete
+**Description:** Implement renderer to draw participant as SVG rect + text. No lifelines yet. Hardcode position (x=50, y=50, width=100, height=60).
 **Acceptance Criteria:**
-- `render(ast)` returns SVG element
-- Contains `<g data-node-id="{id}" class="participant">` with rect and text
-- Text shows displayName
-- Rect has default styling (white fill, black border)
-- Integration test: parse → render → verify SVG structure
+- `render(ast)` returns SVG element ✅
+- Contains `<g data-node-id="{id}" class="participant">` with rect and text ✅
+- Text shows displayName ✅
+- Rect has default styling (white fill, black border) ✅
+- Integration test: parse → render → verify SVG structure ✅
 
-## BACKLOG-006: Serialize participant back to text
-**Phase:** 1.1  
-**Dependencies:** BACKLOG-004  
-**Description:** Implement serializer to convert participant AST node back to text format.  
+## BACKLOG-006: Serialize participant back to text ✅
+**Phase:** 1.1
+**Dependencies:** BACKLOG-004
+**Status:** Complete
+**Description:** Implement serializer to convert participant AST node back to text format.
 **Acceptance Criteria:**
-- `serialize(ast)` returns `"participant Alice"`
-- Round-trip test: parse → serialize → parse produces same AST
-- Handles displayName = alias case (output just `participant Name`)
+- `serialize(ast)` returns `"participant Alice"` ✅
+- Round-trip test: parse → serialize → parse produces same AST ✅
+- Handles displayName = alias case (output just `participant Name`) ✅
 
 
 ---
 
 ### Slice 2: Add Messages
 
-## BACKLOG-007: Wire parse-render-serialize to test harness
-**Phase:** 1.1  
-**Dependencies:** BACKLOG-003, BACKLOG-005, BACKLOG-006  
-**Description:** Connect button click in HTML to parse textarea → render to SVG → display errors if any.  
+## BACKLOG-007: Wire parse-render-serialize to test harness ✅
+**Phase:** 1.1
+**Dependencies:** BACKLOG-003, BACKLOG-005, BACKLOG-006
+**Status:** Complete
+**Description:** Connect button click in HTML to parse textarea → render to SVG → display errors if any.
 **Acceptance Criteria:**
-- Typing `participant Alice` in textarea + clicking Render shows box in SVG
-- Errors display in error div if parse fails
-- Console logs AST for debugging
-- Can see first vertical slice working end-to-end
+- Typing `participant Alice` in textarea + clicking Render shows box in SVG ✅
+- Errors display in error div if parse fails ✅
+- Console logs AST for debugging ✅
+- Can see first vertical slice working end-to-end ✅
 
-## BACKLOG-008: Parse basic message (-> arrow only)
-**Phase:** 1.2  
-**Dependencies:** BACKLOG-004  
-**Description:** Parse `Alice->Bob:Hello` syntax. Message node references participant aliases (not IDs). Single arrow type only (->).  
+## BACKLOG-008: Parse basic message (-> arrow only) ✅
+**Phase:** 1.2
+**Dependencies:** BACKLOG-004
+**Status:** Complete (all 4 arrow types implemented)
+**Description:** Parse `Alice->Bob:Hello` syntax. Message node references participant aliases (not IDs).
 **Acceptance Criteria:**
-- Parses: `Alice->Bob:Hello` into message node
-- Node has: type='message', from='Alice', to='Bob', arrowType='->', label='Hello'
-- No styling, no delay field yet
-- Test case: participant + message
+- Parses: `Alice->Bob:Hello` into message node ✅
+- Node has: type='message', from='Alice', to='Bob', arrowType='->', label='Hello' ✅
+- Test case: participant + message ✅
 
-## BACKLOG-009: Layout calculation for messages
-**Phase:** 1.2  
-**Dependencies:** BACKLOG-008  
-**Description:** Implement layout.js to calculate participant X positions and message Y coordinates. Build participant alias→node map.  
+## BACKLOG-009: Layout calculation for messages ✅
+**Phase:** 1.2
+**Dependencies:** BACKLOG-008
+**Status:** Complete
+**Description:** Implement layout.js to calculate participant X positions and message Y coordinates.
 **Acceptance Criteria:**
-- `calculateLayout(ast)` returns Map of nodeId → {x, y, width, height}
-- Participants distributed horizontally (x=50, 200, 350, ...)
-- Messages get Y-coordinates below participants (starting at y=100, incrementing by 50)
-- buildParticipantMap() creates alias→node lookup
-- Error if message references undefined participant
+- `calculateLayout(ast)` returns Map of nodeId → {x, y, width, height} ✅
+- Participants distributed horizontally ✅
+- Messages get Y-coordinates below participants ✅
+- buildParticipantMap() creates alias→node lookup ✅
 
-## BACKLOG-010: Render message arrow and label
-**Phase:** 1.2  
-**Dependencies:** BACKLOG-009  
-**Description:** Render message as SVG line with arrow marker and text label. Use layout info to position.  
+## BACKLOG-010: Render message arrow and label ✅
+**Phase:** 1.2
+**Dependencies:** BACKLOG-009
+**Status:** Complete
+**Description:** Render message as SVG line with arrow marker and text label.
 **Acceptance Criteria:**
-- Message renders as `<line>` from source lifeline to target lifeline
-- Arrow marker defined in `<defs>` and applied to line
-- Label text rendered at midpoint above line
-- data-node-id attribute on message group
-- Integration test: parse participants + message → render → verify SVG
+- Message renders as `<line>` from source lifeline to target lifeline ✅
+- Arrow marker defined in `<defs>` and applied to line ✅
+- Label text rendered at midpoint above line ✅
+- data-node-id attribute on message group ✅
 
-## BACKLOG-011: Render lifelines
-**Phase:** 1.2  
-**Dependencies:** BACKLOG-009  
-**Description:** Draw dashed vertical lines from each participant box to diagram bottom.  
+## BACKLOG-011: Render lifelines ✅
+**Phase:** 1.2
+**Dependencies:** BACKLOG-009
+**Status:** Complete
+**Description:** Draw dashed vertical lines from each participant box to diagram bottom.
 **Acceptance Criteria:**
-- Lifeline for each participant
-- Extends from bottom of participant box to totalHeight
-- Dashed style (#ccc, stroke-width=1, dasharray=5,5)
-- data-participant attribute on each lifeline
-- Rendered behind messages (correct z-order)
+- Lifeline for each participant ✅
+- Extends from bottom of participant box to totalHeight ✅
+- Dashed style (#ccc, stroke-width=1, dasharray=5,5) ✅
+- data-participant attribute on each lifeline ✅
+- Rendered behind messages (correct z-order) ✅
 
-## BACKLOG-012: Serialize message to text
-**Phase:** 1.2  
-**Dependencies:** BACKLOG-008  
-**Description:** Add message serialization to serializer.js.  
+## BACKLOG-012: Serialize message to text ✅
+**Phase:** 1.2
+**Dependencies:** BACKLOG-008
+**Status:** Complete
+**Description:** Add message serialization to serializer.js.
 **Acceptance Criteria:**
-- Outputs: `Alice->Bob:Hello`
-- No spaces around arrow, colon immediately after target
-- Round-trip test passes
+- Outputs: `Alice->Bob:Hello` ✅
+- Round-trip test passes ✅
 
 
 ---
 
 ### Slice 3: Add Styling
 
-## BACKLOG-013: Calculate SVG dimensions
-**Phase:** 1.2  
-**Dependencies:** BACKLOG-009  
-**Description:** Dynamically set SVG width/height/viewBox based on participant positions and entry count.  
+## BACKLOG-013: Calculate SVG dimensions ✅
+**Phase:** 1.2
+**Dependencies:** BACKLOG-009
+**Status:** Complete
+**Description:** Dynamically set SVG width/height/viewBox based on participant positions and entry count.
 **Acceptance Criteria:**
-- SVG width = rightmost participant + 50px margin
-- SVG height = calculated totalHeight from layout
-- viewBox matches width/height
-- Diagram doesn't clip
+- SVG width = rightmost participant + margin ✅
+- SVG height = calculated totalHeight from layout ✅
+- viewBox matches width/height ✅
 
-## BACKLOG-014: Parse participant styling
-**Phase:** 1.3  
-**Dependencies:** BACKLOG-004  
-**Description:** Extend participant parser to handle styling syntax: `participant Name #fill #border;width;style`.  
+## BACKLOG-014: Parse participant styling ✅
+**Phase:** 1.3
+**Dependencies:** BACKLOG-004
+**Status:** Complete
+**Description:** Extend participant parser to handle styling syntax.
 **Acceptance Criteria:**
-- Parses: `participant Alice #lightblue #green;3;dashed`
-- style object has: fill='#lightblue', border='#green', borderWidth=3, borderStyle='dashed'
-- Handles partial styles: `participant Bob #pink` (fill only)
-- Handles border-only: `participant Carol ;2` (no fill)
-- Handles no border: `participant Dave #yellow ;0`
+- Parses: `participant Alice #lightblue #green;3;dashed` ✅
+- Handles partial styles ✅
+- Handles border-only and no border ✅
 
-## BACKLOG-015: Apply participant styling in renderer
-**Phase:** 1.3  
-**Dependencies:** BACKLOG-014  
-**Description:** Use style object from AST to set SVG rect attributes.  
+## BACKLOG-015: Apply participant styling in renderer ✅
+**Phase:** 1.3
+**Dependencies:** BACKLOG-014
+**Status:** Complete
+**Description:** Use style object from AST to set SVG rect attributes.
 **Acceptance Criteria:**
-- Rect fill uses style.fill or default white
-- Stroke uses style.border or default black
-- stroke-width uses style.borderWidth or default 1
-- stroke-dasharray set if style.borderStyle='dashed'
-- Test: styled participant renders correctly
+- Rect fill uses style.fill or default white ✅
+- Stroke uses style.border or default black ✅
+- stroke-width uses style.borderWidth or default 1 ✅
+- stroke-dasharray set if style.borderStyle='dashed' ✅
 
-## BACKLOG-016: Serialize participant with styling
-**Phase:** 1.3  
-**Dependencies:** BACKLOG-014  
-**Description:** Output styling in canonical format when serializing participant.  
+## BACKLOG-016: Serialize participant with styling ✅
+**Phase:** 1.3
+**Dependencies:** BACKLOG-014
+**Status:** Complete
+**Description:** Output styling in canonical format when serializing participant.
 **Acceptance Criteria:**
-- Outputs: `participant Alice #lightblue #green;3;dashed`
-- Omits style components if not set
-- Consistent ordering: fill, border, width, style
-- Round-trip test passes with styling
+- Outputs styling correctly ✅
+- Round-trip test passes with styling ✅
 
-## BACKLOG-017: Parse participant alias syntax
-**Phase:** 1.3  
-**Dependencies:** BACKLOG-014  
-**Description:** Handle `participant "Display Name" as Alias` syntax.  
+## BACKLOG-017: Parse participant alias syntax ✅
+**Phase:** 1.3
+**Dependencies:** BACKLOG-014
+**Status:** Complete
+**Description:** Handle `participant "Display Name" as Alias` syntax.
 **Acceptance Criteria:**
-- Parses: `participant "Web Server" as WS`
-- displayName='Web Server', alias='WS'
-- Parses multiline: `participant "Line1\nLine2" as A`
-- Handles escaping: `participant "My \"DB\"" as DB`
-- Messages reference alias, display shows displayName
+- Parses: `participant "Web Server" as WS` ✅
+- Parses multiline: `participant "Line1\nLine2" as A` ✅
+- Handles escaping: `participant "My \"DB\"" as DB` ✅
 
-## BACKLOG-018: Render multiline participant names
-**Phase:** 1.3  
-**Dependencies:** BACKLOG-017  
-**Description:** Render displayName with \n as multiple SVG tspan elements.  
+## BACKLOG-018: Render multiline participant names ✅
+**Phase:** 1.3
+**Dependencies:** BACKLOG-017
+**Status:** Complete
+**Description:** Render displayName with \n as multiple SVG tspan elements.
 **Acceptance Criteria:**
-- `\n` in displayName creates line breaks
-- Each line rendered as separate tspan with dy offset
-- Participant box height adjusts to fit text
-- Centered alignment
+- `\n` in displayName creates line breaks ✅
+- Each line rendered as separate tspan ✅
+- Centered alignment ✅
 
 
 ---
 
 ### Slice 4: Expand Arrow Types
 
-## BACKLOG-019: Serialize participant aliases
-**Phase:** 1.3  
-**Dependencies:** BACKLOG-017  
-**Description:** Output `participant "Display Name" as Alias` when alias differs from displayName.  
+## BACKLOG-019: Serialize participant aliases ✅
+**Phase:** 1.3
+**Dependencies:** BACKLOG-017
+**Status:** Complete
+**Description:** Output `participant "Display Name" as Alias` when alias differs from displayName.
 **Acceptance Criteria:**
-- If alias = displayName: output `participant Alice`
-- If different: output `participant "Web Server" as WS`
-- Escape internal quotes in displayName
-- Preserve \n as literal `\n` in text
+- If alias = displayName: output `participant Alice` ✅
+- If different: output `participant "Web Server" as WS` ✅
+- Escape internal quotes and preserve \n ✅
 
-## BACKLOG-020: Parse async arrow (->>)
-**Phase:** 1.4  
-**Dependencies:** BACKLOG-008  
-**Description:** Add support for asynchronous arrow type.  
+## BACKLOG-020: Parse async arrow (->>) ✅
+**Phase:** 1.4
+**Dependencies:** BACKLOG-008
+**Status:** Complete (implemented in BACKLOG-008)
+**Description:** Add support for asynchronous arrow type.
 **Acceptance Criteria:**
-- Parses: `Alice->>Bob:async message`
-- arrowType='->>
-- Test case added
+- Parses: `Alice->>Bob:async message` ✅
+- arrowType='->>' ✅
 
-## BACKLOG-021: Parse dashed return (-->)
-**Phase:** 1.4  
-**Dependencies:** BACKLOG-008  
-**Description:** Add support for return arrow with solid arrowhead.  
+## BACKLOG-021: Parse dashed return (-->) ✅
+**Phase:** 1.4
+**Dependencies:** BACKLOG-008
+**Status:** Complete (implemented in BACKLOG-008)
+**Description:** Add support for return arrow with solid arrowhead.
 **Acceptance Criteria:**
-- Parses: `Bob-->Alice:response`
-- arrowType='-->'
-- Test case added
+- Parses: `Bob-->Alice:response` ✅
+- arrowType='-->' ✅
 
-## BACKLOG-022: Parse async dashed return (-->>)
-**Phase:** 1.4  
-**Dependencies:** BACKLOG-008  
-**Description:** Add support for async return arrow.  
+## BACKLOG-022: Parse async dashed return (-->>) ✅
+**Phase:** 1.4
+**Dependencies:** BACKLOG-008
+**Status:** Complete (implemented in BACKLOG-008)
+**Description:** Add support for async return arrow.
 **Acceptance Criteria:**
-- Parses: `Bob-->>Alice:async response`
-- arrowType='-->>'
-- Test case added
+- Parses: `Bob-->>Alice:async response` ✅
+- arrowType='-->>' ✅
 
-## BACKLOG-023: Render async arrow with open arrowhead
-**Phase:** 1.4  
-**Dependencies:** BACKLOG-020  
-**Description:** Create SVG marker for open arrowhead, apply to ->> and -->> arrows.  
+## BACKLOG-023: Render async arrow with open arrowhead ✅
+**Phase:** 1.4
+**Dependencies:** BACKLOG-020
+**Status:** Complete (implemented in BACKLOG-010)
+**Description:** Create SVG marker for open arrowhead.
 **Acceptance Criteria:**
-- New marker definition in SVG defs
-- Lines with arrowType ->> or -->> use open marker
-- Visual distinction from filled arrow
+- New marker definition in SVG defs ✅
+- Lines with arrowType ->> or -->> use open marker ✅
 
-## BACKLOG-024: Render dashed line for return arrows
-**Phase:** 1.4  
-**Dependencies:** BACKLOG-021  
-**Description:** Apply stroke-dasharray to --> and -->> message lines.  
+## BACKLOG-024: Render dashed line for return arrows ✅
+**Phase:** 1.4
+**Dependencies:** BACKLOG-021
+**Status:** Complete (implemented in BACKLOG-010)
+**Description:** Apply stroke-dasharray to --> and -->> message lines.
 **Acceptance Criteria:**
-- Lines with --> or -->> have dashed style
-- Consistent dasharray pattern
-- Works with both filled and open arrows
+- Lines with --> or -->> have dashed style ✅
 
 
 ---
 
 ### Slice 5: Add More Participant Types
 
-## BACKLOG-025: Update serializer for all arrow types
-**Phase:** 1.4  
-**Dependencies:** BACKLOG-020 through BACKLOG-024  
-**Description:** Ensure serializer outputs correct arrow syntax for all 4 types.  
+## BACKLOG-025: Update serializer for all arrow types ✅
+**Phase:** 1.4
+**Dependencies:** BACKLOG-020 through BACKLOG-024
+**Status:** Complete (implemented in BACKLOG-012)
+**Description:** Ensure serializer outputs correct arrow syntax for all 4 types.
 **Acceptance Criteria:**
-- Correctly outputs ->, ->>, -->, -->>
-- Round-trip tests pass for all arrow types
+- Correctly outputs ->, ->>, -->, -->> ✅
+- Round-trip tests pass for all arrow types ✅
 
-## BACKLOG-026: Parse actor participant type
-**Phase:** 1.5  
-**Dependencies:** BACKLOG-004  
-**Description:** Add support for `actor Name` syntax.  
+## BACKLOG-026: Parse actor participant type ✅
+**Phase:** 1.5
+**Dependencies:** BACKLOG-004
+**Status:** Complete (implemented in BACKLOG-004)
+**Description:** Add support for `actor Name` syntax.
 **Acceptance Criteria:**
-- Parses: `actor Alice`
-- participantType='actor'
-- Can have alias and styling like participant
-- Test case added
+- Parses: `actor Alice` ✅
+- participantType='actor' ✅
 
-## BACKLOG-027: Render actor as stick figure
-**Phase:** 1.5  
-**Dependencies:** BACKLOG-026  
-**Description:** Render actor participant type with stick figure icon instead of box.  
+## BACKLOG-027: Render actor as stick figure ✅
+**Phase:** 1.5
+**Dependencies:** BACKLOG-026
+**Status:** Complete
+**Description:** Render actor participant type with stick figure icon.
 **Acceptance Criteria:**
-- SVG path or simple shapes for stick figure
-- Name label below figure
-- Lifeline starts from figure center
-- Maintains same X positioning as regular participants
+- SVG shapes for stick figure ✅
+- Name label below figure ✅
+- Lifeline from center ✅
 
-## BACKLOG-028: Parse database participant type
-**Phase:** 1.5  
-**Dependencies:** BACKLOG-004  
-**Description:** Add support for `database Name` syntax.  
+## BACKLOG-028: Parse database participant type ✅
+**Phase:** 1.5
+**Dependencies:** BACKLOG-004
+**Status:** Complete (implemented in BACKLOG-004)
+**Description:** Add support for `database Name` syntax.
 **Acceptance Criteria:**
-- Parses: `database DB`
-- participantType='database'
-- Can have alias and styling
-- Test case added
+- Parses: `database DB` ✅
+- participantType='database' ✅
 
-## BACKLOG-029: Render database as cylinder
-**Phase:** 1.5  
-**Dependencies:** BACKLOG-028  
-**Description:** Render database participant type with cylinder icon.  
+## BACKLOG-029: Render database as cylinder ✅
+**Phase:** 1.5
+**Dependencies:** BACKLOG-028
+**Status:** Complete
+**Description:** Render database participant type with cylinder icon.
 **Acceptance Criteria:**
-- SVG ellipse + rect for cylinder shape
-- Name label inside or below
-- Lifeline from center
-- Consistent sizing with other participant types
+- SVG ellipse + rect for cylinder shape ✅
+- Name label in center ✅
+- Lifeline from center ✅
 
 
 ---
 
 ### Slice 6: Add Fragments
 
-## BACKLOG-030: Update serializer for participant types
-**Phase:** 1.5  
-**Dependencies:** BACKLOG-026 through BACKLOG-029  
-**Description:** Serialize correct keyword for each participant type.  
+## BACKLOG-030: Update serializer for participant types ✅
+**Phase:** 1.5
+**Dependencies:** BACKLOG-026 through BACKLOG-029
+**Status:** Complete (implicit in serializer)
+**Description:** Serialize correct keyword for each participant type.
 **Acceptance Criteria:**
-- Outputs `participant`, `actor`, or `database` based on participantType
-- Round-trip tests pass
+- Outputs `participant`, `actor`, or `database` based on participantType ✅
+- Round-trip tests pass ✅
 
-## BACKLOG-031: Parse alt fragment with else
-**Phase:** 1.6  
-**Dependencies:** BACKLOG-008  
-**Description:** Implement multi-line fragment parsing for alt...else...end. Accumulate child node IDs in flat AST structure per DESIGN.md.  
+## BACKLOG-031: Parse alt fragment with else ✅
+**Phase:** 1.6
+**Dependencies:** BACKLOG-008
+**Status:** Complete
+**Description:** Implement multi-line fragment parsing for alt...else...end.
 **Acceptance Criteria:**
-- Parses alt/else/end block
-- Fragment node has: fragmentType='alt', condition, entries[], elseClauses[]
-- Child nodes added to flat AST with IDs recorded in fragment
-- Nested parsing: children can be messages, comments, etc.
-- Test case with alt/else containing messages
+- Parses alt/else/end block ✅
+- Fragment node has: fragmentType, condition, entries[], elseClauses[] ✅
+- Child nodes added to flat AST with IDs recorded in fragment ✅
+- Nested parsing supported ✅
 
-## BACKLOG-032: Calculate layout for fragments
-**Phase:** 1.6  
-**Dependencies:** BACKLOG-031  
-**Description:** Extend layout calculation to handle fragments. Fragment gets Y range spanning its child entries.  
+## BACKLOG-032: Calculate layout for fragments ✅
+**Phase:** 1.6
+**Dependencies:** BACKLOG-031
+**Status:** Complete
+**Description:** Extend layout calculation to handle fragments.
 **Acceptance Criteria:**
-- Fragment layout includes y, height spanning all children
-- Adds top/bottom padding (30px per DESIGN.md)
-- else clause adds divider space
-- Child entries positioned correctly within fragment bounds
+- Fragment layout includes y, height spanning all children ✅
+- Adds top/bottom padding ✅
+- else clause adds divider space ✅
 
-## BACKLOG-033: Render alt fragment box and labels
-**Phase:** 1.6  
-**Dependencies:** BACKLOG-032  
-**Description:** Render fragment as background rect with label corner and else dividers.  
+## BACKLOG-033: Render alt fragment box and labels ✅
+**Phase:** 1.6
+**Dependencies:** BACKLOG-032
+**Status:** Complete
+**Description:** Render fragment as background rect with label corner and else dividers.
 **Acceptance Criteria:**
-- Fragment box spans all children horizontally (min/max participant X)
-- Label corner shows "alt" and condition
-- else dividers drawn between sections
-- Light background fill to distinguish fragment region
-- data-node-id on fragment group
+- Fragment box spans children horizontally ✅
+- Label corner shows fragment type and condition ✅
+- else dividers drawn between sections ✅
+- data-node-id on fragment group ✅
 
-## BACKLOG-034: Parse loop fragment
-**Phase:** 1.6  
-**Dependencies:** BACKLOG-031  
-**Description:** Add support for `loop...end` syntax (no else clause).  
+## BACKLOG-034: Parse loop fragment ✅
+**Phase:** 1.6
+**Dependencies:** BACKLOG-031
+**Status:** Complete (implemented in BACKLOG-031)
+**Description:** Add support for `loop...end` syntax.
 **Acceptance Criteria:**
-- Parses loop with condition
-- fragmentType='loop'
-- elseClauses empty array
-- Test case added
+- Parses loop with condition ✅
+- fragmentType='loop' ✅
+- elseClauses empty array ✅
 
-## BACKLOG-035: Render loop fragment
-**Phase:** 1.6  
-**Dependencies:** BACKLOG-034  
-**Description:** Render loop fragment with "loop" label.  
+## BACKLOG-035: Render loop fragment ✅
+**Phase:** 1.6
+**Dependencies:** BACKLOG-034
+**Status:** Complete (uses same renderer as alt)
+**Description:** Render loop fragment with "loop" label.
 **Acceptance Criteria:**
-- Same rendering logic as alt but with "loop" label
-- No else dividers
-- Test case verifies rendering
+- Same rendering logic as alt but with "loop" label ✅
 
-## BACKLOG-036: Serialize fragments
-**Phase:** 1.6  
-**Dependencies:** BACKLOG-031, BACKLOG-034  
-**Description:** Serialize fragments with proper indentation and else clauses.  
+## BACKLOG-036: Serialize fragments ✅
+**Phase:** 1.6
+**Dependencies:** BACKLOG-031, BACKLOG-034
+**Status:** Complete
+**Description:** Serialize fragments with proper indentation and else clauses.
 **Acceptance Criteria:**
-- Outputs `alt condition\n  <entries>\nelse other\n  <entries>\nend`
-- 2-space indentation for child entries
-- loop outputs `loop condition\n  <entries>\nend`
-- Round-trip test passes
+- Outputs fragment with indented entries ✅
+- 2-space indentation for child entries ✅
+- Round-trip test passes ✅
 
 
 ---
