@@ -28,6 +28,8 @@ function serializeNode(node) {
   switch (node.type) {
     case 'participant':
       return serializeParticipant(node);
+    case 'message':
+      return serializeMessage(node);
     default:
       return null;
   }
@@ -42,4 +44,13 @@ function serializeParticipant(node) {
   // For now, just output: participantType name
   // alias syntax and styling will be added in later backlog items
   return `${node.participantType} ${node.alias}`;
+}
+
+/**
+ * Serialize a message node
+ * @param {Object} node - Message AST node
+ * @returns {string} Serialized message
+ */
+function serializeMessage(node) {
+  return `${node.from}${node.arrowType}${node.to}:${node.label}`;
 }

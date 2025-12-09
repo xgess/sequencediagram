@@ -33,7 +33,7 @@ export function init() {
   renderButton.addEventListener('click', handleRender);
 
   // Add sample text
-  sourceTextarea.value = 'participant Alice\nparticipant Bob\ndatabase DB';
+  sourceTextarea.value = 'participant Alice\nparticipant Bob\ndatabase DB\n\nAlice->Bob:Hello\nBob-->Alice:Hi there!\nAlice->>DB:Save data\nDB-->>Alice:OK';
 
   console.log('Sequence Diagram Tool initialized');
 }

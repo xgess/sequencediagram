@@ -66,7 +66,66 @@ describe('Serializer', () => {
     });
   });
 
+  describe('message serialization (BACKLOG-012)', () => {
+    it('should serialize sync message (->)', () => {
+      const ast = parse('Alice->Bob:Hello');
+      const text = serialize(ast);
+      expect(text).toBe('Alice->Bob:Hello');
+    });
+
+    it('should serialize async message (->>)', () => {
+      const ast = parse('Alice->>Bob:Async');
+      const text = serialize(ast);
+      expect(text).toBe('Alice->>Bob:Async');
+    });
+
+    it('should serialize return message (-->)', () => {
+      const ast = parse('Bob-->Alice:Response');
+      const text = serialize(ast);
+      expect(text).toBe('Bob-->Alice:Response');
+    });
+
+    it('should serialize async return message (-->>)', () => {
+      const ast = parse('Bob-->>Alice:Async Response');
+      const text = serialize(ast);
+      expect(text).toBe('Bob-->>Alice:Async Response');
+    });
+
+    it('should serialize message with empty label', () => {
+      const ast = parse('Alice->Bob:');
+      const text = serialize(ast);
+      expect(text).toBe('Alice->Bob:');
+    });
+  });
+
+  describe('round-trip tests (messages)', () => {
+    it('should round-trip message', () => {
+      const input = 'Alice->Bob:Hello World';
+      const ast1 = parse(input);
+      const serialized = serialize(ast1);
+      const ast2 = parse(serialized);
+
+      expect(ast2).toHaveLength(1);
+      expect(ast2[0].from).toBe(ast1[0].from);
+      expect(ast2[0].to).toBe(ast1[0].to);
+      expect(ast2[0].arrowType).toBe(ast1[0].arrowType);
+      expect(ast2[0].label).toBe(ast1[0].label);
+    });
+
+    it('should round-trip participants and messages', () => {
+      const input = 'participant Alice\nparticipant Bob\nAlice->Bob:Hello\nBob-->Alice:Hi';
+      const ast1 = parse(input);
+      const serialized = serialize(ast1);
+      const ast2 = parse(serialized);
+
+      expect(ast2).toHaveLength(4);
+      expect(ast2[0].alias).toBe('Alice');
+      expect(ast2[1].alias).toBe('Bob');
+      expect(ast2[2].label).toBe('Hello');
+      expect(ast2[3].label).toBe('Hi');
+    });
+  });
+
   // TODO(Phase1): Add serializer tests as features are implemented
-  // - BACKLOG-012: Serialize message
   // - BACKLOG-036: Serialize fragment
 });
