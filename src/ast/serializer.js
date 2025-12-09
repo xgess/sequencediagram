@@ -41,7 +41,15 @@ function serializeNode(node) {
  * @returns {string} Serialized participant declaration
  */
 function serializeParticipant(node) {
-  let output = `${node.participantType} ${node.alias}`;
+  let output = node.participantType;
+
+  // If displayName differs from alias, use quoted syntax
+  if (node.displayName !== node.alias) {
+    const escapedName = escapeString(node.displayName);
+    output += ` "${escapedName}" as ${node.alias}`;
+  } else {
+    output += ` ${node.alias}`;
+  }
 
   // Add styling if present
   const styleStr = serializeParticipantStyle(node.style);
@@ -50,6 +58,18 @@ function serializeParticipant(node) {
   }
 
   return output;
+}
+
+/**
+ * Escape a string for quoted output (handle " and \n)
+ * @param {string} str - String to escape
+ * @returns {string} Escaped string
+ */
+function escapeString(str) {
+  return str
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n');
 }
 
 /**

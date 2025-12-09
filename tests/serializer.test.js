@@ -164,6 +164,70 @@ describe('Serializer', () => {
     });
   });
 
+  describe('participant alias serialization (BACKLOG-019)', () => {
+    it('should serialize simple participant without alias syntax', () => {
+      const ast = parse('participant Alice');
+      const text = serialize(ast);
+      expect(text).toBe('participant Alice');
+    });
+
+    it('should serialize participant with different displayName and alias', () => {
+      const ast = parse('participant "Web Server" as WS');
+      const text = serialize(ast);
+      expect(text).toBe('participant "Web Server" as WS');
+    });
+
+    it('should serialize multiline displayName with escaped newlines', () => {
+      const ast = parse('participant "Line1\\nLine2" as A');
+      const text = serialize(ast);
+      expect(text).toBe('participant "Line1\\nLine2" as A');
+    });
+
+    it('should serialize escaped quotes in displayName', () => {
+      const ast = parse('participant "My \\"DB\\"" as DB');
+      const text = serialize(ast);
+      expect(text).toBe('participant "My \\"DB\\"" as DB');
+    });
+
+    it('should serialize alias with styling', () => {
+      const ast = parse('participant "Web Server" as WS #lightblue');
+      const text = serialize(ast);
+      expect(text).toBe('participant "Web Server" as WS #lightblue');
+    });
+
+    it('should serialize alias with full styling', () => {
+      const ast = parse('participant "My Service" as MS #pink #blue;2;dashed');
+      const text = serialize(ast);
+      expect(text).toBe('participant "My Service" as MS #pink #blue;2;dashed');
+    });
+
+    it('should round-trip participant with alias', () => {
+      const input = 'participant "Web Server" as WS';
+      const ast1 = parse(input);
+      const serialized = serialize(ast1);
+      const ast2 = parse(serialized);
+
+      expect(ast2[0].displayName).toBe('Web Server');
+      expect(ast2[0].alias).toBe('WS');
+    });
+
+    it('should round-trip multiline with escaped newlines', () => {
+      const input = 'participant "Line1\\nLine2" as A';
+      const ast1 = parse(input);
+      const serialized = serialize(ast1);
+      const ast2 = parse(serialized);
+
+      expect(ast2[0].displayName).toBe('Line1\nLine2');
+      expect(ast2[0].alias).toBe('A');
+    });
+
+    it('should serialize actor with alias', () => {
+      const ast = parse('actor "External User" as EU');
+      const text = serialize(ast);
+      expect(text).toBe('actor "External User" as EU');
+    });
+  });
+
   // TODO(Phase1): Add serializer tests as features are implemented
   // - BACKLOG-036: Serialize fragment
 });
