@@ -79,7 +79,62 @@ describe('Renderer', () => {
     });
   });
 
+  describe('message rendering (BACKLOG-010)', () => {
+    it('should render message with line and label', () => {
+      const ast = parse('participant Alice\nparticipant Bob\nAlice->Bob:Hello');
+      const svg = render(ast);
+
+      const message = svg.querySelector('.message');
+      expect(message).not.toBeNull();
+      expect(message.getAttribute('data-node-id')).toMatch(/^m_[a-z0-9]{8}$/);
+
+      const line = message.querySelector('line');
+      expect(line).not.toBeNull();
+
+      const text = message.querySelector('text');
+      expect(text).not.toBeNull();
+      expect(text.textContent).toBe('Hello');
+    });
+
+    it('should render message with arrow marker', () => {
+      const ast = parse('participant Alice\nparticipant Bob\nAlice->Bob:Hello');
+      const svg = render(ast);
+
+      const line = svg.querySelector('.message line');
+      expect(line.getAttribute('marker-end')).toContain('arrowhead');
+    });
+
+    it('should render multiple messages', () => {
+      const ast = parse('participant Alice\nparticipant Bob\nAlice->Bob:Hello\nBob-->Alice:Hi');
+      const svg = render(ast);
+
+      const messages = svg.querySelectorAll('.message');
+      expect(messages).toHaveLength(2);
+    });
+
+    it('should render dashed line for return messages', () => {
+      const ast = parse('participant Alice\nparticipant Bob\nBob-->Alice:Response');
+      const svg = render(ast);
+
+      const line = svg.querySelector('.message line');
+      expect(line.getAttribute('stroke-dasharray')).toBe('5,5');
+    });
+
+    it('should have defs with arrow markers', () => {
+      const ast = parse('participant Alice\nparticipant Bob\nAlice->Bob:Hello');
+      const svg = render(ast);
+
+      const defs = svg.querySelector('defs');
+      expect(defs).not.toBeNull();
+
+      const solidMarker = svg.querySelector('#arrowhead-solid');
+      expect(solidMarker).not.toBeNull();
+
+      const openMarker = svg.querySelector('#arrowhead-open');
+      expect(openMarker).not.toBeNull();
+    });
+  });
+
   // TODO(Phase1): Add renderer tests as features are implemented
-  // - BACKLOG-010: Render message
   // - BACKLOG-033: Render fragment
 });
