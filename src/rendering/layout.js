@@ -9,6 +9,7 @@ const PARTICIPANT_START_X = 50;
 const PARTICIPANT_START_Y = 50;
 const MESSAGE_START_Y = 130; // Below participants
 const MESSAGE_SPACING = 50;
+const FRAGMENT_PADDING = 30;
 const MARGIN = 50;
 
 /**
@@ -35,23 +36,83 @@ export function calculateLayout(ast) {
     layout.set(p.id, participantLayout.get(p.alias));
   });
 
-  // Calculate message positions
-  let currentY = MESSAGE_START_Y;
-  const messages = ast.filter(n => n.type === 'message');
-  messages.forEach(m => {
-    const fromLayout = participantLayout.get(m.from);
-    const toLayout = participantLayout.get(m.to);
+  // Build node lookup by ID
+  const nodeById = new Map();
+  for (const node of ast) {
+    nodeById.set(node.id, node);
+  }
 
-    if (fromLayout && toLayout) {
-      layout.set(m.id, {
-        y: currentY,
-        fromX: fromLayout.centerX,
-        toX: toLayout.centerX,
-        height: MESSAGE_SPACING
+  // Track which entries belong to fragments (to avoid double-processing)
+  const fragmentEntries = new Set();
+  for (const node of ast) {
+    if (node.type === 'fragment') {
+      for (const entryId of node.entries) {
+        fragmentEntries.add(entryId);
+      }
+      for (const elseClause of node.elseClauses) {
+        for (const entryId of elseClause.entries) {
+          fragmentEntries.add(entryId);
+        }
+      }
+    }
+  }
+
+  // Calculate positions for messages and fragments
+  let currentY = MESSAGE_START_Y;
+
+  for (const node of ast) {
+    // Skip participants (already handled)
+    if (node.type === 'participant') continue;
+
+    // Skip entries that are part of a fragment (they'll be laid out by the fragment)
+    if (fragmentEntries.has(node.id)) continue;
+
+    if (node.type === 'message') {
+      const fromLayout = participantLayout.get(node.from);
+      const toLayout = participantLayout.get(node.to);
+
+      if (fromLayout && toLayout) {
+        layout.set(node.id, {
+          y: currentY,
+          fromX: fromLayout.centerX,
+          toX: toLayout.centerX,
+          height: MESSAGE_SPACING
+        });
+      }
+      currentY += MESSAGE_SPACING;
+    } else if (node.type === 'fragment') {
+      const fragmentStart = currentY;
+      currentY += FRAGMENT_PADDING; // Top padding
+
+      // Layout entries in the main section
+      for (const entryId of node.entries) {
+        currentY = layoutEntry(entryId, nodeById, participantLayout, layout, currentY);
+      }
+
+      // Layout else clauses
+      for (const elseClause of node.elseClauses) {
+        // Store else clause divider position
+        elseClause.dividerY = currentY;
+
+        for (const entryId of elseClause.entries) {
+          currentY = layoutEntry(entryId, nodeById, participantLayout, layout, currentY);
+        }
+      }
+
+      currentY += FRAGMENT_PADDING; // Bottom padding
+
+      // Calculate fragment horizontal bounds
+      const bounds = getFragmentBounds(node, nodeById, participantLayout);
+
+      layout.set(node.id, {
+        y: fragmentStart,
+        height: currentY - fragmentStart,
+        x: bounds.minX,
+        width: bounds.maxX - bounds.minX,
+        type: 'fragment'
       });
     }
-    currentY += MESSAGE_SPACING;
-  });
+  }
 
   // Calculate total height
   const totalHeight = currentY + MARGIN;
@@ -60,6 +121,105 @@ export function calculateLayout(ast) {
     layout,
     totalHeight,
     participantLayout
+  };
+}
+
+/**
+ * Layout a single entry (message or nested fragment) and return the new Y position
+ */
+function layoutEntry(entryId, nodeById, participantLayout, layout, currentY) {
+  const entry = nodeById.get(entryId);
+  if (!entry) return currentY;
+
+  if (entry.type === 'message') {
+    const fromLayout = participantLayout.get(entry.from);
+    const toLayout = participantLayout.get(entry.to);
+
+    if (fromLayout && toLayout) {
+      layout.set(entry.id, {
+        y: currentY,
+        fromX: fromLayout.centerX,
+        toX: toLayout.centerX,
+        height: MESSAGE_SPACING
+      });
+    }
+    return currentY + MESSAGE_SPACING;
+  }
+
+  if (entry.type === 'fragment') {
+    // Nested fragment
+    const fragmentStart = currentY;
+    currentY += FRAGMENT_PADDING;
+
+    for (const nestedEntryId of entry.entries) {
+      currentY = layoutEntry(nestedEntryId, nodeById, participantLayout, layout, currentY);
+    }
+
+    for (const elseClause of entry.elseClauses) {
+      elseClause.dividerY = currentY;
+      for (const nestedEntryId of elseClause.entries) {
+        currentY = layoutEntry(nestedEntryId, nodeById, participantLayout, layout, currentY);
+      }
+    }
+
+    currentY += FRAGMENT_PADDING;
+
+    const bounds = getFragmentBounds(entry, nodeById, participantLayout);
+
+    layout.set(entry.id, {
+      y: fragmentStart,
+      height: currentY - fragmentStart,
+      x: bounds.minX,
+      width: bounds.maxX - bounds.minX,
+      type: 'fragment'
+    });
+  }
+
+  return currentY;
+}
+
+/**
+ * Calculate the horizontal bounds of a fragment based on participants referenced in its entries
+ */
+function getFragmentBounds(fragment, nodeById, participantLayout) {
+  const participantXPositions = [];
+
+  // Collect all participants referenced in fragment's messages
+  const allEntries = [
+    ...fragment.entries,
+    ...fragment.elseClauses.flatMap(c => c.entries)
+  ];
+
+  for (const entryId of allEntries) {
+    const entry = nodeById.get(entryId);
+    if (!entry) continue;
+
+    if (entry.type === 'message') {
+      const fromLayout = participantLayout.get(entry.from);
+      const toLayout = participantLayout.get(entry.to);
+      if (fromLayout) participantXPositions.push(fromLayout.x, fromLayout.x + PARTICIPANT_WIDTH);
+      if (toLayout) participantXPositions.push(toLayout.x, toLayout.x + PARTICIPANT_WIDTH);
+    } else if (entry.type === 'fragment') {
+      // For nested fragments, include their bounds
+      const nestedBounds = getFragmentBounds(entry, nodeById, participantLayout);
+      participantXPositions.push(nestedBounds.minX, nestedBounds.maxX);
+    }
+  }
+
+  // If no participants found, use default bounds (full width)
+  if (participantXPositions.length === 0) {
+    const allParticipants = Array.from(participantLayout.values());
+    if (allParticipants.length > 0) {
+      const minX = Math.min(...allParticipants.map(p => p.x));
+      const maxX = Math.max(...allParticipants.map(p => p.x + PARTICIPANT_WIDTH));
+      return { minX: minX - 20, maxX: maxX + 20 };
+    }
+    return { minX: PARTICIPANT_START_X - 20, maxX: PARTICIPANT_START_X + PARTICIPANT_WIDTH + 20 };
+  }
+
+  return {
+    minX: Math.min(...participantXPositions) - 20,
+    maxX: Math.max(...participantXPositions) + 20
   };
 }
 
