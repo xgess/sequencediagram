@@ -27,9 +27,42 @@ body {
 }
 
 #editor-pane h3 {
-  margin: 0 0 12px 0;
+  margin: 0;
   font-size: 16px;
   color: #333;
+}
+
+/* Editor Header with Toolbar */
+#editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+#editor-toolbar {
+  display: flex;
+  gap: 8px;
+}
+
+#editor-toolbar button {
+  padding: 4px 10px;
+  font-size: 12px;
+  background: #f5f5f5;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+#editor-toolbar button:hover {
+  background: #e5e5e5;
+}
+
+#editor-toolbar button.active {
+  background: #4a90d9;
+  color: white;
+  border-color: #3a7dbf;
 }
 
 /* CodeMirror Editor Container */

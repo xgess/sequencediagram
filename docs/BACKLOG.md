@@ -734,15 +734,27 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Case-sensitive option ✅
 - Regular expression support ✅
 
-## BACKLOG-064: Word wrap toggle
-**Phase:** 2.3  
-**Dependencies:** BACKLOG-057  
-**Description:** Add word wrap toggle option in editor settings.  
+## BACKLOG-064: Word wrap toggle ✅
+**Phase:** 2.3
+**Dependencies:** BACKLOG-057
+**Status:** Complete
+**Description:** Add word wrap toggle option in editor settings.
 **Acceptance Criteria:**
-- Toggle button or menu item
-- CodeMirror lineWrapping option toggled
-- Preference saved to localStorage
-- Default: off
+- Toggle button or menu item ✅
+- CodeMirror lineWrapping option toggled ✅
+- Preference saved to localStorage ✅
+- Default: off ✅
+
+## BACKLOG-065: Tab handling configuration ✅
+**Phase:** 2.3
+**Dependencies:** BACKLOG-057
+**Status:** Complete
+**Description:** Configure CodeMirror tab behavior per REQUIREMENTS.md.
+**Acceptance Criteria:**
+- Tab key inserts spaces (not tab character) ✅
+- Shift-Tab de-indents ✅
+- Configurable tab width (default: 2 spaces) ✅
+- Consistent with fragment indentation ✅
 
 
 ---
@@ -750,16 +762,6 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 ## Phase 3: Interactivity (SVG → Text)
 
 ### Foundation
-
-## BACKLOG-065: Tab handling configuration
-**Phase:** 2.3  
-**Dependencies:** BACKLOG-057  
-**Description:** Configure CodeMirror tab behavior per REQUIREMENTS.md.  
-**Acceptance Criteria:**
-- Tab key inserts spaces (not tab character)
-- Shift-Tab de-indents
-- Configurable tab width (default: 2 spaces)
-- Consistent with fragment indentation
 
 ## BACKLOG-066: Command pattern base classes
 **Phase:** 3.1  

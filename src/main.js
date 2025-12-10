@@ -17,9 +17,14 @@ let debounceTimer = null;
 let editorContainer;
 let diagramContainer;
 let errorsDiv;
+let wrapToggleBtn;
 
 // Debounce delay for auto-render (ms)
 const DEBOUNCE_DELAY = 300;
+
+// localStorage keys
+const STORAGE_KEY_WRAP = 'sequencediagram.wordWrap';
+const STORAGE_KEY_TAB_SIZE = 'sequencediagram.tabSize';
 
 /**
  * Initialize the application
@@ -37,6 +42,9 @@ export function init() {
 
   // Initialize CodeMirror
   initCodeMirror();
+
+  // Initialize toolbar
+  initToolbar();
 
   console.log('Sequence Diagram Tool initialized');
 }
@@ -75,6 +83,10 @@ Bob-->Alice:Hi there!
 Alice->>DB:Save data
 DB-->>Alice:OK`;
 
+  // Load preferences from localStorage
+  const wordWrap = loadPreference(STORAGE_KEY_WRAP, false);
+  const tabSize = loadPreference(STORAGE_KEY_TAB_SIZE, 2);
+
   // Create CodeMirror instance
   // Undo/redo is built-in: Ctrl-Z/Cmd-Z to undo, Ctrl-Y/Cmd-Shift-Z to redo
   // undoDepth configures history size (default 200, we use 100)
@@ -82,12 +94,28 @@ DB-->>Alice:OK`;
     value: sampleText,
     mode: 'sequence-diagram',
     lineNumbers: true,
-    lineWrapping: false,
-    tabSize: 2,
+    lineWrapping: wordWrap,
+    tabSize: tabSize,
     indentWithTabs: false,
+    indentUnit: tabSize,
+    smartIndent: true,
     theme: 'default',
     autofocus: true,
-    undoDepth: 100  // History depth for undo/redo
+    undoDepth: 100,  // History depth for undo/redo
+    extraKeys: {
+      // Tab inserts spaces
+      'Tab': function(cm) {
+        if (cm.somethingSelected()) {
+          cm.indentSelection('add');
+        } else {
+          cm.replaceSelection(' '.repeat(cm.getOption('indentUnit')), 'end');
+        }
+      },
+      // Shift-Tab de-indents
+      'Shift-Tab': function(cm) {
+        cm.indentSelection('subtract');
+      }
+    }
   });
 
   // Setup auto-completion
@@ -291,6 +319,115 @@ export function getHistoryInfo() {
     undoSize: history.undo,
     redoSize: history.redo
   };
+}
+
+/**
+ * Initialize toolbar buttons and their handlers
+ */
+function initToolbar() {
+  wrapToggleBtn = document.getElementById('wrap-toggle');
+
+  if (wrapToggleBtn) {
+    // Set initial state from editor
+    updateWrapButton();
+
+    // Handle click
+    wrapToggleBtn.addEventListener('click', toggleWordWrap);
+  }
+}
+
+/**
+ * Toggle word wrap on/off
+ */
+export function toggleWordWrap() {
+  if (!editor) return;
+
+  const currentWrap = editor.getOption('lineWrapping');
+  const newWrap = !currentWrap;
+
+  editor.setOption('lineWrapping', newWrap);
+  savePreference(STORAGE_KEY_WRAP, newWrap);
+  updateWrapButton();
+}
+
+/**
+ * Update word wrap button text and state
+ */
+function updateWrapButton() {
+  if (!wrapToggleBtn || !editor) return;
+
+  const isWrapping = editor.getOption('lineWrapping');
+  wrapToggleBtn.textContent = `Wrap: ${isWrapping ? 'On' : 'Off'}`;
+  wrapToggleBtn.classList.toggle('active', isWrapping);
+}
+
+/**
+ * Get current word wrap state
+ * @returns {boolean} True if word wrap is enabled
+ */
+export function getWordWrap() {
+  return editor ? editor.getOption('lineWrapping') : false;
+}
+
+/**
+ * Set word wrap state
+ * @param {boolean} enabled - Whether to enable word wrap
+ */
+export function setWordWrap(enabled) {
+  if (!editor) return;
+
+  editor.setOption('lineWrapping', enabled);
+  savePreference(STORAGE_KEY_WRAP, enabled);
+  updateWrapButton();
+}
+
+/**
+ * Get current tab size
+ * @returns {number} Tab size in spaces
+ */
+export function getTabSize() {
+  return editor ? editor.getOption('tabSize') : 2;
+}
+
+/**
+ * Set tab size
+ * @param {number} size - Tab size in spaces
+ */
+export function setTabSize(size) {
+  if (!editor || size < 1 || size > 8) return;
+
+  editor.setOption('tabSize', size);
+  editor.setOption('indentUnit', size);
+  savePreference(STORAGE_KEY_TAB_SIZE, size);
+}
+
+/**
+ * Load preference from localStorage
+ * @param {string} key - Storage key
+ * @param {*} defaultValue - Default value if not found
+ * @returns {*} Stored value or default
+ */
+function loadPreference(key, defaultValue) {
+  try {
+    const stored = localStorage.getItem(key);
+    if (stored === null) return defaultValue;
+    return JSON.parse(stored);
+  } catch {
+    return defaultValue;
+  }
+}
+
+/**
+ * Save preference to localStorage
+ * @param {string} key - Storage key
+ * @param {*} value - Value to store
+ */
+function savePreference(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Ignore storage errors (e.g., private browsing)
+  }
 }
 
 // Auto-init when DOM ready (for browser)
