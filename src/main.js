@@ -5,6 +5,7 @@ import { parse } from './ast/parser.js';
 import { serialize } from './ast/serializer.js';
 import { render } from './rendering/renderer.js';
 import { defineMode } from './editor/mode.js';
+import { registerHint, setupAutoComplete } from './editor/hint.js';
 
 // App state
 let currentAst = [];
@@ -52,6 +53,9 @@ function initCodeMirror() {
   // Define our custom syntax highlighting mode
   defineMode(CodeMirror);
 
+  // Register hint provider
+  registerHint(CodeMirror);
+
   // Sample diagram text
   const sampleText = `title Sample Diagram
 
@@ -78,6 +82,9 @@ DB-->>Alice:OK`;
     theme: 'default',
     autofocus: true
   });
+
+  // Setup auto-completion
+  setupAutoComplete(editor);
 
   // Wire up change handler with debounce
   editor.on('change', handleEditorChange);

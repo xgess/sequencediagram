@@ -687,15 +687,16 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Strings quoted ✅
 - Applied to editor ✅
 
-## BACKLOG-060: Basic auto-completion
-**Phase:** 2.2  
-**Dependencies:** BACKLOG-059  
-**Description:** Implement Ctrl-Space auto-completion for keywords and participant aliases.  
+## BACKLOG-060: Basic auto-completion ✅
+**Phase:** 2.2
+**Dependencies:** BACKLOG-059
+**Status:** Complete
+**Description:** Implement Ctrl-Space auto-completion for keywords and participant aliases.
 **Acceptance Criteria:**
-- Ctrl-Space / Cmd-Space triggers suggestions
-- Suggests: participant types, fragment types, participant aliases in scope
-- Arrow keys navigate, Enter accepts
-- Works mid-word
+- Ctrl-Space / Cmd-Space triggers suggestions ✅
+- Suggests: participant types, fragment types, participant aliases in scope ✅
+- Arrow keys navigate, Enter accepts ✅
+- Works mid-word ✅
 
 ## BACKLOG-061: Error markers in scrollbar
 **Phase:** 2.2  
