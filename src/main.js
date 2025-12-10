@@ -6,6 +6,7 @@ import { serialize } from './ast/serializer.js';
 import { render } from './rendering/renderer.js';
 import { defineMode } from './editor/mode.js';
 import { registerHint, setupAutoComplete } from './editor/hint.js';
+import { registerLinter, setupLinting } from './editor/linter.js';
 
 // App state
 let currentAst = [];
@@ -56,6 +57,9 @@ function initCodeMirror() {
   // Register hint provider
   registerHint(CodeMirror);
 
+  // Register linter
+  registerLinter(CodeMirror);
+
   // Sample diagram text
   const sampleText = `title Sample Diagram
 
@@ -85,6 +89,9 @@ DB-->>Alice:OK`;
 
   // Setup auto-completion
   setupAutoComplete(editor);
+
+  // Setup linting (error markers)
+  setupLinting(editor);
 
   // Wire up change handler with debounce
   editor.on('change', handleEditorChange);

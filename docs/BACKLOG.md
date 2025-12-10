@@ -698,15 +698,16 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Arrow keys navigate, Enter accepts ✅
 - Works mid-word ✅
 
-## BACKLOG-061: Error markers in scrollbar
-**Phase:** 2.2  
-**Dependencies:** BACKLOG-058  
-**Description:** Display red markers in CodeMirror scrollbar for lines with parse errors.  
+## BACKLOG-061: Error markers in scrollbar ✅
+**Phase:** 2.2
+**Dependencies:** BACKLOG-058
+**Status:** Complete
+**Description:** Display red markers in CodeMirror scrollbar for lines with parse errors.
 **Acceptance Criteria:**
-- Each error gets marker at correct line
-- Clicking marker scrolls to line
-- Markers update on text change
-- Tooltip shows error message on hover
+- Each error gets marker at correct line ✅
+- Clicking marker scrolls to line ✅
+- Markers update on text change ✅
+- Tooltip shows error message on hover ✅
 
 ## BACKLOG-062: Undo/redo integration
 **Phase:** 2.2  
