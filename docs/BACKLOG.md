@@ -503,40 +503,43 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Title appears at top of output ✅
 - Round-trip test passes ✅
 
-## BACKLOG-045: Parse basic text markup tokens
-**Phase:** 1.8  
-**Dependencies:** BACKLOG-008  
-**Description:** Implement markup parser for **bold**, //italic//, \n in message labels and participant names. Creates internal markup AST per DESIGN.md.  
+## BACKLOG-045: Parse basic text markup tokens ✅
+**Phase:** 1.8
+**Dependencies:** BACKLOG-008
+**Status:** Complete
+**Description:** Implement markup parser for **bold**, //italic//, \n in message labels and participant names. Creates internal markup AST per DESIGN.md.
 **Acceptance Criteria:**
-- parseMarkup(text) returns array of {type, content} segments
-- Handles: **bold**, //italic//, \n
-- Test cases for each markup type and combinations
+- parseMarkup(text) returns array of {type, content} segments ✅
+- Handles: **bold**, //italic//, \n ✅
+- Test cases for each markup type and combinations ✅
 
-## BACKLOG-046: Render text markup to SVG tspans
-**Phase:** 1.8  
-**Dependencies:** BACKLOG-045  
-**Description:** Convert markup segments to styled SVG tspan elements.  
+## BACKLOG-046: Render text markup to SVG tspans ✅
+**Phase:** 1.8
+**Dependencies:** BACKLOG-045
+**Status:** Complete
+**Description:** Convert markup segments to styled SVG tspan elements.
 **Acceptance Criteria:**
-- Bold segments have font-weight="bold"
-- Italic segments have font-style="italic"
-- \n creates new tspan with dy offset
-- Works in message labels and participant names
-- Test: message with markup renders correctly
+- Bold segments have font-weight="bold" ✅
+- Italic segments have font-style="italic" ✅
+- \n creates new tspan with dy offset ✅
+- Works in message labels and participant names (integration pending)
+- Test: message with markup renders correctly ✅
 
 
 ---
 
 ### Slice 9: Error Handling
 
-## BACKLOG-047: Preserve markup in serializer
-**Phase:** 1.8  
-**Dependencies:** BACKLOG-045  
-**Description:** Ensure serializer outputs markup syntax exactly.  
+## BACKLOG-047: Preserve markup in serializer ✅
+**Phase:** 1.8
+**Dependencies:** BACKLOG-045
+**Status:** Complete
+**Description:** Ensure serializer outputs markup syntax exactly.
 **Acceptance Criteria:**
-- **bold** stays as **bold** in output
-- //italic// stays as //italic//
-- \n stays as literal \n (not actual newline)
-- Round-trip test passes with markup
+- **bold** stays as **bold** in output ✅
+- //italic// stays as //italic// ✅
+- \n stays as literal \n (not actual newline) ✅
+- Round-trip test passes with markup ✅
 
 ## BACKLOG-048: Create error nodes for parse failures
 **Phase:** 1.9  
