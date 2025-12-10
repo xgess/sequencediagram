@@ -1,8 +1,9 @@
-// Tests for Command pattern implementation (BACKLOG-066, BACKLOG-067)
+// Tests for Command pattern implementation (BACKLOG-066, BACKLOG-067, BACKLOG-071)
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Command, CommandHistory } from '../src/commands/Command.js';
 import { ReplaceASTCommand } from '../src/commands/ReplaceASTCommand.js';
+import { RemoveNodeCommand } from '../src/commands/RemoveNodeCommand.js';
 
 // Test command that adds an item to AST
 class AddItemCommand extends Command {
@@ -522,5 +523,147 @@ describe('ReplaceASTCommand (BACKLOG-067)', () => {
     current = history.redo(current);
     expect(current).toHaveLength(3);
     expect(current[2].label).toBe('Hello');
+  });
+});
+
+describe('RemoveNodeCommand (BACKLOG-071)', () => {
+  let history;
+  let initialAst;
+
+  beforeEach(() => {
+    history = new CommandHistory();
+    initialAst = [
+      { id: 'p_1', type: 'participant', alias: 'Alice' },
+      { id: 'p_2', type: 'participant', alias: 'Bob' },
+      { id: 'm_1', type: 'message', from: 'Alice', to: 'Bob', label: 'Hello' }
+    ];
+  });
+
+  it('should remove node from AST with do()', () => {
+    const node = initialAst[1];
+    const cmd = new RemoveNodeCommand('p_2', node, 1);
+
+    const result = cmd.do(initialAst);
+
+    expect(result).toHaveLength(2);
+    expect(result.find(n => n.id === 'p_2')).toBeUndefined();
+  });
+
+  it('should restore node with undo()', () => {
+    const node = initialAst[1];
+    const cmd = new RemoveNodeCommand('p_2', node, 1);
+
+    const afterDo = cmd.do(initialAst);
+    const afterUndo = cmd.undo(afterDo);
+
+    expect(afterUndo).toHaveLength(3);
+    expect(afterUndo[1].id).toBe('p_2');
+    expect(afterUndo[1].alias).toBe('Bob');
+  });
+
+  it('should restore node at original index', () => {
+    const node = initialAst[0];
+    const cmd = new RemoveNodeCommand('p_1', node, 0);
+
+    const afterDo = cmd.do(initialAst);
+    expect(afterDo[0].id).toBe('p_2');
+
+    const afterUndo = cmd.undo(afterDo);
+    expect(afterUndo[0].id).toBe('p_1');
+    expect(afterUndo[1].id).toBe('p_2');
+  });
+
+  it('should have descriptive description', () => {
+    const node = initialAst[1];
+    const cmd = new RemoveNodeCommand('p_2', node, 1);
+
+    expect(cmd.description).toBe('Remove participant: Bob');
+  });
+
+  it('should work with CommandHistory', () => {
+    const node = initialAst[2];
+    const cmd = new RemoveNodeCommand('m_1', node, 2);
+
+    let current = history.execute(cmd, initialAst);
+    expect(current).toHaveLength(2);
+    expect(current.find(n => n.id === 'm_1')).toBeUndefined();
+
+    current = history.undo(current);
+    expect(current).toHaveLength(3);
+    expect(current[2].id).toBe('m_1');
+
+    current = history.redo(current);
+    expect(current).toHaveLength(2);
+    expect(current.find(n => n.id === 'm_1')).toBeUndefined();
+  });
+
+  describe('fragment entries', () => {
+    let fragmentAst;
+
+    beforeEach(() => {
+      fragmentAst = [
+        { id: 'p_1', type: 'participant', alias: 'Alice' },
+        { id: 'p_2', type: 'participant', alias: 'Bob' },
+        {
+          id: 'f_1',
+          type: 'fragment',
+          fragmentType: 'alt',
+          condition: 'cond',
+          entries: [
+            { id: 'm_1', type: 'message', from: 'Alice', to: 'Bob', label: 'Hello' },
+            { id: 'm_2', type: 'message', from: 'Bob', to: 'Alice', label: 'Hi' }
+          ],
+          elseClauses: [
+            {
+              condition: 'else',
+              entries: [
+                { id: 'm_3', type: 'message', from: 'Alice', to: 'Bob', label: 'Bye' }
+              ]
+            }
+          ]
+        }
+      ];
+    });
+
+    it('should remove node from fragment entries', () => {
+      const node = fragmentAst[2].entries[0];
+      const cmd = new RemoveNodeCommand('m_1', node, 0, 'f_1', 'entries');
+
+      const result = cmd.do(fragmentAst);
+
+      expect(result[2].entries).toHaveLength(1);
+      expect(result[2].entries[0].id).toBe('m_2');
+    });
+
+    it('should restore node to fragment entries', () => {
+      const node = fragmentAst[2].entries[0];
+      const cmd = new RemoveNodeCommand('m_1', node, 0, 'f_1', 'entries');
+
+      const afterDo = cmd.do(fragmentAst);
+      const afterUndo = cmd.undo(afterDo);
+
+      expect(afterUndo[2].entries).toHaveLength(2);
+      expect(afterUndo[2].entries[0].id).toBe('m_1');
+    });
+
+    it('should remove node from else clause entries', () => {
+      const node = fragmentAst[2].elseClauses[0].entries[0];
+      const cmd = new RemoveNodeCommand('m_3', node, 0, 'f_1', 'elseClauses', 0);
+
+      const result = cmd.do(fragmentAst);
+
+      expect(result[2].elseClauses[0].entries).toHaveLength(0);
+    });
+
+    it('should restore node to else clause entries', () => {
+      const node = fragmentAst[2].elseClauses[0].entries[0];
+      const cmd = new RemoveNodeCommand('m_3', node, 0, 'f_1', 'elseClauses', 0);
+
+      const afterDo = cmd.do(fragmentAst);
+      const afterUndo = cmd.undo(afterDo);
+
+      expect(afterUndo[2].elseClauses[0].entries).toHaveLength(1);
+      expect(afterUndo[2].elseClauses[0].entries[0].id).toBe('m_3');
+    });
   });
 });

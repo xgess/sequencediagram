@@ -796,36 +796,39 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Ctrl-Y / Ctrl-Shift-Z for redo ✅
 - Status bar shows undo/redo availability ✅ (via getHistoryInfo())
 
-## BACKLOG-069: Click to select element
-**Phase:** 3.2  
-**Dependencies:** BACKLOG-063  
-**Description:** Implement click handler to select any diagram element (participant, message, fragment, note).  
+## BACKLOG-069: Click to select element ✅
+**Phase:** 3.2
+**Dependencies:** BACKLOG-063
+**Status:** Complete
+**Description:** Implement click handler to select any diagram element (participant, message, fragment, note).
 **Acceptance Criteria:**
-- Clicking element highlights it (stroke or glow)
-- Only one element selected at a time
-- Click background deselects
-- Selected element ID stored in app state
+- Clicking element highlights it (stroke or glow) ✅
+- Only one element selected at a time ✅
+- Click background deselects ✅
+- Selected element ID stored in app state ✅
 
-## BACKLOG-070: Highlight source line on selection
-**Phase:** 3.2  
-**Dependencies:** BACKLOG-066  
-**Description:** When diagram element clicked, highlight corresponding line(s) in CodeMirror.  
+## BACKLOG-070: Highlight source line on selection ✅
+**Phase:** 3.2
+**Dependencies:** BACKLOG-066
+**Status:** Complete
+**Description:** When diagram element clicked, highlight corresponding line(s) in CodeMirror.
 **Acceptance Criteria:**
-- Selected element's sourceLineStart/End used to highlight
-- CodeMirror scrolls to line if needed
-- Line highlight cleared on deselect
-- Bidirectional: clicking code also selects diagram element (Phase 3 later task)
+- Selected element's sourceLineStart/End used to highlight ✅
+- CodeMirror scrolls to line if needed ✅
+- Line highlight cleared on deselect ✅
+- Bidirectional: clicking code also selects diagram element (deferred to later task)
 
-## BACKLOG-071: Delete key deletes selected element
-**Phase:** 3.2  
-**Dependencies:** BACKLOG-066  
-**Description:** Pressing Delete key removes selected element from AST.  
+## BACKLOG-071: Delete key deletes selected element ✅
+**Phase:** 3.2
+**Dependencies:** BACKLOG-066
+**Status:** Complete
+**Description:** Pressing Delete key removes selected element from AST.
 **Acceptance Criteria:**
-- Creates RemoveNode command
-- Element removed from AST
-- Text and diagram update
-- Undo restores element
-- Test: delete message, undo, verify restored
+- Creates RemoveNode command ✅
+- Element removed from AST ✅
+- Text and diagram update ✅
+- Undo restores element ✅
+- Test: delete message, undo, verify restored ✅
 
 
 ### Selection and Basic Interaction

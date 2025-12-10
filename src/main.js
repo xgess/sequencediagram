@@ -9,6 +9,8 @@ import { registerHint, setupAutoComplete } from './editor/hint.js';
 import { registerLinter, setupLinting } from './editor/linter.js';
 import { CommandHistory } from './commands/Command.js';
 import { ReplaceASTCommand } from './commands/ReplaceASTCommand.js';
+import { RemoveNodeCommand } from './commands/RemoveNodeCommand.js';
+import { initSelection, removeSelection, selectElement, deselectAll, getSelectedId } from './interaction/selection.js';
 
 // App state
 let currentAst = [];
@@ -17,6 +19,7 @@ let debounceTimer = null;
 let commandHistory = new CommandHistory(100);
 let previousText = '';
 let isUndoRedoInProgress = false;
+let currentSvg = null;
 
 // DOM element references
 let editorContainer;
@@ -50,6 +53,9 @@ export function init() {
 
   // Initialize toolbar
   initToolbar();
+
+  // Initialize keyboard shortcuts for diagram
+  initDiagramKeyboard();
 
   console.log('Sequence Diagram Tool initialized');
 }
@@ -194,12 +200,21 @@ export function updateFromText(text, createCommand = false) {
   // Render AST to SVG
   const svg = render(currentAst);
 
+  // Remove selection from old SVG if exists
+  if (currentSvg) {
+    removeSelection(currentSvg);
+  }
+
   // Replace diagram in container
   const existingSvg = diagramContainer.querySelector('svg');
   if (existingSvg) {
     existingSvg.remove();
   }
   diagramContainer.appendChild(svg);
+
+  // Store reference and initialize selection
+  currentSvg = svg;
+  initSelection(svg, handleSelectionChange);
 
   // Check for errors in AST and display them
   displayErrors(currentAst);
@@ -381,12 +396,21 @@ export function redo() {
 function renderCurrentAst() {
   const svg = render(currentAst);
 
+  // Remove selection from old SVG if exists
+  if (currentSvg) {
+    removeSelection(currentSvg);
+  }
+
   // Replace diagram in container
   const existingSvg = diagramContainer.querySelector('svg');
   if (existingSvg) {
     existingSvg.remove();
   }
   diagramContainer.appendChild(svg);
+
+  // Store reference and initialize selection
+  currentSvg = svg;
+  initSelection(svg, handleSelectionChange);
 
   // Check for errors in AST and display them
   displayErrors(currentAst);
@@ -427,6 +451,251 @@ export function getCommandHistory() {
  */
 export function clearCommandHistory() {
   commandHistory.clear();
+}
+
+// Line highlight marker in CodeMirror
+let lineHighlightMarker = null;
+
+/**
+ * Handle selection change callback
+ * @param {string|null} nodeId - Selected node ID or null
+ */
+function handleSelectionChange(nodeId) {
+  console.log('Selection changed:', nodeId);
+
+  // Clear previous line highlight
+  clearLineHighlight();
+
+  // Find the node in AST
+  const node = nodeId ? findNodeById(nodeId) : null;
+
+  // Log for debugging
+  if (node) {
+    console.log('Selected node:', node);
+
+    // Highlight source lines in editor
+    if (node.sourceLineStart !== undefined) {
+      highlightSourceLines(node.sourceLineStart, node.sourceLineEnd || node.sourceLineStart);
+    }
+  }
+}
+
+/**
+ * Highlight source lines in CodeMirror
+ * @param {number} startLine - 1-indexed start line
+ * @param {number} endLine - 1-indexed end line
+ */
+function highlightSourceLines(startLine, endLine) {
+  if (!editor) return;
+
+  // CodeMirror uses 0-indexed lines
+  const start = startLine - 1;
+  const end = endLine - 1;
+
+  // Mark the lines
+  lineHighlightMarker = editor.markText(
+    { line: start, ch: 0 },
+    { line: end, ch: editor.getLine(end)?.length || 0 },
+    { className: 'cm-selection-highlight' }
+  );
+
+  // Scroll the start line into view
+  editor.scrollIntoView({ line: start, ch: 0 }, 100);
+}
+
+/**
+ * Clear line highlight in CodeMirror
+ */
+function clearLineHighlight() {
+  if (lineHighlightMarker) {
+    lineHighlightMarker.clear();
+    lineHighlightMarker = null;
+  }
+}
+
+/**
+ * Find node in AST by ID
+ * @param {string} nodeId
+ * @returns {Object|null}
+ */
+function findNodeById(nodeId) {
+  // Search in flat AST
+  for (const node of currentAst) {
+    if (node.id === nodeId) {
+      return node;
+    }
+    // Check fragment entries
+    if (node.type === 'fragment') {
+      if (node.entries) {
+        for (const entry of node.entries) {
+          if (entry.id === nodeId) {
+            return entry;
+          }
+        }
+      }
+      if (node.elseClauses) {
+        for (const clause of node.elseClauses) {
+          if (clause.entries) {
+            for (const entry of clause.entries) {
+              if (entry.id === nodeId) {
+                return entry;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Get currently selected node
+ * @returns {Object|null} Selected node or null
+ */
+export function getSelectedNode() {
+  const nodeId = getSelectedId();
+  return nodeId ? findNodeById(nodeId) : null;
+}
+
+/**
+ * Select a node by ID
+ * @param {string} nodeId
+ */
+export function select(nodeId) {
+  selectElement(nodeId);
+}
+
+/**
+ * Deselect all nodes
+ */
+export function clearSelection() {
+  deselectAll();
+}
+
+/**
+ * Get selected element ID
+ * @returns {string|null}
+ */
+export { getSelectedId };
+
+/**
+ * Initialize keyboard shortcuts for diagram interactions
+ */
+function initDiagramKeyboard() {
+  document.addEventListener('keydown', handleDiagramKeydown);
+}
+
+/**
+ * Handle keydown events for diagram interactions
+ * @param {KeyboardEvent} event
+ */
+function handleDiagramKeydown(event) {
+  // Don't handle keys when typing in editor
+  if (event.target.closest('.CodeMirror')) {
+    return;
+  }
+
+  // Delete key - remove selected element
+  if (event.key === 'Delete' || event.key === 'Backspace') {
+    const selectedId = getSelectedId();
+    if (selectedId) {
+      deleteSelectedElement();
+      event.preventDefault();
+    }
+  }
+
+  // Escape - deselect
+  if (event.key === 'Escape') {
+    deselectAll();
+    clearLineHighlight();
+  }
+}
+
+/**
+ * Delete the currently selected element
+ */
+export function deleteSelectedElement() {
+  const selectedId = getSelectedId();
+  if (!selectedId) return;
+
+  // Find the node and its location
+  const nodeInfo = findNodeWithLocation(selectedId);
+  if (!nodeInfo) return;
+
+  const { node, index, parentId, parentProperty, clauseIndex } = nodeInfo;
+
+  // Create and execute the remove command
+  const cmd = new RemoveNodeCommand(selectedId, node, index, parentId, parentProperty, clauseIndex);
+  currentAst = commandHistory.execute(cmd, currentAst);
+
+  // Clear selection
+  deselectAll();
+  clearLineHighlight();
+
+  // Update text and re-render
+  const newText = serialize(currentAst);
+  previousText = newText;
+
+  // Update editor without creating another command
+  isUndoRedoInProgress = true;
+  editor.setValue(newText);
+  isUndoRedoInProgress = false;
+
+  // Re-render
+  renderCurrentAst();
+}
+
+/**
+ * Find node in AST with location info for undo
+ * @param {string} nodeId
+ * @returns {Object|null} {node, index, parentId, parentProperty, clauseIndex}
+ */
+function findNodeWithLocation(nodeId) {
+  // Search in flat AST
+  for (let i = 0; i < currentAst.length; i++) {
+    const node = currentAst[i];
+    if (node.id === nodeId) {
+      return { node, index: i, parentId: null, parentProperty: null, clauseIndex: null };
+    }
+
+    // Check fragment entries
+    if (node.type === 'fragment') {
+      if (node.entries) {
+        for (let j = 0; j < node.entries.length; j++) {
+          if (node.entries[j].id === nodeId) {
+            return {
+              node: node.entries[j],
+              index: j,
+              parentId: node.id,
+              parentProperty: 'entries',
+              clauseIndex: null
+            };
+          }
+        }
+      }
+
+      if (node.elseClauses) {
+        for (let ci = 0; ci < node.elseClauses.length; ci++) {
+          const clause = node.elseClauses[ci];
+          if (clause.entries) {
+            for (let j = 0; j < clause.entries.length; j++) {
+              if (clause.entries[j].id === nodeId) {
+                return {
+                  node: clause.entries[j],
+                  index: j,
+                  parentId: node.id,
+                  parentProperty: 'elseClauses',
+                  clauseIndex: ci
+                };
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return null;
 }
 
 /**
