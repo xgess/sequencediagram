@@ -1,10 +1,12 @@
-// Tests for Command pattern implementation (BACKLOG-066, BACKLOG-067, BACKLOG-071)
+// Tests for Command pattern implementation (BACKLOG-066, BACKLOG-067, BACKLOG-071, BACKLOG-074, BACKLOG-075)
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Command, CommandHistory } from '../src/commands/Command.js';
 import { ReplaceASTCommand } from '../src/commands/ReplaceASTCommand.js';
 import { RemoveNodeCommand } from '../src/commands/RemoveNodeCommand.js';
 import { ReorderNodeCommand } from '../src/commands/ReorderNodeCommand.js';
+import { MoveMessageTargetCommand } from '../src/commands/MoveMessageTargetCommand.js';
+import { MoveMessageSourceCommand } from '../src/commands/MoveMessageSourceCommand.js';
 
 // Test command that adds an item to AST
 class AddItemCommand extends Command {
@@ -800,6 +802,220 @@ describe('ReorderNodeCommand (BACKLOG-073)', () => {
 
       expect(result[0].id).toBe('p_2');
       expect(result[4].id).toBe('p_1');
+    });
+  });
+});
+
+describe('MoveMessageTargetCommand (BACKLOG-074)', () => {
+  let history;
+  let initialAst;
+
+  beforeEach(() => {
+    history = new CommandHistory();
+    initialAst = [
+      { id: 'p_1', type: 'participant', alias: 'Alice' },
+      { id: 'p_2', type: 'participant', alias: 'Bob' },
+      { id: 'p_3', type: 'participant', alias: 'Charlie' },
+      { id: 'm_1', type: 'message', from: 'Alice', to: 'Bob', label: 'Hello' }
+    ];
+  });
+
+  it('should change message target with do()', () => {
+    const cmd = new MoveMessageTargetCommand('m_1', 'Bob', 'Charlie');
+
+    const result = cmd.do(initialAst);
+    const message = result.find(n => n.id === 'm_1');
+
+    expect(message.to).toBe('Charlie');
+    expect(message.from).toBe('Alice'); // from unchanged
+  });
+
+  it('should restore original target with undo()', () => {
+    const cmd = new MoveMessageTargetCommand('m_1', 'Bob', 'Charlie');
+
+    const afterDo = cmd.do(initialAst);
+    expect(afterDo.find(n => n.id === 'm_1').to).toBe('Charlie');
+
+    const afterUndo = cmd.undo(afterDo);
+    expect(afterUndo.find(n => n.id === 'm_1').to).toBe('Bob');
+  });
+
+  it('should have descriptive description', () => {
+    const cmd = new MoveMessageTargetCommand('m_1', 'Bob', 'Charlie');
+    expect(cmd.description).toBe('Move message target from Bob to Charlie');
+  });
+
+  it('should work with CommandHistory', () => {
+    const cmd = new MoveMessageTargetCommand('m_1', 'Bob', 'Charlie');
+
+    let current = history.execute(cmd, initialAst);
+    expect(current.find(n => n.id === 'm_1').to).toBe('Charlie');
+
+    current = history.undo(current);
+    expect(current.find(n => n.id === 'm_1').to).toBe('Bob');
+
+    current = history.redo(current);
+    expect(current.find(n => n.id === 'm_1').to).toBe('Charlie');
+  });
+
+  describe('fragment entries', () => {
+    let fragmentAst;
+
+    beforeEach(() => {
+      fragmentAst = [
+        { id: 'p_1', type: 'participant', alias: 'Alice' },
+        { id: 'p_2', type: 'participant', alias: 'Bob' },
+        { id: 'p_3', type: 'participant', alias: 'Charlie' },
+        {
+          id: 'f_1',
+          type: 'fragment',
+          fragmentType: 'alt',
+          condition: 'cond',
+          entries: [
+            { id: 'm_1', type: 'message', from: 'Alice', to: 'Bob', label: 'Hello' }
+          ],
+          elseClauses: [
+            {
+              condition: 'else',
+              entries: [
+                { id: 'm_2', type: 'message', from: 'Bob', to: 'Alice', label: 'Bye' }
+              ]
+            }
+          ]
+        }
+      ];
+    });
+
+    it('should change target of message in fragment entries', () => {
+      const cmd = new MoveMessageTargetCommand('m_1', 'Bob', 'Charlie');
+
+      const result = cmd.do(fragmentAst);
+
+      expect(result[3].entries[0].to).toBe('Charlie');
+    });
+
+    it('should change target of message in else clause', () => {
+      const cmd = new MoveMessageTargetCommand('m_2', 'Alice', 'Charlie');
+
+      const result = cmd.do(fragmentAst);
+
+      expect(result[3].elseClauses[0].entries[0].to).toBe('Charlie');
+    });
+
+    it('should restore message in fragment on undo', () => {
+      const cmd = new MoveMessageTargetCommand('m_1', 'Bob', 'Charlie');
+
+      const afterDo = cmd.do(fragmentAst);
+      const afterUndo = cmd.undo(afterDo);
+
+      expect(afterUndo[3].entries[0].to).toBe('Bob');
+    });
+  });
+});
+
+describe('MoveMessageSourceCommand (BACKLOG-075)', () => {
+  let history;
+  let initialAst;
+
+  beforeEach(() => {
+    history = new CommandHistory();
+    initialAst = [
+      { id: 'p_1', type: 'participant', alias: 'Alice' },
+      { id: 'p_2', type: 'participant', alias: 'Bob' },
+      { id: 'p_3', type: 'participant', alias: 'Charlie' },
+      { id: 'm_1', type: 'message', from: 'Alice', to: 'Bob', label: 'Hello' }
+    ];
+  });
+
+  it('should change message source with do()', () => {
+    const cmd = new MoveMessageSourceCommand('m_1', 'Alice', 'Charlie');
+
+    const result = cmd.do(initialAst);
+    const message = result.find(n => n.id === 'm_1');
+
+    expect(message.from).toBe('Charlie');
+    expect(message.to).toBe('Bob'); // to unchanged
+  });
+
+  it('should restore original source with undo()', () => {
+    const cmd = new MoveMessageSourceCommand('m_1', 'Alice', 'Charlie');
+
+    const afterDo = cmd.do(initialAst);
+    expect(afterDo.find(n => n.id === 'm_1').from).toBe('Charlie');
+
+    const afterUndo = cmd.undo(afterDo);
+    expect(afterUndo.find(n => n.id === 'm_1').from).toBe('Alice');
+  });
+
+  it('should have descriptive description', () => {
+    const cmd = new MoveMessageSourceCommand('m_1', 'Alice', 'Charlie');
+    expect(cmd.description).toBe('Move message source from Alice to Charlie');
+  });
+
+  it('should work with CommandHistory', () => {
+    const cmd = new MoveMessageSourceCommand('m_1', 'Alice', 'Charlie');
+
+    let current = history.execute(cmd, initialAst);
+    expect(current.find(n => n.id === 'm_1').from).toBe('Charlie');
+
+    current = history.undo(current);
+    expect(current.find(n => n.id === 'm_1').from).toBe('Alice');
+
+    current = history.redo(current);
+    expect(current.find(n => n.id === 'm_1').from).toBe('Charlie');
+  });
+
+  describe('fragment entries', () => {
+    let fragmentAst;
+
+    beforeEach(() => {
+      fragmentAst = [
+        { id: 'p_1', type: 'participant', alias: 'Alice' },
+        { id: 'p_2', type: 'participant', alias: 'Bob' },
+        { id: 'p_3', type: 'participant', alias: 'Charlie' },
+        {
+          id: 'f_1',
+          type: 'fragment',
+          fragmentType: 'alt',
+          condition: 'cond',
+          entries: [
+            { id: 'm_1', type: 'message', from: 'Alice', to: 'Bob', label: 'Hello' }
+          ],
+          elseClauses: [
+            {
+              condition: 'else',
+              entries: [
+                { id: 'm_2', type: 'message', from: 'Bob', to: 'Alice', label: 'Bye' }
+              ]
+            }
+          ]
+        }
+      ];
+    });
+
+    it('should change source of message in fragment entries', () => {
+      const cmd = new MoveMessageSourceCommand('m_1', 'Alice', 'Charlie');
+
+      const result = cmd.do(fragmentAst);
+
+      expect(result[3].entries[0].from).toBe('Charlie');
+    });
+
+    it('should change source of message in else clause', () => {
+      const cmd = new MoveMessageSourceCommand('m_2', 'Bob', 'Charlie');
+
+      const result = cmd.do(fragmentAst);
+
+      expect(result[3].elseClauses[0].entries[0].from).toBe('Charlie');
+    });
+
+    it('should restore message in fragment on undo', () => {
+      const cmd = new MoveMessageSourceCommand('m_1', 'Alice', 'Charlie');
+
+      const afterDo = cmd.do(fragmentAst);
+      const afterUndo = cmd.undo(afterDo);
+
+      expect(afterUndo[3].entries[0].from).toBe('Alice');
     });
   });
 });

@@ -861,27 +861,29 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Text updates to show new position ✅
 - Undo moves message back ✅
 
-## BACKLOG-074: Drag message endpoint to change target
-**Phase:** 3.3  
-**Dependencies:** BACKLOG-066  
-**Description:** Drag arrow endpoint to snap to different participant lifeline.  
+## BACKLOG-074: Drag message endpoint to change target ✅
+**Phase:** 3.3
+**Dependencies:** BACKLOG-066
+**Status:** Complete
+**Description:** Drag arrow endpoint to snap to different participant lifeline.
 **Acceptance Criteria:**
-- Dragging endpoint shows visual feedback
-- Snaps to nearest participant lifeline
-- Creates MoveMessageTarget command
-- Message.to updated in AST
-- Text updates: `Alice->Charlie:msg` (was Bob)
-- Undo restores original target
+- Dragging endpoint shows visual feedback ✅
+- Snaps to nearest participant lifeline ✅
+- Creates MoveMessageTarget command ✅
+- Message.to updated in AST ✅
+- Text updates: `Alice->Charlie:msg` (was Bob) ✅
+- Undo restores original target ✅
 
-## BACKLOG-075: Drag message endpoint to change source
-**Phase:** 3.3  
-**Dependencies:** BACKLOG-088  
-**Description:** Same as BACKLOG-088 but for source endpoint.  
+## BACKLOG-075: Drag message endpoint to change source ✅
+**Phase:** 3.3
+**Dependencies:** BACKLOG-074
+**Status:** Complete
+**Description:** Same as BACKLOG-074 but for source endpoint.
 **Acceptance Criteria:**
-- Drag from-end of message
-- Snaps to participant lifeline
-- Creates MoveMessageSource command
-- message.from updated
+- Drag from-end of message ✅
+- Snaps to participant lifeline ✅
+- Creates MoveMessageSource command ✅
+- message.from updated ✅
 
 ## BACKLOG-076: Double-click message to edit label
 **Phase:** 3.3  

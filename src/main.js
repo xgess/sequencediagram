@@ -14,6 +14,8 @@ import { initSelection, removeSelection, selectElement, deselectAll, getSelected
 import { initCursors, removeCursors } from './interaction/cursors.js';
 import { initDrag, removeDrag } from './interaction/drag.js';
 import { ReorderNodeCommand } from './commands/ReorderNodeCommand.js';
+import { MoveMessageTargetCommand } from './commands/MoveMessageTargetCommand.js';
+import { MoveMessageSourceCommand } from './commands/MoveMessageSourceCommand.js';
 
 // App state
 let currentAst = [];
@@ -221,7 +223,7 @@ export function updateFromText(text, createCommand = false) {
   currentSvg = svg;
   initSelection(svg, handleSelectionChange);
   initCursors(svg);
-  initDrag(svg, handleDragComplete);
+  initDrag(svg, handleDragComplete, handleEndpointChange);
 
   // Check for errors in AST and display them
   displayErrors(currentAst);
@@ -421,7 +423,7 @@ function renderCurrentAst() {
   currentSvg = svg;
   initSelection(svg, handleSelectionChange);
   initCursors(svg);
-  initDrag(svg, handleDragComplete);
+  initDrag(svg, handleDragComplete, handleEndpointChange);
 
   // Check for errors in AST and display them
   displayErrors(currentAst);
@@ -579,6 +581,50 @@ function handleDragComplete(nodeId, deltaIndex) {
   renderCurrentAst();
 
   console.log(`Reordered ${nodeId} from ${oldIndex} to ${newIndex}`);
+}
+
+/**
+ * Handle endpoint change - modify message source or target
+ * @param {string} nodeId - ID of the message node
+ * @param {string} endpointType - 'source' or 'target'
+ * @param {string} newParticipant - Alias of the new participant
+ */
+function handleEndpointChange(nodeId, endpointType, newParticipant) {
+  if (!nodeId || !newParticipant) return;
+
+  // Find the message node
+  const node = findNodeById(nodeId);
+  if (!node || node.type !== 'message') return;
+
+  // Get old participant
+  const oldParticipant = endpointType === 'source' ? node.from : node.to;
+
+  // Don't change if same participant
+  if (oldParticipant === newParticipant) return;
+
+  // Create and execute appropriate command
+  let cmd;
+  if (endpointType === 'source') {
+    cmd = new MoveMessageSourceCommand(nodeId, oldParticipant, newParticipant);
+  } else {
+    cmd = new MoveMessageTargetCommand(nodeId, oldParticipant, newParticipant);
+  }
+
+  currentAst = commandHistory.execute(cmd, currentAst);
+
+  // Update text and re-render
+  const newText = serialize(currentAst);
+  previousText = newText;
+
+  // Update editor without creating another command
+  isUndoRedoInProgress = true;
+  editor.setValue(newText);
+  isUndoRedoInProgress = false;
+
+  // Re-render
+  renderCurrentAst();
+
+  console.log(`Changed message ${nodeId} ${endpointType} from ${oldParticipant} to ${newParticipant}`);
 }
 
 /**
