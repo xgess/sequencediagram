@@ -603,14 +603,15 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Tests for error handling ✅
 - All tests pass ✅
 
-## BACKLOG-053: Round-trip property tests
-**Phase:** 1.10  
-**Dependencies:** BACKLOG-052  
-**Description:** Verify parse → serialize → parse produces identical AST for all Phase 1 features.  
+## BACKLOG-053: Round-trip property tests ✅
+**Phase:** 1.10
+**Dependencies:** BACKLOG-052
+**Status:** Complete
+**Description:** Verify parse → serialize → parse produces identical AST for all Phase 1 features.
 **Acceptance Criteria:**
-- Round-trip test for each syntax element
-- Canonical formatting is stable
-- Edge cases covered (empty labels, special chars, etc.)
+- Round-trip test for each syntax element ✅
+- Canonical formatting is stable ✅
+- Edge cases covered (empty labels, special chars, etc.) ✅
 
 ## BACKLOG-054: Example diagrams collection
 **Phase:** 1.10  
