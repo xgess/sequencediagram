@@ -563,15 +563,16 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Gets 40px height in layout ✅
 - Test: parse error renders warning box ✅
 
-## BACKLOG-050: Display parse errors in UI
-**Phase:** 1.9  
-**Dependencies:** BACKLOG-048  
-**Description:** Show error count and messages in error div of test harness.  
+## BACKLOG-050: Display parse errors in UI ✅
+**Phase:** 1.9
+**Dependencies:** BACKLOG-048
+**Status:** Complete
+**Description:** Show error count and messages in error div of test harness.
 **Acceptance Criteria:**
-- Error div shows count: "2 errors"
-- Lists each error with line number and message
-- Red text styling
-- Clicking error scrolls textarea to that line (if possible without CodeMirror)
+- Error div shows count: "2 errors" ✅
+- Lists each error with line number and message ✅
+- Red text styling ✅
+- Clicking error scrolls textarea to that line (if possible without CodeMirror) ✅
 
 
 ---

@@ -70,13 +70,91 @@ export function updateFromText(text) {
   }
   diagramContainer.appendChild(svg);
 
-  // Check for errors in AST
-  const errors = currentAst.filter(node => node.type === 'error');
-  if (errors.length > 0) {
-    errorsDiv.textContent = `${errors.length} error(s) found`;
-  }
+  // Check for errors in AST and display them
+  displayErrors(currentAst);
 
   return svg;
+}
+
+/**
+ * Display parse errors in the errors div
+ * @param {Array} ast - AST nodes array
+ */
+function displayErrors(ast) {
+  const errors = ast.filter(node => node.type === 'error');
+
+  if (errors.length === 0) {
+    errorsDiv.innerHTML = '';
+    errorsDiv.style.display = 'none';
+    return;
+  }
+
+  errorsDiv.style.display = 'block';
+
+  // Build error list HTML
+  const errorCount = errors.length === 1 ? '1 error' : `${errors.length} errors`;
+  let html = `<div class="error-header">${errorCount}</div><ul class="error-list">`;
+
+  for (const error of errors) {
+    const lineNum = error.sourceLineStart;
+    const escapedMessage = escapeHtml(error.message);
+    html += `<li class="error-item" data-line="${lineNum}">`;
+    html += `<span class="error-line">Line ${lineNum}:</span> `;
+    html += `<span class="error-text">${escapedMessage}</span>`;
+    html += `</li>`;
+  }
+
+  html += '</ul>';
+  errorsDiv.innerHTML = html;
+
+  // Add click handlers to scroll to error line
+  const errorItems = errorsDiv.querySelectorAll('.error-item');
+  errorItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const lineNum = parseInt(item.getAttribute('data-line'), 10);
+      scrollToLine(lineNum);
+    });
+  });
+}
+
+/**
+ * Scroll textarea to show the specified line
+ * @param {number} lineNum - 1-indexed line number
+ */
+function scrollToLine(lineNum) {
+  if (!sourceTextarea) return;
+
+  const text = sourceTextarea.value;
+  const lines = text.split('\n');
+
+  // Calculate character position of the line start
+  let charPos = 0;
+  for (let i = 0; i < lineNum - 1 && i < lines.length; i++) {
+    charPos += lines[i].length + 1; // +1 for newline
+  }
+
+  // Select the line
+  const lineEnd = charPos + (lines[lineNum - 1]?.length || 0);
+  sourceTextarea.focus();
+  sourceTextarea.setSelectionRange(charPos, lineEnd);
+
+  // Try to scroll the selection into view
+  // This is a simple approximation since textarea doesn't have great scroll-to-line support
+  const lineHeight = 20; // approximate
+  sourceTextarea.scrollTop = (lineNum - 1) * lineHeight;
+}
+
+/**
+ * Escape HTML special characters
+ * @param {string} str - String to escape
+ * @returns {string} Escaped string
+ */
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 /**

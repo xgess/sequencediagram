@@ -70,15 +70,49 @@ body {
 
 #errors {
   margin-top: 12px;
-  min-height: 40px;
+  display: none;
 }
 
 #errors:not(:empty) {
+  display: block;
   padding: 12px;
   background: #fff0f0;
   border: 1px solid #ffcccc;
   border-radius: 4px;
   color: #cc0000;
+}
+
+.error-header {
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.error-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.error-item {
+  padding: 4px 0;
+  cursor: pointer;
+  border-bottom: 1px solid #ffdddd;
+}
+
+.error-item:last-child {
+  border-bottom: none;
+}
+
+.error-item:hover {
+  background: #ffe0e0;
+}
+
+.error-line {
+  font-weight: bold;
+}
+
+.error-text {
+  color: #990000;
 }
 
 /* Diagram Pane */
