@@ -52,6 +52,46 @@ body {
   box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.2);
 }
 
+/* Syntax Highlighting Colors */
+.cm-s-default .cm-keyword {
+  color: #0000ff;
+  font-weight: bold;
+}
+
+.cm-s-default .cm-operator {
+  color: #d14;
+  font-weight: bold;
+}
+
+.cm-s-default .cm-comment {
+  color: #999;
+  font-style: italic;
+}
+
+.cm-s-default .cm-string {
+  color: #080;
+}
+
+.cm-s-default .cm-string-2 {
+  color: #a50;
+}
+
+.cm-s-default .cm-number {
+  color: #800080;
+}
+
+.cm-s-default .cm-atom {
+  color: #800080;
+}
+
+.cm-s-default .cm-variable {
+  color: #333;
+}
+
+.cm-s-default .cm-punctuation {
+  color: #666;
+}
+
 #errors {
   margin-top: 12px;
   display: none;

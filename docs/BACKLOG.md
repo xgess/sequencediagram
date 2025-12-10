@@ -675,16 +675,17 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - No re-render if text unchanged ✅
 - Smooth editing experience ✅
 
-## BACKLOG-059: Syntax highlighting mode
-**Phase:** 2.2  
-**Dependencies:** BACKLOG-057  
-**Description:** Create custom CodeMirror mode for sequence diagram syntax highlighting.  
+## BACKLOG-059: Syntax highlighting mode ✅
+**Phase:** 2.2
+**Dependencies:** BACKLOG-057
+**Status:** Complete
+**Description:** Create custom CodeMirror mode for sequence diagram syntax highlighting.
 **Acceptance Criteria:**
-- Keywords highlighted: participant, actor, database, alt, loop, else, end, etc.
-- Arrow operators highlighted
-- Comments greyed out
-- Strings quoted
-- Applied to editor
+- Keywords highlighted: participant, actor, database, alt, loop, else, end, etc. ✅
+- Arrow operators highlighted ✅
+- Comments greyed out ✅
+- Strings quoted ✅
+- Applied to editor ✅
 
 ## BACKLOG-060: Basic auto-completion
 **Phase:** 2.2  

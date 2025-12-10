@@ -4,6 +4,7 @@
 import { parse } from './ast/parser.js';
 import { serialize } from './ast/serializer.js';
 import { render } from './rendering/renderer.js';
+import { defineMode } from './editor/mode.js';
 
 // App state
 let currentAst = [];
@@ -48,6 +49,9 @@ function initCodeMirror() {
     return;
   }
 
+  // Define our custom syntax highlighting mode
+  defineMode(CodeMirror);
+
   // Sample diagram text
   const sampleText = `title Sample Diagram
 
@@ -66,6 +70,7 @@ DB-->>Alice:OK`;
   // Create CodeMirror instance
   editor = CodeMirror(editorContainer, {
     value: sampleText,
+    mode: 'sequence-diagram',
     lineNumbers: true,
     lineWrapping: false,
     tabSize: 2,
