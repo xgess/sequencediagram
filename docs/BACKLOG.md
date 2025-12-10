@@ -653,25 +653,27 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Can import from local files ✅
 - No network requests ✅
 
-## BACKLOG-057: Replace textarea with CodeMirror
-**Phase:** 2.1  
-**Dependencies:** BACKLOG-056  
-**Description:** Integrate CodeMirror instance into HTML test harness, remove textarea.  
+## BACKLOG-057: Replace textarea with CodeMirror ✅
+**Phase:** 2.1
+**Dependencies:** BACKLOG-056
+**Status:** Complete
+**Description:** Integrate CodeMirror instance into HTML test harness, remove textarea.
 **Acceptance Criteria:**
-- CodeMirror instance renders in editor-pane
-- Can type and edit text
-- getValue() returns current text
-- Remove "Render" button (will auto-update)
+- CodeMirror instance renders in editor-pane ✅
+- Can type and edit text ✅
+- getValue() returns current text ✅
+- Remove "Render" button (will auto-update) ✅
 
-## BACKLOG-058: Debounced auto-render
-**Phase:** 2.2  
-**Dependencies:** BACKLOG-057  
-**Description:** Wire CodeMirror onChange to parse → render with 300ms debounce.  
+## BACKLOG-058: Debounced auto-render ✅
+**Phase:** 2.2
+**Dependencies:** BACKLOG-057
+**Status:** Complete
+**Description:** Wire CodeMirror onChange to parse → render with 300ms debounce.
 **Acceptance Criteria:**
-- Diagram updates automatically while typing
-- 300ms delay prevents mid-word parsing
-- No re-render if text unchanged
-- Smooth editing experience
+- Diagram updates automatically while typing ✅
+- 300ms delay prevents mid-word parsing ✅
+- No re-render if text unchanged ✅
+- Smooth editing experience ✅
 
 ## BACKLOG-059: Syntax highlighting mode
 **Phase:** 2.2  

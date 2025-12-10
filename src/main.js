@@ -1,5 +1,5 @@
 // App initialization and main entry point
-// Wires together parser, renderer, and UI
+// Wires together parser, renderer, and UI with CodeMirror editor
 
 import { parse } from './ast/parser.js';
 import { serialize } from './ast/serializer.js';
@@ -7,43 +7,94 @@ import { render } from './rendering/renderer.js';
 
 // App state
 let currentAst = [];
+let editor = null;
+let debounceTimer = null;
 
 // DOM element references
-let sourceTextarea;
+let editorContainer;
 let diagramContainer;
 let errorsDiv;
-let renderButton;
+
+// Debounce delay for auto-render (ms)
+const DEBOUNCE_DELAY = 300;
 
 /**
  * Initialize the application
  */
 export function init() {
   // Get DOM elements
-  sourceTextarea = document.getElementById('source');
+  editorContainer = document.getElementById('editor');
   diagramContainer = document.getElementById('diagram-pane');
   errorsDiv = document.getElementById('errors');
-  renderButton = document.getElementById('render-btn');
 
-  if (!sourceTextarea || !diagramContainer || !renderButton) {
+  if (!editorContainer || !diagramContainer) {
     console.error('Required DOM elements not found');
     return;
   }
 
-  // Wire up render button
-  renderButton.addEventListener('click', handleRender);
-
-  // Add sample text
-  sourceTextarea.value = 'participant Alice\nparticipant Bob\ndatabase DB\n\nAlice->Bob:Hello\nBob-->Alice:Hi there!\nAlice->>DB:Save data\nDB-->>Alice:OK';
+  // Initialize CodeMirror
+  initCodeMirror();
 
   console.log('Sequence Diagram Tool initialized');
 }
 
 /**
- * Handle render button click
+ * Initialize CodeMirror editor
  */
-function handleRender() {
-  const text = sourceTextarea.value;
-  updateFromText(text);
+function initCodeMirror() {
+  // Check if CodeMirror is available
+  if (typeof CodeMirror === 'undefined') {
+    console.error('CodeMirror not loaded');
+    return;
+  }
+
+  // Sample diagram text
+  const sampleText = `title Sample Diagram
+
+participant Alice
+participant Bob
+database DB
+
+// Send a message
+Alice->Bob:Hello
+Bob-->Alice:Hi there!
+
+// Database interaction
+Alice->>DB:Save data
+DB-->>Alice:OK`;
+
+  // Create CodeMirror instance
+  editor = CodeMirror(editorContainer, {
+    value: sampleText,
+    lineNumbers: true,
+    lineWrapping: false,
+    tabSize: 2,
+    indentWithTabs: false,
+    theme: 'default',
+    autofocus: true
+  });
+
+  // Wire up change handler with debounce
+  editor.on('change', handleEditorChange);
+
+  // Initial render
+  updateFromText(sampleText);
+}
+
+/**
+ * Handle editor content change with debounce
+ */
+function handleEditorChange() {
+  // Clear previous timer
+  if (debounceTimer) {
+    clearTimeout(debounceTimer);
+  }
+
+  // Set new timer for debounced update
+  debounceTimer = setTimeout(() => {
+    const text = editor.getValue();
+    updateFromText(text);
+  }, DEBOUNCE_DELAY);
 }
 
 /**
@@ -52,7 +103,9 @@ function handleRender() {
  */
 export function updateFromText(text) {
   // Clear previous errors
-  errorsDiv.textContent = '';
+  if (errorsDiv) {
+    errorsDiv.textContent = '';
+  }
 
   // Parse text to AST
   currentAst = parse(text);
@@ -81,6 +134,8 @@ export function updateFromText(text) {
  * @param {Array} ast - AST nodes array
  */
 function displayErrors(ast) {
+  if (!errorsDiv) return;
+
   const errors = ast.filter(node => node.type === 'error');
 
   if (errors.length === 0) {
@@ -118,30 +173,27 @@ function displayErrors(ast) {
 }
 
 /**
- * Scroll textarea to show the specified line
+ * Scroll editor to show the specified line
  * @param {number} lineNum - 1-indexed line number
  */
 function scrollToLine(lineNum) {
-  if (!sourceTextarea) return;
+  if (!editor) return;
 
-  const text = sourceTextarea.value;
-  const lines = text.split('\n');
+  // CodeMirror uses 0-indexed lines
+  const line = lineNum - 1;
 
-  // Calculate character position of the line start
-  let charPos = 0;
-  for (let i = 0; i < lineNum - 1 && i < lines.length; i++) {
-    charPos += lines[i].length + 1; // +1 for newline
-  }
+  // Move cursor to line and select it
+  editor.setCursor({ line, ch: 0 });
+  editor.setSelection(
+    { line, ch: 0 },
+    { line, ch: editor.getLine(line)?.length || 0 }
+  );
 
-  // Select the line
-  const lineEnd = charPos + (lines[lineNum - 1]?.length || 0);
-  sourceTextarea.focus();
-  sourceTextarea.setSelectionRange(charPos, lineEnd);
+  // Scroll the line into view
+  editor.scrollIntoView({ line, ch: 0 }, 100);
 
-  // Try to scroll the selection into view
-  // This is a simple approximation since textarea doesn't have great scroll-to-line support
-  const lineHeight = 20; // approximate
-  sourceTextarea.scrollTop = (lineNum - 1) * lineHeight;
+  // Focus the editor
+  editor.focus();
 }
 
 /**
@@ -171,6 +223,14 @@ export function getAst() {
  */
 export function getText() {
   return serialize(currentAst);
+}
+
+/**
+ * Get CodeMirror editor instance
+ * @returns {CodeMirror} Editor instance
+ */
+export function getEditor() {
+  return editor;
 }
 
 // Auto-init when DOM ready (for browser)

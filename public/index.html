@@ -4,14 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sequence Diagram Tool</title>
+  <link rel="stylesheet" href="../lib/codemirror/codemirror.css">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div id="container">
     <div id="editor-pane">
       <h3>Source Text</h3>
-      <textarea id="source" rows="20" cols="50" placeholder="Enter sequence diagram text..."></textarea>
-      <button id="render-btn">Render Diagram</button>
+      <div id="editor"></div>
       <div id="errors"></div>
     </div>
 
@@ -21,6 +21,8 @@
     </div>
   </div>
 
+  <script src="../lib/codemirror/codemirror.js"></script>
+  <script src="../lib/codemirror/addon/mode/simple.js"></script>
   <script type="module" src="../src/main.js"></script>
 </body>
 </html>
