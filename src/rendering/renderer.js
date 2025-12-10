@@ -4,6 +4,7 @@
 import { renderParticipant } from './participants.js';
 import { renderMessage } from './messages.js';
 import { renderFragment } from './fragments.js';
+import { renderError } from './errors.js';
 import { calculateLayout } from './layout.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -50,10 +51,16 @@ export function render(ast) {
   titleGroup.setAttribute('id', 'title');
   svg.appendChild(titleGroup);
 
+  // Errors group
+  const errorsGroup = document.createElementNS(SVG_NS, 'g');
+  errorsGroup.setAttribute('id', 'errors');
+  svg.appendChild(errorsGroup);
+
   // Get elements from AST
   const participants = ast.filter(node => node.type === 'participant');
   const messages = ast.filter(node => node.type === 'message');
   const fragments = ast.filter(node => node.type === 'fragment');
+  const errors = ast.filter(node => node.type === 'error');
   const titleDirective = ast.find(node => node.type === 'directive' && node.directiveType === 'title');
 
   // Calculate final height for lifelines
@@ -92,6 +99,15 @@ export function render(ast) {
     if (layoutInfo) {
       const messageEl = renderMessage(message, layoutInfo);
       messagesGroup.appendChild(messageEl);
+    }
+  });
+
+  // Render errors
+  errors.forEach(error => {
+    const layoutInfo = layout.get(error.id);
+    if (layoutInfo) {
+      const errorEl = renderError(error, layoutInfo);
+      errorsGroup.appendChild(errorEl);
     }
   });
 

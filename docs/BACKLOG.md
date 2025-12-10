@@ -552,15 +552,16 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Multiple errors can exist in same AST ✅
 - Test case with syntax errors ✅
 
-## BACKLOG-049: Render error nodes
-**Phase:** 1.9  
-**Dependencies:** BACKLOG-048  
-**Description:** Display error nodes as red warning boxes in diagram per DESIGN.md.  
+## BACKLOG-049: Render error nodes ✅
+**Phase:** 1.9
+**Dependencies:** BACKLOG-048
+**Status:** Complete
+**Description:** Display error nodes as red warning boxes in diagram per DESIGN.md.
 **Acceptance Criteria:**
-- Red bordered box with warning icon (⚠)
-- Error message displayed
-- Gets 50px height in layout
-- Test: parse error renders warning box
+- Red bordered box with warning icon (⚠) ✅
+- Error message displayed ✅
+- Gets 40px height in layout ✅
+- Test: parse error renders warning box ✅
 
 ## BACKLOG-050: Display parse errors in UI
 **Phase:** 1.9  

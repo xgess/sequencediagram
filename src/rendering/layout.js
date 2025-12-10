@@ -11,6 +11,7 @@ const TITLE_HEIGHT = 30; // Extra space when title present
 const MESSAGE_START_Y = 130; // Below participants
 const MESSAGE_SPACING = 50;
 const BLANKLINE_SPACING = 20;
+const ERROR_HEIGHT = 40;
 const FRAGMENT_PADDING = 30;
 const MARGIN = 50;
 
@@ -82,7 +83,24 @@ export function calculateLayout(ast) {
       continue;
     }
 
-    if (node.type === 'message') {
+    if (node.type === 'error') {
+      // Error nodes get a full-width warning box
+      const allParticipants = Array.from(participantLayout.values());
+      const minX = allParticipants.length > 0
+        ? Math.min(...allParticipants.map(p => p.x)) - 10
+        : PARTICIPANT_START_X - 10;
+      const maxX = allParticipants.length > 0
+        ? Math.max(...allParticipants.map(p => p.x + PARTICIPANT_WIDTH)) + 10
+        : PARTICIPANT_START_X + PARTICIPANT_WIDTH + 10;
+
+      layout.set(node.id, {
+        x: minX,
+        y: currentY,
+        width: maxX - minX,
+        height: ERROR_HEIGHT
+      });
+      currentY += ERROR_HEIGHT + 10;
+    } else if (node.type === 'message') {
       const fromLayout = participantLayout.get(node.from);
       const toLayout = participantLayout.get(node.to);
 
@@ -152,6 +170,25 @@ function layoutEntry(entryId, nodeById, participantLayout, layout, currentY) {
   // Handle blank lines - add spacing
   if (entry.type === 'blankline') {
     return currentY + BLANKLINE_SPACING;
+  }
+
+  // Handle error nodes inside fragments
+  if (entry.type === 'error') {
+    const allParticipants = Array.from(participantLayout.values());
+    const minX = allParticipants.length > 0
+      ? Math.min(...allParticipants.map(p => p.x)) - 10
+      : PARTICIPANT_START_X - 10;
+    const maxX = allParticipants.length > 0
+      ? Math.max(...allParticipants.map(p => p.x + PARTICIPANT_WIDTH)) + 10
+      : PARTICIPANT_START_X + PARTICIPANT_WIDTH + 10;
+
+    layout.set(entry.id, {
+      x: minX,
+      y: currentY,
+      width: maxX - minX,
+      height: ERROR_HEIGHT
+    });
+    return currentY + ERROR_HEIGHT + 10;
   }
 
   if (entry.type === 'message') {

@@ -530,5 +530,59 @@ describe('Renderer', () => {
     });
   });
 
+  describe('error rendering (BACKLOG-049)', () => {
+    it('should render error box for parse errors', () => {
+      const ast = parse('participant Alice\ninvalid syntax here\nAlice->Alice:Test');
+      const svg = render(ast);
+
+      const errorBox = svg.querySelector('.error-box');
+      expect(errorBox).not.toBeNull();
+      expect(errorBox.getAttribute('stroke')).toBe('#c00');
+      expect(errorBox.getAttribute('fill')).toBe('#fee');
+    });
+
+    it('should render warning icon', () => {
+      const ast = parse('invalid syntax');
+      const svg = render(ast);
+
+      const icon = svg.querySelector('.error-icon');
+      expect(icon).not.toBeNull();
+      expect(icon.textContent).toBe('⚠');
+    });
+
+    it('should render error message', () => {
+      const ast = parse('invalid syntax');
+      const svg = render(ast);
+
+      const message = svg.querySelector('.error-message');
+      expect(message).not.toBeNull();
+      expect(message.textContent).toContain('Unrecognized syntax');
+    });
+
+    it('should set data-node-id on error group', () => {
+      const ast = parse('invalid syntax');
+      const svg = render(ast);
+
+      const errorGroup = svg.querySelector('.error');
+      expect(errorGroup.getAttribute('data-node-id')).toMatch(/^e_[a-z0-9]{8}$/);
+    });
+
+    it('should have errors group in SVG', () => {
+      const ast = parse('invalid syntax');
+      const svg = render(ast);
+
+      const errorsGroup = svg.querySelector('#errors');
+      expect(errorsGroup).not.toBeNull();
+    });
+
+    it('should render multiple errors', () => {
+      const ast = parse('invalid1\ninvalid2');
+      const svg = render(ast);
+
+      const errors = svg.querySelectorAll('.error');
+      expect(errors.length).toBe(2);
+    });
+  });
+
   // TODO(Phase1): Add renderer tests as features are implemented
 });
