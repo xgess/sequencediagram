@@ -65,8 +65,8 @@ function serializeNode(node, nodeById, indent) {
     case 'directive':
       return indentStr(indent) + serializeDirective(node);
     case 'error':
-      // Serialize error nodes back as their original text
-      return node.text ? indentStr(indent) + node.text : null;
+      // Serialize error nodes as comments to preserve information
+      return indentStr(indent) + `// ERROR: ${node.message} - "${node.text}"`;
     default:
       return null;
   }

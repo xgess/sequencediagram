@@ -579,14 +579,15 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 
 ### Slice 10: Integration and Testing
 
-## BACKLOG-051: Serialize error nodes as comments
-**Phase:** 1.9  
-**Dependencies:** BACKLOG-048  
-**Description:** Output error nodes as comments so serialized text is valid.  
+## BACKLOG-051: Serialize error nodes as comments ✅
+**Phase:** 1.9
+**Dependencies:** BACKLOG-048
+**Status:** Complete
+**Description:** Output error nodes as comments so serialized text is valid.
 **Acceptance Criteria:**
-- Outputs: `// ERROR: {message} - "{text}"`
-- Position preserved
-- Re-parsing serialized output creates new error node at same spot
+- Outputs: `// ERROR: {message} - "{text}"` ✅
+- Position preserved ✅
+- Re-parsing serialized output creates comment node (preserves info) ✅
 
 ## BACKLOG-052: Integration test suite
 **Phase:** 1.10  

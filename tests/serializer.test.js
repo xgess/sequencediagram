@@ -458,5 +458,54 @@ describe('Serializer', () => {
     });
   });
 
+  describe('error node serialization (BACKLOG-051)', () => {
+    it('should serialize error node as comment', () => {
+      const ast = parse('invalidSyntax!!!');
+      const text = serialize(ast);
+      expect(text).toContain('// ERROR:');
+      expect(text).toContain('invalidSyntax!!!');
+    });
+
+    it('should include error message and original text', () => {
+      const ast = parse('this is not valid');
+      const text = serialize(ast);
+      expect(text).toMatch(/\/\/ ERROR: .+ - "this is not valid"/);
+    });
+
+    it('should serialize error nodes interspersed with valid nodes', () => {
+      const ast = parse('participant Alice\ninvalidLine\nAlice->Bob:Hello');
+      const text = serialize(ast);
+      expect(text).toContain('participant Alice');
+      expect(text).toContain('// ERROR:');
+      expect(text).toContain('invalidLine');
+      expect(text).toContain('Alice->Bob:Hello');
+    });
+
+    it('should serialize multiple error nodes', () => {
+      const ast = parse('badLine1\nbadLine2');
+      const text = serialize(ast);
+      expect(text.match(/\/\/ ERROR:/g).length).toBe(2);
+      expect(text).toContain('badLine1');
+      expect(text).toContain('badLine2');
+    });
+
+    it('should serialize error inside fragment with indentation', () => {
+      const ast = parse('alt success\ninvalidInFragment\nend');
+      const text = serialize(ast);
+      expect(text).toContain('  // ERROR:');
+      expect(text).toContain('invalidInFragment');
+    });
+
+    it('should produce valid output when re-parsed (creates comment)', () => {
+      const ast1 = parse('invalidSyntax');
+      const serialized = serialize(ast1);
+      const ast2 = parse(serialized);
+      // The serialized error becomes a comment when re-parsed
+      const comment = ast2.find(n => n.type === 'comment');
+      expect(comment).toBeDefined();
+      expect(comment.text).toContain('ERROR');
+    });
+  });
+
   // TODO(Phase1): Add serializer tests as features are implemented
 });
