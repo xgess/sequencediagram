@@ -541,15 +541,16 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - \n stays as literal \n (not actual newline) ✅
 - Round-trip test passes with markup ✅
 
-## BACKLOG-048: Create error nodes for parse failures
-**Phase:** 1.9  
-**Dependencies:** BACKLOG-004  
-**Description:** When parser encounters unknown syntax, create error node instead of crashing.  
+## BACKLOG-048: Create error nodes for parse failures ✅
+**Phase:** 1.9
+**Dependencies:** BACKLOG-004
+**Status:** Complete
+**Description:** When parser encounters unknown syntax, create error node instead of crashing.
 **Acceptance Criteria:**
-- Unknown syntax creates node with type='error', text, message
-- Parser continues to next line
-- Multiple errors can exist in same AST
-- Test case with syntax errors
+- Unknown syntax creates node with type='error', text, message ✅
+- Parser continues to next line ✅
+- Multiple errors can exist in same AST ✅
+- Test case with syntax errors ✅
 
 ## BACKLOG-049: Render error nodes
 **Phase:** 1.9  

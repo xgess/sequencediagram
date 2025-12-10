@@ -532,5 +532,59 @@ end`;
     });
   });
 
+  describe('error node creation (BACKLOG-048)', () => {
+    it('should create error node for unrecognized syntax', () => {
+      const ast = parse('this is not valid syntax');
+      const error = ast.find(n => n.type === 'error');
+      expect(error).not.toBeNull();
+      expect(error.text).toBe('this is not valid syntax');
+      expect(error.message).toContain('Unrecognized syntax');
+    });
+
+    it('should generate valid ID for error node', () => {
+      const ast = parse('invalid line');
+      const error = ast.find(n => n.type === 'error');
+      expect(error.id).toMatch(/^e_[a-z0-9]{8}$/);
+    });
+
+    it('should set sourceLineStart and sourceLineEnd', () => {
+      const ast = parse('participant Alice\ninvalid line\nparticipant Bob');
+      const error = ast.find(n => n.type === 'error');
+      expect(error.sourceLineStart).toBe(2);
+      expect(error.sourceLineEnd).toBe(2);
+    });
+
+    it('should create multiple error nodes', () => {
+      const ast = parse('invalid1\ninvalid2\ninvalid3');
+      const errors = ast.filter(n => n.type === 'error');
+      expect(errors.length).toBe(3);
+    });
+
+    it('should create error node inside fragment', () => {
+      const ast = parse('alt test\ninvalid line\nend');
+      const fragment = ast.find(n => n.type === 'fragment');
+      const error = ast.find(n => n.type === 'error');
+      expect(error).not.toBeNull();
+      expect(fragment.entries).toContain(error.id);
+    });
+
+    it('should create error for unclosed fragment', () => {
+      const ast = parse('alt test\nAlice->Bob:Hello');
+      const errors = ast.filter(n => n.type === 'error');
+      const unclosedError = errors.find(e => e.message.includes('Unclosed fragment'));
+      expect(unclosedError).not.toBeNull();
+      expect(unclosedError.message).toContain('alt');
+    });
+
+    it('should continue parsing after error', () => {
+      const ast = parse('invalid line\nparticipant Alice');
+      const error = ast.find(n => n.type === 'error');
+      const participant = ast.find(n => n.type === 'participant');
+      expect(error).not.toBeNull();
+      expect(participant).not.toBeNull();
+      expect(participant.alias).toBe('Alice');
+    });
+  });
+
   // TODO(Phase1): Add parser tests as features are implemented
 });

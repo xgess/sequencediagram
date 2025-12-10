@@ -78,8 +78,15 @@ function parseAt(lines, lineIndex, ast) {
     return { nextLine: lineIndex + 1 };
   }
 
-  // Unrecognized line - skip for now
-  // TODO(Phase1): Add error node creation in BACKLOG-048
+  // Unrecognized line - create error node
+  ast.push({
+    id: generateId('error'),
+    type: 'error',
+    text: trimmed,
+    message: `Unrecognized syntax: "${trimmed}"`,
+    sourceLineStart: lineNumber,
+    sourceLineEnd: lineNumber
+  });
   return { nextLine: lineIndex + 1 };
 }
 
@@ -249,12 +256,31 @@ function parseFragment(lines, startLine, ast) {
       continue;
     }
 
-    // Unrecognized line inside fragment - skip
+    // Unrecognized line inside fragment - create error node
+    const errorNode = {
+      id: generateId('error'),
+      type: 'error',
+      text: line,
+      message: `Unrecognized syntax: "${line}"`,
+      sourceLineStart: i + 1,
+      sourceLineEnd: i + 1
+    };
+    ast.push(errorNode);
+    currentEntries.push(errorNode.id);
     i++;
   }
 
-  // Missing 'end' - create fragment anyway with what we have
-  // TODO(Phase1): Create error node for unclosed fragment in BACKLOG-048
+  // Missing 'end' - create fragment anyway with what we have and add error
+  const errorNode = {
+    id: generateId('error'),
+    type: 'error',
+    text: '',
+    message: `Unclosed fragment "${fragmentType}" starting at line ${fragmentStartLine}`,
+    sourceLineStart: fragmentStartLine,
+    sourceLineEnd: i
+  };
+  ast.push(errorNode);
+
   const fragmentNode = {
     id: fragmentId,
     type: 'fragment',
