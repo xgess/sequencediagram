@@ -7,11 +7,16 @@ import { render } from './rendering/renderer.js';
 import { defineMode } from './editor/mode.js';
 import { registerHint, setupAutoComplete } from './editor/hint.js';
 import { registerLinter, setupLinting } from './editor/linter.js';
+import { CommandHistory } from './commands/Command.js';
+import { ReplaceASTCommand } from './commands/ReplaceASTCommand.js';
 
 // App state
 let currentAst = [];
 let editor = null;
 let debounceTimer = null;
+let commandHistory = new CommandHistory(100);
+let previousText = '';
+let isUndoRedoInProgress = false;
 
 // DOM element references
 let editorContainer;
@@ -135,6 +140,11 @@ DB-->>Alice:OK`;
  * Handle editor content change with debounce
  */
 function handleEditorChange() {
+  // Skip if this change is from undo/redo
+  if (isUndoRedoInProgress) {
+    return;
+  }
+
   // Clear previous timer
   if (debounceTimer) {
     clearTimeout(debounceTimer);
@@ -143,22 +153,40 @@ function handleEditorChange() {
   // Set new timer for debounced update
   debounceTimer = setTimeout(() => {
     const text = editor.getValue();
-    updateFromText(text);
+
+    // Only create command if text actually changed
+    if (text !== previousText) {
+      updateFromText(text, true); // true = create command
+    }
   }, DEBOUNCE_DELAY);
 }
 
 /**
  * Parse text and update diagram
  * @param {string} text - Source text
+ * @param {boolean} createCommand - Whether to create a ReplaceAST command
  */
-export function updateFromText(text) {
+export function updateFromText(text, createCommand = false) {
   // Clear previous errors
   if (errorsDiv) {
     errorsDiv.textContent = '';
   }
 
+  // Store old AST for command
+  const oldAst = currentAst;
+  const oldText = previousText;
+
   // Parse text to AST
   currentAst = parse(text);
+
+  // Create command if requested and text changed
+  if (createCommand && text !== oldText) {
+    const cmd = new ReplaceASTCommand(oldAst, currentAst, oldText, text);
+    commandHistory.execute(cmd, oldAst);
+  }
+
+  // Update previous text for next comparison
+  previousText = text;
 
   // Log AST for debugging
   console.log('AST:', currentAst);
@@ -284,41 +312,121 @@ export function getEditor() {
 }
 
 /**
- * Undo the last editor change
- * Uses CodeMirror's built-in undo
- * Note: Phase 3 will add ReplaceAST command integration here
+ * Undo the last change
+ * Uses command history for structural edits, falls back to CodeMirror for typing
  */
 export function undo() {
-  if (editor) {
+  if (!editor) return;
+
+  // Check if we have command history to undo
+  if (commandHistory.canUndo()) {
+    isUndoRedoInProgress = true;
+
+    // Get the command's old text
+    const lastCommand = commandHistory.undoStack[commandHistory.undoStack.length - 1];
+    const oldText = lastCommand.getOldText();
+
+    // Undo the command (updates AST internally)
+    currentAst = commandHistory.undo(currentAst);
+    previousText = oldText;
+
+    // Update editor without triggering new command
+    editor.setValue(oldText);
+
+    // Re-render with the old AST
+    renderCurrentAst();
+
+    isUndoRedoInProgress = false;
+  } else {
+    // Fall back to CodeMirror's character-level undo
     editor.undo();
   }
 }
 
 /**
  * Redo the last undone change
- * Uses CodeMirror's built-in redo
- * Note: Phase 3 will add ReplaceAST command integration here
+ * Uses command history for structural edits, falls back to CodeMirror for typing
  */
 export function redo() {
-  if (editor) {
+  if (!editor) return;
+
+  // Check if we have command history to redo
+  if (commandHistory.canRedo()) {
+    isUndoRedoInProgress = true;
+
+    // Get the command's new text
+    const nextCommand = commandHistory.redoStack[commandHistory.redoStack.length - 1];
+    const newText = nextCommand.getNewText();
+
+    // Redo the command (updates AST internally)
+    currentAst = commandHistory.redo(currentAst);
+    previousText = newText;
+
+    // Update editor without triggering new command
+    editor.setValue(newText);
+
+    // Re-render with the new AST
+    renderCurrentAst();
+
+    isUndoRedoInProgress = false;
+  } else {
+    // Fall back to CodeMirror's character-level redo
     editor.redo();
   }
 }
 
 /**
+ * Render current AST to diagram (without parsing)
+ */
+function renderCurrentAst() {
+  const svg = render(currentAst);
+
+  // Replace diagram in container
+  const existingSvg = diagramContainer.querySelector('svg');
+  if (existingSvg) {
+    existingSvg.remove();
+  }
+  diagramContainer.appendChild(svg);
+
+  // Check for errors in AST and display them
+  displayErrors(currentAst);
+}
+
+/**
  * Get undo/redo history info
- * @returns {Object} {canUndo, canRedo, undoSize, redoSize}
+ * @returns {Object} {canUndo, canRedo, undoSize, redoSize, commandCanUndo, commandCanRedo}
  */
 export function getHistoryInfo() {
-  if (!editor) return { canUndo: false, canRedo: false, undoSize: 0, redoSize: 0 };
+  if (!editor) return { canUndo: false, canRedo: false, undoSize: 0, redoSize: 0, commandCanUndo: false, commandCanRedo: false };
 
-  const history = editor.getDoc().historySize();
+  const cmHistory = editor.getDoc().historySize();
+  const cmdInfo = commandHistory.getInfo();
+
   return {
-    canUndo: history.undo > 0,
-    canRedo: history.redo > 0,
-    undoSize: history.undo,
-    redoSize: history.redo
+    canUndo: cmHistory.undo > 0 || cmdInfo.canUndo,
+    canRedo: cmHistory.redo > 0 || cmdInfo.canRedo,
+    undoSize: cmHistory.undo,
+    redoSize: cmHistory.redo,
+    commandCanUndo: cmdInfo.canUndo,
+    commandCanRedo: cmdInfo.canRedo,
+    commandUndoCount: cmdInfo.undoCount,
+    commandRedoCount: cmdInfo.redoCount
   };
+}
+
+/**
+ * Get command history instance
+ * @returns {CommandHistory}
+ */
+export function getCommandHistory() {
+  return commandHistory;
+}
+
+/**
+ * Clear command history
+ */
+export function clearCommandHistory() {
+  commandHistory.clear();
 }
 
 /**

@@ -763,35 +763,38 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 
 ### Foundation
 
-## BACKLOG-066: Command pattern base classes
-**Phase:** 3.1  
-**Dependencies:** Phase 2 complete  
-**Description:** Implement Command class and CommandHistory per DESIGN.md.  
+## BACKLOG-066: Command pattern base classes ✅
+**Phase:** 3.1
+**Dependencies:** Phase 2 complete
+**Status:** Complete
+**Description:** Implement Command class and CommandHistory per DESIGN.md.
 **Acceptance Criteria:**
-- Command base class with do/undo methods
-- CommandHistory with execute/undo/redo
-- 100-level history cap
-- Unit tests for history management
+- Command base class with do/undo methods ✅
+- CommandHistory with execute/undo/redo ✅
+- 100-level history cap ✅
+- Unit tests for history management ✅
 
-## BACKLOG-067: ReplaceAST command
-**Phase:** 3.1  
-**Dependencies:** BACKLOG-063  
-**Description:** Implement command to replace entire AST (for text edits).  
+## BACKLOG-067: ReplaceAST command ✅
+**Phase:** 3.1
+**Dependencies:** BACKLOG-063
+**Status:** Complete
+**Description:** Implement command to replace entire AST (for text edits).
 **Acceptance Criteria:**
-- Stores old and new AST
-- do() returns new AST, undo() returns old
-- Integration with CodeMirror: create ReplaceAST command after parse completes
-- Test: type → parse → undo → redo cycle
+- Stores old and new AST ✅
+- do() returns new AST, undo() returns old ✅
+- Integration with CodeMirror: create ReplaceAST command after parse completes ✅
+- Test: type → parse → undo → redo cycle ✅
 
-## BACKLOG-068: Keyboard shortcuts for undo/redo
-**Phase:** 3.1  
-**Dependencies:** BACKLOG-064  
-**Description:** Wire Ctrl-Z/Y to command history (taking precedence over CodeMirror when history non-empty).  
+## BACKLOG-068: Keyboard shortcuts for undo/redo ✅
+**Phase:** 3.1
+**Dependencies:** BACKLOG-064
+**Status:** Complete
+**Description:** Wire Ctrl-Z/Y to command history (taking precedence over CodeMirror when history non-empty).
 **Acceptance Criteria:**
-- Ctrl-Z calls commandHistory.undo() if stack has commands
-- Falls back to CodeMirror undo if history empty
-- Ctrl-Y / Ctrl-Shift-Z for redo
-- Status bar shows undo/redo availability
+- Ctrl-Z calls commandHistory.undo() if stack has commands ✅
+- Falls back to CodeMirror undo if history empty ✅
+- Ctrl-Y / Ctrl-Shift-Z for redo ✅
+- Status bar shows undo/redo availability ✅ (via getHistoryInfo())
 
 ## BACKLOG-069: Click to select element
 **Phase:** 3.2  

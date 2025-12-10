@@ -1,0 +1,526 @@
+// Tests for Command pattern implementation (BACKLOG-066, BACKLOG-067)
+
+import { describe, it, expect, beforeEach } from 'vitest';
+import { Command, CommandHistory } from '../src/commands/Command.js';
+import { ReplaceASTCommand } from '../src/commands/ReplaceASTCommand.js';
+
+// Test command that adds an item to AST
+class AddItemCommand extends Command {
+  constructor(item) {
+    super(`Add item: ${item.id}`);
+    this.item = item;
+  }
+
+  do(ast) {
+    return [...ast, this.item];
+  }
+
+  undo(ast) {
+    return ast.filter(node => node.id !== this.item.id);
+  }
+}
+
+// Test command that removes an item from AST
+class RemoveItemCommand extends Command {
+  constructor(itemId) {
+    super(`Remove item: ${itemId}`);
+    this.itemId = itemId;
+    this.removedItem = null;
+    this.removedIndex = -1;
+  }
+
+  do(ast) {
+    this.removedIndex = ast.findIndex(node => node.id === this.itemId);
+    if (this.removedIndex === -1) return ast;
+    this.removedItem = ast[this.removedIndex];
+    return ast.filter(node => node.id !== this.itemId);
+  }
+
+  undo(ast) {
+    if (!this.removedItem) return ast;
+    const result = [...ast];
+    result.splice(this.removedIndex, 0, this.removedItem);
+    return result;
+  }
+}
+
+// Test command that modifies an item
+class ModifyItemCommand extends Command {
+  constructor(itemId, property, newValue) {
+    super(`Modify ${property} of ${itemId}`);
+    this.itemId = itemId;
+    this.property = property;
+    this.newValue = newValue;
+    this.oldValue = null;
+  }
+
+  do(ast) {
+    return ast.map(node => {
+      if (node.id === this.itemId) {
+        this.oldValue = node[this.property];
+        return { ...node, [this.property]: this.newValue };
+      }
+      return node;
+    });
+  }
+
+  undo(ast) {
+    return ast.map(node => {
+      if (node.id === this.itemId) {
+        return { ...node, [this.property]: this.oldValue };
+      }
+      return node;
+    });
+  }
+}
+
+describe('Command Base Class (BACKLOG-066)', () => {
+  it('should throw if do() not implemented', () => {
+    const cmd = new Command('test');
+    expect(() => cmd.do([])).toThrow('must be implemented');
+  });
+
+  it('should throw if undo() not implemented', () => {
+    const cmd = new Command('test');
+    expect(() => cmd.undo([])).toThrow('must be implemented');
+  });
+
+  it('should store description', () => {
+    const cmd = new Command('Test description');
+    expect(cmd.description).toBe('Test description');
+  });
+});
+
+describe('CommandHistory (BACKLOG-066)', () => {
+  let history;
+  let initialAst;
+
+  beforeEach(() => {
+    history = new CommandHistory();
+    initialAst = [
+      { id: 'p_1', type: 'participant', alias: 'Alice' },
+      { id: 'p_2', type: 'participant', alias: 'Bob' }
+    ];
+  });
+
+  describe('basic operations', () => {
+    it('should initialize with empty stacks', () => {
+      expect(history.canUndo()).toBe(false);
+      expect(history.canRedo()).toBe(false);
+    });
+
+    it('should execute command and add to undo stack', () => {
+      const newItem = { id: 'p_3', type: 'participant', alias: 'Charlie' };
+      const cmd = new AddItemCommand(newItem);
+
+      const newAst = history.execute(cmd, initialAst);
+
+      expect(newAst).toHaveLength(3);
+      expect(newAst[2].alias).toBe('Charlie');
+      expect(history.canUndo()).toBe(true);
+      expect(history.canRedo()).toBe(false);
+    });
+
+    it('should undo command', () => {
+      const newItem = { id: 'p_3', type: 'participant', alias: 'Charlie' };
+      const cmd = new AddItemCommand(newItem);
+
+      let ast = history.execute(cmd, initialAst);
+      expect(ast).toHaveLength(3);
+
+      ast = history.undo(ast);
+      expect(ast).toHaveLength(2);
+      expect(history.canUndo()).toBe(false);
+      expect(history.canRedo()).toBe(true);
+    });
+
+    it('should redo undone command', () => {
+      const newItem = { id: 'p_3', type: 'participant', alias: 'Charlie' };
+      const cmd = new AddItemCommand(newItem);
+
+      let ast = history.execute(cmd, initialAst);
+      ast = history.undo(ast);
+      expect(ast).toHaveLength(2);
+
+      ast = history.redo(ast);
+      expect(ast).toHaveLength(3);
+      expect(ast[2].alias).toBe('Charlie');
+      expect(history.canUndo()).toBe(true);
+      expect(history.canRedo()).toBe(false);
+    });
+  });
+
+  describe('redo stack clearing', () => {
+    it('should clear redo stack when new command executed', () => {
+      const item1 = { id: 'p_3', type: 'participant', alias: 'Charlie' };
+      const item2 = { id: 'p_4', type: 'participant', alias: 'David' };
+
+      let ast = history.execute(new AddItemCommand(item1), initialAst);
+      ast = history.undo(ast);
+      expect(history.canRedo()).toBe(true);
+
+      ast = history.execute(new AddItemCommand(item2), ast);
+      expect(history.canRedo()).toBe(false);
+    });
+  });
+
+  describe('multiple commands', () => {
+    it('should handle multiple execute/undo/redo', () => {
+      const item1 = { id: 'p_3', type: 'participant', alias: 'Charlie' };
+      const item2 = { id: 'p_4', type: 'participant', alias: 'David' };
+
+      let ast = history.execute(new AddItemCommand(item1), initialAst);
+      ast = history.execute(new AddItemCommand(item2), ast);
+
+      expect(ast).toHaveLength(4);
+      expect(history.getInfo().undoCount).toBe(2);
+
+      ast = history.undo(ast);
+      expect(ast).toHaveLength(3);
+
+      ast = history.undo(ast);
+      expect(ast).toHaveLength(2);
+
+      ast = history.redo(ast);
+      expect(ast).toHaveLength(3);
+
+      ast = history.redo(ast);
+      expect(ast).toHaveLength(4);
+    });
+  });
+
+  describe('history cap at 100 levels', () => {
+    it('should enforce maximum history size', () => {
+      const smallHistory = new CommandHistory(5);
+      let ast = [];
+
+      for (let i = 0; i < 10; i++) {
+        const item = { id: `item_${i}`, type: 'test' };
+        ast = smallHistory.execute(new AddItemCommand(item), ast);
+      }
+
+      expect(smallHistory.getInfo().undoCount).toBe(5);
+    });
+
+    it('should remove oldest command when limit exceeded', () => {
+      const smallHistory = new CommandHistory(3);
+      let ast = [];
+
+      for (let i = 0; i < 5; i++) {
+        const item = { id: `item_${i}`, type: 'test' };
+        ast = smallHistory.execute(new AddItemCommand(item), ast);
+      }
+
+      // Should have items 0-4 in AST but only commands 2,3,4 in history
+      expect(ast).toHaveLength(5);
+      expect(smallHistory.getInfo().undoCount).toBe(3);
+
+      // Undo should only go back 3 levels
+      ast = smallHistory.undo(ast);
+      ast = smallHistory.undo(ast);
+      ast = smallHistory.undo(ast);
+      ast = smallHistory.undo(ast); // Should have no effect
+
+      expect(ast).toHaveLength(2); // Only removed 3 items
+    });
+
+    it('should default to 100 max size', () => {
+      const defaultHistory = new CommandHistory();
+      expect(defaultHistory.maxSize).toBe(100);
+    });
+  });
+
+  describe('info and descriptions', () => {
+    it('should provide accurate history info', () => {
+      const item = { id: 'p_3', type: 'participant', alias: 'Charlie' };
+      let ast = history.execute(new AddItemCommand(item), initialAst);
+
+      const info = history.getInfo();
+      expect(info.undoCount).toBe(1);
+      expect(info.redoCount).toBe(0);
+      expect(info.canUndo).toBe(true);
+      expect(info.canRedo).toBe(false);
+    });
+
+    it('should return command descriptions', () => {
+      const item = { id: 'p_3', type: 'participant', alias: 'Charlie' };
+      let ast = history.execute(new AddItemCommand(item), initialAst);
+
+      expect(history.getLastUndoDescription()).toBe('Add item: p_3');
+      expect(history.getLastRedoDescription()).toBeNull();
+
+      ast = history.undo(ast);
+
+      expect(history.getLastUndoDescription()).toBeNull();
+      expect(history.getLastRedoDescription()).toBe('Add item: p_3');
+    });
+  });
+
+  describe('clear history', () => {
+    it('should clear all history', () => {
+      const item = { id: 'p_3', type: 'participant', alias: 'Charlie' };
+      let ast = history.execute(new AddItemCommand(item), initialAst);
+      history.undo(ast);
+
+      history.clear();
+
+      expect(history.canUndo()).toBe(false);
+      expect(history.canRedo()).toBe(false);
+      expect(history.getInfo().undoCount).toBe(0);
+      expect(history.getInfo().redoCount).toBe(0);
+    });
+  });
+
+  describe('no-op when stacks empty', () => {
+    it('should return same AST when undo stack empty', () => {
+      const result = history.undo(initialAst);
+      expect(result).toBe(initialAst);
+    });
+
+    it('should return same AST when redo stack empty', () => {
+      const result = history.redo(initialAst);
+      expect(result).toBe(initialAst);
+    });
+  });
+});
+
+describe('Example Commands', () => {
+  let history;
+  let initialAst;
+
+  beforeEach(() => {
+    history = new CommandHistory();
+    initialAst = [
+      { id: 'p_1', type: 'participant', alias: 'Alice', displayName: 'Alice' },
+      { id: 'p_2', type: 'participant', alias: 'Bob', displayName: 'Bob' },
+      { id: 'm_1', type: 'message', from: 'Alice', to: 'Bob', label: 'Hello' }
+    ];
+  });
+
+  describe('AddItemCommand', () => {
+    it('should add item with do() and remove with undo()', () => {
+      const newItem = { id: 'p_3', type: 'participant', alias: 'Charlie' };
+      const cmd = new AddItemCommand(newItem);
+
+      const afterDo = cmd.do(initialAst);
+      expect(afterDo).toHaveLength(4);
+      expect(afterDo.find(n => n.id === 'p_3')).toBeDefined();
+
+      const afterUndo = cmd.undo(afterDo);
+      expect(afterUndo).toHaveLength(3);
+      expect(afterUndo.find(n => n.id === 'p_3')).toBeUndefined();
+    });
+  });
+
+  describe('RemoveItemCommand', () => {
+    it('should remove item with do() and restore with undo()', () => {
+      const cmd = new RemoveItemCommand('p_2');
+
+      const afterDo = cmd.do(initialAst);
+      expect(afterDo).toHaveLength(2);
+      expect(afterDo.find(n => n.id === 'p_2')).toBeUndefined();
+
+      const afterUndo = cmd.undo(afterDo);
+      expect(afterUndo).toHaveLength(3);
+      expect(afterUndo.find(n => n.id === 'p_2')).toBeDefined();
+    });
+
+    it('should restore item at original index', () => {
+      const cmd = new RemoveItemCommand('p_2');
+
+      const afterDo = cmd.do(initialAst);
+      const afterUndo = cmd.undo(afterDo);
+
+      expect(afterUndo[1].id).toBe('p_2');
+    });
+  });
+
+  describe('ModifyItemCommand', () => {
+    it('should modify property with do() and restore with undo()', () => {
+      const cmd = new ModifyItemCommand('m_1', 'label', 'Goodbye');
+
+      const afterDo = cmd.do(initialAst);
+      const message = afterDo.find(n => n.id === 'm_1');
+      expect(message.label).toBe('Goodbye');
+
+      const afterUndo = cmd.undo(afterDo);
+      const restoredMessage = afterUndo.find(n => n.id === 'm_1');
+      expect(restoredMessage.label).toBe('Hello');
+    });
+  });
+
+  describe('complex command sequences', () => {
+    it('should handle interleaved add/remove/modify', () => {
+      const addCmd = new AddItemCommand({ id: 'p_3', type: 'participant', alias: 'Charlie' });
+      const modifyCmd = new ModifyItemCommand('m_1', 'label', 'Hi');
+      const removeCmd = new RemoveItemCommand('p_1');
+
+      let ast = history.execute(addCmd, initialAst);
+      expect(ast).toHaveLength(4);
+
+      ast = history.execute(modifyCmd, ast);
+      expect(ast.find(n => n.id === 'm_1').label).toBe('Hi');
+
+      ast = history.execute(removeCmd, ast);
+      expect(ast).toHaveLength(3);
+      expect(ast.find(n => n.id === 'p_1')).toBeUndefined();
+
+      // Undo all
+      ast = history.undo(ast);
+      expect(ast.find(n => n.id === 'p_1')).toBeDefined();
+
+      ast = history.undo(ast);
+      expect(ast.find(n => n.id === 'm_1').label).toBe('Hello');
+
+      ast = history.undo(ast);
+      expect(ast).toHaveLength(3);
+      expect(ast.find(n => n.id === 'p_3')).toBeUndefined();
+    });
+  });
+});
+
+describe('ReplaceASTCommand (BACKLOG-067)', () => {
+  let history;
+
+  beforeEach(() => {
+    history = new CommandHistory();
+  });
+
+  it('should replace entire AST with do()', () => {
+    const oldAst = [
+      { id: 'p_1', type: 'participant', alias: 'Alice' }
+    ];
+    const newAst = [
+      { id: 'p_1', type: 'participant', alias: 'Alice' },
+      { id: 'p_2', type: 'participant', alias: 'Bob' }
+    ];
+
+    const cmd = new ReplaceASTCommand(oldAst, newAst);
+    const result = cmd.do(oldAst);
+
+    expect(result).toHaveLength(2);
+    expect(result).toBe(newAst);
+  });
+
+  it('should restore old AST with undo()', () => {
+    const oldAst = [
+      { id: 'p_1', type: 'participant', alias: 'Alice' }
+    ];
+    const newAst = [
+      { id: 'p_1', type: 'participant', alias: 'Alice' },
+      { id: 'p_2', type: 'participant', alias: 'Bob' }
+    ];
+
+    const cmd = new ReplaceASTCommand(oldAst, newAst);
+    const afterDo = cmd.do(oldAst);
+    const afterUndo = cmd.undo(afterDo);
+
+    expect(afterUndo).toHaveLength(1);
+    expect(afterUndo).toBe(oldAst);
+  });
+
+  it('should store source text', () => {
+    const oldAst = [];
+    const newAst = [{ id: 'p_1', type: 'participant', alias: 'Alice' }];
+    const oldText = '';
+    const newText = 'participant Alice';
+
+    const cmd = new ReplaceASTCommand(oldAst, newAst, oldText, newText);
+
+    expect(cmd.getOldText()).toBe(oldText);
+    expect(cmd.getNewText()).toBe(newText);
+  });
+
+  it('should have description "Text edit"', () => {
+    const cmd = new ReplaceASTCommand([], []);
+    expect(cmd.description).toBe('Text edit');
+  });
+
+  it('should work with CommandHistory', () => {
+    const ast1 = [{ id: 'p_1', type: 'participant', alias: 'Alice' }];
+    const ast2 = [
+      { id: 'p_1', type: 'participant', alias: 'Alice' },
+      { id: 'p_2', type: 'participant', alias: 'Bob' }
+    ];
+    const ast3 = [
+      { id: 'p_1', type: 'participant', alias: 'Alice' },
+      { id: 'p_2', type: 'participant', alias: 'Bob' },
+      { id: 'm_1', type: 'message', from: 'Alice', to: 'Bob', label: 'Hi' }
+    ];
+
+    let current = ast1;
+    current = history.execute(new ReplaceASTCommand(ast1, ast2), current);
+    expect(current).toHaveLength(2);
+
+    current = history.execute(new ReplaceASTCommand(ast2, ast3), current);
+    expect(current).toHaveLength(3);
+
+    // Undo back to ast2
+    current = history.undo(current);
+    expect(current).toHaveLength(2);
+
+    // Undo back to ast1
+    current = history.undo(current);
+    expect(current).toHaveLength(1);
+
+    // Redo to ast2
+    current = history.redo(current);
+    expect(current).toHaveLength(2);
+
+    // Redo to ast3
+    current = history.redo(current);
+    expect(current).toHaveLength(3);
+  });
+
+  it('should handle type->parse->undo->redo cycle simulation', () => {
+    // Simulates the workflow: user types, system parses, user undoes
+    const emptyAst = [];
+    const text1 = 'participant Alice';
+    const ast1 = [{ id: 'p_1', type: 'participant', alias: 'Alice' }];
+
+    const text2 = 'participant Alice\nparticipant Bob';
+    const ast2 = [
+      { id: 'p_1', type: 'participant', alias: 'Alice' },
+      { id: 'p_2', type: 'participant', alias: 'Bob' }
+    ];
+
+    const text3 = 'participant Alice\nparticipant Bob\nAlice->Bob:Hello';
+    const ast3 = [
+      { id: 'p_1', type: 'participant', alias: 'Alice' },
+      { id: 'p_2', type: 'participant', alias: 'Bob' },
+      { id: 'm_1', type: 'message', from: 'Alice', to: 'Bob', label: 'Hello' }
+    ];
+
+    // Step 1: User types first line, system parses
+    let current = history.execute(
+      new ReplaceASTCommand(emptyAst, ast1, '', text1),
+      emptyAst
+    );
+    expect(current).toHaveLength(1);
+
+    // Step 2: User types second line
+    current = history.execute(
+      new ReplaceASTCommand(ast1, ast2, text1, text2),
+      current
+    );
+    expect(current).toHaveLength(2);
+
+    // Step 3: User types message
+    current = history.execute(
+      new ReplaceASTCommand(ast2, ast3, text2, text3),
+      current
+    );
+    expect(current).toHaveLength(3);
+
+    // User hits undo - should go back to ast2
+    current = history.undo(current);
+    expect(current).toHaveLength(2);
+    expect(history.getLastUndoDescription()).toBe('Text edit');
+    expect(history.getLastRedoDescription()).toBe('Text edit');
+
+    // User hits redo - should go forward to ast3
+    current = history.redo(current);
+    expect(current).toHaveLength(3);
+    expect(current[2].label).toBe('Hello');
+  });
+});
