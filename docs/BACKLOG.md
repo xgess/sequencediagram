@@ -709,15 +709,16 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Markers update on text change ✅
 - Tooltip shows error message on hover ✅
 
-## BACKLOG-062: Undo/redo integration
-**Phase:** 2.2  
-**Dependencies:** BACKLOG-057  
-**Description:** Verify CodeMirror's built-in undo/redo works correctly. Document integration point for Phase 3 command history.  
+## BACKLOG-062: Undo/redo integration ✅
+**Phase:** 2.2
+**Dependencies:** BACKLOG-057
+**Status:** Complete
+**Description:** Verify CodeMirror's built-in undo/redo works correctly. Document integration point for Phase 3 command history.
 **Acceptance Criteria:**
-- Ctrl-Z / Cmd-Z undoes typing
-- Ctrl-Y / Cmd-Shift-Z redoes
-- Undo stack depth = 100
-- Document hook point for Phase 3 ReplaceAST command integration
+- Ctrl-Z / Cmd-Z undoes typing ✅
+- Ctrl-Y / Cmd-Shift-Z redoes ✅
+- Undo stack depth = 100 ✅
+- Document hook point for Phase 3 ReplaceAST command integration ✅
 
 ## BACKLOG-063: Find and Replace functionality
 **Phase:** 2.3  

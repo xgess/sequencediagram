@@ -76,6 +76,8 @@ Alice->>DB:Save data
 DB-->>Alice:OK`;
 
   // Create CodeMirror instance
+  // Undo/redo is built-in: Ctrl-Z/Cmd-Z to undo, Ctrl-Y/Cmd-Shift-Z to redo
+  // undoDepth configures history size (default 200, we use 100)
   editor = CodeMirror(editorContainer, {
     value: sampleText,
     mode: 'sequence-diagram',
@@ -84,7 +86,8 @@ DB-->>Alice:OK`;
     tabSize: 2,
     indentWithTabs: false,
     theme: 'default',
-    autofocus: true
+    autofocus: true,
+    undoDepth: 100  // History depth for undo/redo
   });
 
   // Setup auto-completion
@@ -250,6 +253,44 @@ export function getText() {
  */
 export function getEditor() {
   return editor;
+}
+
+/**
+ * Undo the last editor change
+ * Uses CodeMirror's built-in undo
+ * Note: Phase 3 will add ReplaceAST command integration here
+ */
+export function undo() {
+  if (editor) {
+    editor.undo();
+  }
+}
+
+/**
+ * Redo the last undone change
+ * Uses CodeMirror's built-in redo
+ * Note: Phase 3 will add ReplaceAST command integration here
+ */
+export function redo() {
+  if (editor) {
+    editor.redo();
+  }
+}
+
+/**
+ * Get undo/redo history info
+ * @returns {Object} {canUndo, canRedo, undoSize, redoSize}
+ */
+export function getHistoryInfo() {
+  if (!editor) return { canUndo: false, canRedo: false, undoSize: 0, redoSize: 0 };
+
+  const history = editor.getDoc().historySize();
+  return {
+    canUndo: history.undo > 0,
+    canRedo: history.redo > 0,
+    undoSize: history.undo,
+    redoSize: history.redo
+  };
 }
 
 // Auto-init when DOM ready (for browser)
