@@ -137,7 +137,13 @@ export function registerHint(CodeMirror) {
  * @param {CodeMirror} editor - CodeMirror instance
  */
 export function setupAutoComplete(editor) {
-  // Ctrl-Space or Cmd-Space triggers completion
+  // Configure extra key bindings:
+  // - Ctrl-Space / Cmd-Space: Auto-completion
+  // - Ctrl-F / Cmd-F: Find (provided by search addon)
+  // - Ctrl-G / Cmd-G: Find next
+  // - Shift-Ctrl-G / Shift-Cmd-G: Find previous
+  // - Shift-Ctrl-F / Cmd-Option-F: Replace
+  // - Shift-Ctrl-R / Shift-Cmd-Option-R: Replace all
   editor.setOption('extraKeys', {
     'Ctrl-Space': function(cm) {
       cm.showHint({
@@ -150,6 +156,19 @@ export function setupAutoComplete(editor) {
         hint: CodeMirror.hint['sequence-diagram'],
         completeSingle: false
       });
-    }
+    },
+    // Find/Replace - using CodeMirror's built-in search commands
+    'Ctrl-F': 'find',
+    'Cmd-F': 'find',
+    'Ctrl-G': 'findNext',
+    'Cmd-G': 'findNext',
+    'Shift-Ctrl-G': 'findPrev',
+    'Shift-Cmd-G': 'findPrev',
+    'Shift-Ctrl-F': 'replace',
+    'Cmd-Option-F': 'replace',
+    'Shift-Ctrl-R': 'replaceAll',
+    'Shift-Cmd-Option-F': 'replaceAll',
+    // Jump to line
+    'Alt-G': 'jumpToLine'
   });
 }
