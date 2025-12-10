@@ -4,6 +4,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { Command, CommandHistory } from '../src/commands/Command.js';
 import { ReplaceASTCommand } from '../src/commands/ReplaceASTCommand.js';
 import { RemoveNodeCommand } from '../src/commands/RemoveNodeCommand.js';
+import { ReorderNodeCommand } from '../src/commands/ReorderNodeCommand.js';
 
 // Test command that adds an item to AST
 class AddItemCommand extends Command {
@@ -664,6 +665,141 @@ describe('RemoveNodeCommand (BACKLOG-071)', () => {
 
       expect(afterUndo[2].elseClauses[0].entries).toHaveLength(1);
       expect(afterUndo[2].elseClauses[0].entries[0].id).toBe('m_3');
+    });
+  });
+});
+
+describe('ReorderNodeCommand (BACKLOG-073)', () => {
+  let history;
+  let initialAst;
+
+  beforeEach(() => {
+    history = new CommandHistory();
+    initialAst = [
+      { id: 'p_1', type: 'participant', alias: 'Alice' },
+      { id: 'p_2', type: 'participant', alias: 'Bob' },
+      { id: 'm_1', type: 'message', from: 'Alice', to: 'Bob', label: 'First' },
+      { id: 'm_2', type: 'message', from: 'Bob', to: 'Alice', label: 'Second' },
+      { id: 'm_3', type: 'message', from: 'Alice', to: 'Bob', label: 'Third' }
+    ];
+  });
+
+  it('should move node forward in AST with do()', () => {
+    const cmd = new ReorderNodeCommand('m_1', 2, 4);
+
+    const result = cmd.do(initialAst);
+
+    expect(result[2].id).toBe('m_2');
+    expect(result[3].id).toBe('m_3');
+    expect(result[4].id).toBe('m_1');
+  });
+
+  it('should move node backward in AST with do()', () => {
+    const cmd = new ReorderNodeCommand('m_3', 4, 2);
+
+    const result = cmd.do(initialAst);
+
+    expect(result[2].id).toBe('m_3');
+    expect(result[3].id).toBe('m_1');
+    expect(result[4].id).toBe('m_2');
+  });
+
+  it('should restore original order with undo()', () => {
+    const cmd = new ReorderNodeCommand('m_1', 2, 4);
+
+    const afterDo = cmd.do(initialAst);
+    expect(afterDo[4].id).toBe('m_1');
+
+    const afterUndo = cmd.undo(afterDo);
+    expect(afterUndo[2].id).toBe('m_1');
+    expect(afterUndo[3].id).toBe('m_2');
+    expect(afterUndo[4].id).toBe('m_3');
+  });
+
+  it('should work with CommandHistory', () => {
+    const cmd = new ReorderNodeCommand('m_1', 2, 4);
+
+    let current = history.execute(cmd, initialAst);
+    expect(current[4].id).toBe('m_1');
+
+    current = history.undo(current);
+    expect(current[2].id).toBe('m_1');
+
+    current = history.redo(current);
+    expect(current[4].id).toBe('m_1');
+  });
+
+  describe('fragment entries', () => {
+    let fragmentAst;
+
+    beforeEach(() => {
+      fragmentAst = [
+        { id: 'p_1', type: 'participant', alias: 'Alice' },
+        { id: 'p_2', type: 'participant', alias: 'Bob' },
+        {
+          id: 'f_1',
+          type: 'fragment',
+          fragmentType: 'alt',
+          condition: 'cond',
+          entries: [
+            { id: 'm_1', type: 'message', from: 'Alice', to: 'Bob', label: 'First' },
+            { id: 'm_2', type: 'message', from: 'Bob', to: 'Alice', label: 'Second' },
+            { id: 'm_3', type: 'message', from: 'Alice', to: 'Bob', label: 'Third' }
+          ],
+          elseClauses: []
+        }
+      ];
+    });
+
+    it('should reorder within fragment entries', () => {
+      const cmd = new ReorderNodeCommand('m_1', 0, 2, 'f_1', 'entries');
+
+      const result = cmd.do(fragmentAst);
+
+      expect(result[2].entries[0].id).toBe('m_2');
+      expect(result[2].entries[1].id).toBe('m_3');
+      expect(result[2].entries[2].id).toBe('m_1');
+    });
+
+    it('should undo reorder within fragment entries', () => {
+      const cmd = new ReorderNodeCommand('m_1', 0, 2, 'f_1', 'entries');
+
+      const afterDo = cmd.do(fragmentAst);
+      const afterUndo = cmd.undo(afterDo);
+
+      expect(afterUndo[2].entries[0].id).toBe('m_1');
+      expect(afterUndo[2].entries[1].id).toBe('m_2');
+      expect(afterUndo[2].entries[2].id).toBe('m_3');
+    });
+  });
+
+  describe('edge cases', () => {
+    it('should handle moving to same position (no-op)', () => {
+      const cmd = new ReorderNodeCommand('m_1', 2, 2);
+
+      const result = cmd.do(initialAst);
+
+      expect(result[2].id).toBe('m_1');
+      expect(result[3].id).toBe('m_2');
+      expect(result[4].id).toBe('m_3');
+    });
+
+    it('should handle moving to position 0', () => {
+      const cmd = new ReorderNodeCommand('m_3', 4, 0);
+
+      const result = cmd.do(initialAst);
+
+      expect(result[0].id).toBe('m_3');
+      expect(result[1].id).toBe('p_1');
+    });
+
+    it('should handle moving to last position', () => {
+      const cmd = new ReorderNodeCommand('p_1', 0, 4);
+
+      const result = cmd.do(initialAst);
+
+      expect(result[0].id).toBe('p_2');
+      expect(result[4].id).toBe('p_1');
     });
   });
 });

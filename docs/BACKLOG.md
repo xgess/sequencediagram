@@ -833,31 +833,33 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 
 ### Selection and Basic Interaction
 
-## BACKLOG-072: Context-sensitive cursor behavior
-**Phase:** 3.2  
-**Dependencies:** BACKLOG-066  
-**Description:** Implement context-sensitive cursor changes per REQUIREMENTS.md to indicate possible actions.  
+## BACKLOG-072: Context-sensitive cursor behavior ✅
+**Phase:** 3.2
+**Dependencies:** BACKLOG-066
+**Status:** Complete
+**Description:** Implement context-sensitive cursor changes per REQUIREMENTS.md to indicate possible actions.
 **Acceptance Criteria:**
-- Hover over message shows move cursor
-- Hover over message endpoints shows resize cursor
-- Hover over fragment boundaries shows resize cursor
-- Hover over draggable elements shows grab/grabbing cursor
-- Hover over clickable elements shows pointer cursor
-- Default cursor when no action available
+- Hover over message shows move cursor ✅
+- Hover over message endpoints shows resize cursor ✅
+- Hover over fragment boundaries shows resize cursor ✅
+- Hover over draggable elements shows grab/grabbing cursor ✅
+- Hover over clickable elements shows pointer cursor ✅
+- Default cursor when no action available ✅
 
 
 ### Message Interactions
 
-## BACKLOG-073: Drag message to reposition vertically
-**Phase:** 3.3  
-**Dependencies:** BACKLOG-066  
-**Description:** Click and drag message to move it up/down in entry order.  
+## BACKLOG-073: Drag message to reposition vertically ✅
+**Phase:** 3.3
+**Dependencies:** BACKLOG-066
+**Status:** Complete
+**Description:** Click and drag message to move it up/down in entry order.
 **Acceptance Criteria:**
-- Dragging message changes its Y position
-- Creates ReorderNode command on drop
-- Message moves in AST array
-- Text updates to show new position
-- Undo moves message back
+- Dragging message changes its Y position ✅
+- Creates ReorderNode command on drop ✅
+- Message moves in AST array ✅
+- Text updates to show new position ✅
+- Undo moves message back ✅
 
 ## BACKLOG-074: Drag message endpoint to change target
 **Phase:** 3.3  

@@ -11,6 +11,9 @@ import { CommandHistory } from './commands/Command.js';
 import { ReplaceASTCommand } from './commands/ReplaceASTCommand.js';
 import { RemoveNodeCommand } from './commands/RemoveNodeCommand.js';
 import { initSelection, removeSelection, selectElement, deselectAll, getSelectedId } from './interaction/selection.js';
+import { initCursors, removeCursors } from './interaction/cursors.js';
+import { initDrag, removeDrag } from './interaction/drag.js';
+import { ReorderNodeCommand } from './commands/ReorderNodeCommand.js';
 
 // App state
 let currentAst = [];
@@ -200,9 +203,11 @@ export function updateFromText(text, createCommand = false) {
   // Render AST to SVG
   const svg = render(currentAst);
 
-  // Remove selection from old SVG if exists
+  // Remove handlers from old SVG if exists
   if (currentSvg) {
     removeSelection(currentSvg);
+    removeCursors(currentSvg);
+    removeDrag(currentSvg);
   }
 
   // Replace diagram in container
@@ -212,9 +217,11 @@ export function updateFromText(text, createCommand = false) {
   }
   diagramContainer.appendChild(svg);
 
-  // Store reference and initialize selection
+  // Store reference and initialize interactions
   currentSvg = svg;
   initSelection(svg, handleSelectionChange);
+  initCursors(svg);
+  initDrag(svg, handleDragComplete);
 
   // Check for errors in AST and display them
   displayErrors(currentAst);
@@ -396,9 +403,11 @@ export function redo() {
 function renderCurrentAst() {
   const svg = render(currentAst);
 
-  // Remove selection from old SVG if exists
+  // Remove handlers from old SVG if exists
   if (currentSvg) {
     removeSelection(currentSvg);
+    removeCursors(currentSvg);
+    removeDrag(currentSvg);
   }
 
   // Replace diagram in container
@@ -408,9 +417,11 @@ function renderCurrentAst() {
   }
   diagramContainer.appendChild(svg);
 
-  // Store reference and initialize selection
+  // Store reference and initialize interactions
   currentSvg = svg;
   initSelection(svg, handleSelectionChange);
+  initCursors(svg);
+  initDrag(svg, handleDragComplete);
 
   // Check for errors in AST and display them
   displayErrors(currentAst);
@@ -511,6 +522,63 @@ function clearLineHighlight() {
     lineHighlightMarker.clear();
     lineHighlightMarker = null;
   }
+}
+
+/**
+ * Handle drag completion - reorder node
+ * @param {string} nodeId - ID of dragged node
+ * @param {number} deltaIndex - How many positions to move (positive = down, negative = up)
+ */
+function handleDragComplete(nodeId, deltaIndex) {
+  if (!nodeId || deltaIndex === 0) return;
+
+  // Find node and its current index
+  const nodeInfo = findNodeWithLocation(nodeId);
+  if (!nodeInfo) return;
+
+  const { index: oldIndex, parentId, parentProperty, clauseIndex } = nodeInfo;
+
+  // Calculate new index
+  let newIndex = oldIndex + deltaIndex;
+
+  // Get the array length for bounds checking
+  let maxIndex;
+  if (parentId) {
+    const parent = currentAst.find(n => n.id === parentId);
+    if (!parent) return;
+
+    if (parentProperty === 'entries') {
+      maxIndex = parent.entries.length - 1;
+    } else if (parentProperty === 'elseClauses' && clauseIndex !== null) {
+      maxIndex = parent.elseClauses[clauseIndex].entries.length - 1;
+    }
+  } else {
+    maxIndex = currentAst.length - 1;
+  }
+
+  // Clamp to valid range
+  newIndex = Math.max(0, Math.min(newIndex, maxIndex));
+
+  // Don't reorder if index didn't change
+  if (newIndex === oldIndex) return;
+
+  // Create and execute reorder command
+  const cmd = new ReorderNodeCommand(nodeId, oldIndex, newIndex, parentId, parentProperty, clauseIndex);
+  currentAst = commandHistory.execute(cmd, currentAst);
+
+  // Update text and re-render
+  const newText = serialize(currentAst);
+  previousText = newText;
+
+  // Update editor without creating another command
+  isUndoRedoInProgress = true;
+  editor.setValue(newText);
+  isUndoRedoInProgress = false;
+
+  // Re-render
+  renderCurrentAst();
+
+  console.log(`Reordered ${nodeId} from ${oldIndex} to ${newIndex}`);
 }
 
 /**
