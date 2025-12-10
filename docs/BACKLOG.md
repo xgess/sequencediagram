@@ -885,17 +885,18 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Creates MoveMessageSource command ✅
 - message.from updated ✅
 
-## BACKLOG-076: Double-click message to edit label
-**Phase:** 3.3  
-**Dependencies:** BACKLOG-066  
-**Description:** Double-clicking message opens inline edit dialog for label text.  
+## BACKLOG-076: Double-click message to edit label ✅
+**Phase:** 3.3
+**Dependencies:** BACKLOG-066
+**Status:** Complete
+**Description:** Double-clicking message opens inline edit dialog for label text.
 **Acceptance Criteria:**
-- Dialog appears near message with text input
-- Pre-filled with current label
-- Enter or click OK commits change
-- Esc or click Cancel dismisses without change
-- Creates EditMessageLabel command
-- Text updates
+- Dialog appears near message with text input ✅
+- Pre-filled with current label ✅
+- Enter or click OK commits change ✅
+- Esc or click Cancel dismisses without change ✅
+- Creates EditMessageLabel command ✅
+- Text updates ✅
 
 ## BACKLOG-077: Create message by dragging between lifelines
 **Phase:** 3.3  

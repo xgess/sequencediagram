@@ -7,6 +7,7 @@ import { RemoveNodeCommand } from '../src/commands/RemoveNodeCommand.js';
 import { ReorderNodeCommand } from '../src/commands/ReorderNodeCommand.js';
 import { MoveMessageTargetCommand } from '../src/commands/MoveMessageTargetCommand.js';
 import { MoveMessageSourceCommand } from '../src/commands/MoveMessageSourceCommand.js';
+import { EditMessageLabelCommand } from '../src/commands/EditMessageLabelCommand.js';
 
 // Test command that adds an item to AST
 class AddItemCommand extends Command {
@@ -1016,6 +1017,126 @@ describe('MoveMessageSourceCommand (BACKLOG-075)', () => {
       const afterUndo = cmd.undo(afterDo);
 
       expect(afterUndo[3].entries[0].from).toBe('Alice');
+    });
+  });
+});
+
+describe('EditMessageLabelCommand (BACKLOG-076)', () => {
+  let history;
+  let initialAst;
+
+  beforeEach(() => {
+    history = new CommandHistory();
+    initialAst = [
+      { id: 'p_1', type: 'participant', alias: 'Alice' },
+      { id: 'p_2', type: 'participant', alias: 'Bob' },
+      { id: 'm_1', type: 'message', from: 'Alice', to: 'Bob', label: 'Hello' }
+    ];
+  });
+
+  it('should change message label with do()', () => {
+    const cmd = new EditMessageLabelCommand('m_1', 'Hello', 'Goodbye');
+
+    const result = cmd.do(initialAst);
+    const message = result.find(n => n.id === 'm_1');
+
+    expect(message.label).toBe('Goodbye');
+    expect(message.from).toBe('Alice'); // from unchanged
+    expect(message.to).toBe('Bob'); // to unchanged
+  });
+
+  it('should restore original label with undo()', () => {
+    const cmd = new EditMessageLabelCommand('m_1', 'Hello', 'Goodbye');
+
+    const afterDo = cmd.do(initialAst);
+    expect(afterDo.find(n => n.id === 'm_1').label).toBe('Goodbye');
+
+    const afterUndo = cmd.undo(afterDo);
+    expect(afterUndo.find(n => n.id === 'm_1').label).toBe('Hello');
+  });
+
+  it('should have descriptive description', () => {
+    const cmd = new EditMessageLabelCommand('m_1', 'Hello', 'Goodbye');
+    expect(cmd.description).toBe('Edit message label');
+  });
+
+  it('should work with CommandHistory', () => {
+    const cmd = new EditMessageLabelCommand('m_1', 'Hello', 'Goodbye');
+
+    let current = history.execute(cmd, initialAst);
+    expect(current.find(n => n.id === 'm_1').label).toBe('Goodbye');
+
+    current = history.undo(current);
+    expect(current.find(n => n.id === 'm_1').label).toBe('Hello');
+
+    current = history.redo(current);
+    expect(current.find(n => n.id === 'm_1').label).toBe('Goodbye');
+  });
+
+  it('should handle empty labels', () => {
+    const cmd = new EditMessageLabelCommand('m_1', 'Hello', '');
+
+    const result = cmd.do(initialAst);
+    expect(result.find(n => n.id === 'm_1').label).toBe('');
+  });
+
+  it('should handle labels with special characters', () => {
+    const cmd = new EditMessageLabelCommand('m_1', 'Hello', '**bold** //italic//');
+
+    const result = cmd.do(initialAst);
+    expect(result.find(n => n.id === 'm_1').label).toBe('**bold** //italic//');
+  });
+
+  describe('fragment entries', () => {
+    let fragmentAst;
+
+    beforeEach(() => {
+      fragmentAst = [
+        { id: 'p_1', type: 'participant', alias: 'Alice' },
+        { id: 'p_2', type: 'participant', alias: 'Bob' },
+        {
+          id: 'f_1',
+          type: 'fragment',
+          fragmentType: 'alt',
+          condition: 'cond',
+          entries: [
+            { id: 'm_1', type: 'message', from: 'Alice', to: 'Bob', label: 'Hello' }
+          ],
+          elseClauses: [
+            {
+              condition: 'else',
+              entries: [
+                { id: 'm_2', type: 'message', from: 'Bob', to: 'Alice', label: 'Bye' }
+              ]
+            }
+          ]
+        }
+      ];
+    });
+
+    it('should change label of message in fragment entries', () => {
+      const cmd = new EditMessageLabelCommand('m_1', 'Hello', 'New message');
+
+      const result = cmd.do(fragmentAst);
+
+      expect(result[2].entries[0].label).toBe('New message');
+    });
+
+    it('should change label of message in else clause', () => {
+      const cmd = new EditMessageLabelCommand('m_2', 'Bye', 'See you later');
+
+      const result = cmd.do(fragmentAst);
+
+      expect(result[2].elseClauses[0].entries[0].label).toBe('See you later');
+    });
+
+    it('should restore message in fragment on undo', () => {
+      const cmd = new EditMessageLabelCommand('m_1', 'Hello', 'New message');
+
+      const afterDo = cmd.do(fragmentAst);
+      const afterUndo = cmd.undo(afterDo);
+
+      expect(afterUndo[2].entries[0].label).toBe('Hello');
     });
   });
 });

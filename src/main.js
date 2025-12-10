@@ -16,6 +16,8 @@ import { initDrag, removeDrag } from './interaction/drag.js';
 import { ReorderNodeCommand } from './commands/ReorderNodeCommand.js';
 import { MoveMessageTargetCommand } from './commands/MoveMessageTargetCommand.js';
 import { MoveMessageSourceCommand } from './commands/MoveMessageSourceCommand.js';
+import { EditMessageLabelCommand } from './commands/EditMessageLabelCommand.js';
+import { showInlineEdit, hideInlineEdit } from './interaction/inlineEdit.js';
 
 // App state
 let currentAst = [];
@@ -221,7 +223,7 @@ export function updateFromText(text, createCommand = false) {
 
   // Store reference and initialize interactions
   currentSvg = svg;
-  initSelection(svg, handleSelectionChange);
+  initSelection(svg, handleSelectionChange, handleDoubleClick);
   initCursors(svg);
   initDrag(svg, handleDragComplete, handleEndpointChange);
 
@@ -421,7 +423,7 @@ function renderCurrentAst() {
 
   // Store reference and initialize interactions
   currentSvg = svg;
-  initSelection(svg, handleSelectionChange);
+  initSelection(svg, handleSelectionChange, handleDoubleClick);
   initCursors(svg);
   initDrag(svg, handleDragComplete, handleEndpointChange);
 
@@ -625,6 +627,61 @@ function handleEndpointChange(nodeId, endpointType, newParticipant) {
   renderCurrentAst();
 
   console.log(`Changed message ${nodeId} ${endpointType} from ${oldParticipant} to ${newParticipant}`);
+}
+
+/**
+ * Handle double-click on diagram element
+ * @param {string} nodeId - ID of the double-clicked node
+ * @param {SVGElement} element - The SVG element that was clicked
+ */
+function handleDoubleClick(nodeId, element) {
+  if (!nodeId) return;
+
+  // Find the node
+  const node = findNodeById(nodeId);
+  if (!node) return;
+
+  // Handle based on node type
+  if (node.type === 'message') {
+    // Show inline edit for message label
+    showInlineEdit(element, nodeId, node.label || '', handleLabelEditComplete);
+  }
+  // Future: handle other node types (participant, fragment condition, etc.)
+}
+
+/**
+ * Handle completion of label edit
+ * @param {string} nodeId - ID of the edited node
+ * @param {string|null} newLabel - New label value, or null if cancelled
+ */
+function handleLabelEditComplete(nodeId, newLabel) {
+  // Cancelled
+  if (newLabel === null) return;
+
+  // Find the node
+  const node = findNodeById(nodeId);
+  if (!node || node.type !== 'message') return;
+
+  // Don't create command if label unchanged
+  if (node.label === newLabel) return;
+
+  // Create and execute edit command
+  const cmd = new EditMessageLabelCommand(nodeId, node.label || '', newLabel);
+  currentAst = commandHistory.execute(cmd, currentAst);
+
+  // Update text and re-render
+  const newText = serialize(currentAst);
+  previousText = newText;
+
+  // Update editor without creating another command
+  isUndoRedoInProgress = true;
+  editor.setValue(newText);
+  isUndoRedoInProgress = false;
+
+  // Re-render
+  renderCurrentAst();
+
+  console.log(`Changed message ${nodeId} label to "${newLabel}"`);
 }
 
 /**

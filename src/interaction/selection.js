@@ -1,24 +1,28 @@
-// Selection handling for diagram elements (BACKLOG-069)
-// Provides click-to-select functionality with visual highlighting
+// Selection handling for diagram elements (BACKLOG-069, BACKLOG-076)
+// Provides click-to-select and double-click-to-edit functionality
 
 // Currently selected element ID
 let selectedElementId = null;
 
-// Callback for selection change
+// Callbacks
 let onSelectionChange = null;
+let onDoubleClick = null;
 
 /**
  * Initialize selection handling on an SVG element
  * @param {SVGElement} svg - The SVG diagram element
- * @param {Function} callback - Callback called when selection changes: (nodeId, node) => void
+ * @param {Function} selectionCallback - Callback called when selection changes: (nodeId) => void
+ * @param {Function} dblClickCallback - Callback called on double-click: (nodeId, element) => void
  */
-export function initSelection(svg, callback) {
+export function initSelection(svg, selectionCallback, dblClickCallback) {
   if (!svg) return;
 
-  onSelectionChange = callback;
+  onSelectionChange = selectionCallback;
+  onDoubleClick = dblClickCallback;
 
   // Add click handler to SVG for selection
   svg.addEventListener('click', handleSvgClick);
+  svg.addEventListener('dblclick', handleSvgDoubleClick);
 
   // Add CSS for selection highlight
   addSelectionStyles();
@@ -31,9 +35,11 @@ export function initSelection(svg, callback) {
 export function removeSelection(svg) {
   if (svg) {
     svg.removeEventListener('click', handleSvgClick);
+    svg.removeEventListener('dblclick', handleSvgDoubleClick);
   }
   selectedElementId = null;
   onSelectionChange = null;
+  onDoubleClick = null;
 }
 
 /**
@@ -52,6 +58,23 @@ function handleSvgClick(event) {
   } else {
     // Clicked on background - deselect
     deselectAll();
+  }
+}
+
+/**
+ * Handle double-click on SVG
+ * @param {MouseEvent} event
+ */
+function handleSvgDoubleClick(event) {
+  // Find the closest selectable group (has data-node-id attribute)
+  const target = event.target;
+  const selectableGroup = target.closest('[data-node-id]');
+
+  if (selectableGroup && onDoubleClick) {
+    const nodeId = selectableGroup.getAttribute('data-node-id');
+    event.preventDefault();
+    event.stopPropagation();
+    onDoubleClick(nodeId, selectableGroup);
   }
 }
 
