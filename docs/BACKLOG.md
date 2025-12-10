@@ -589,18 +589,19 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Position preserved ✅
 - Re-parsing serialized output creates comment node (preserves info) ✅
 
-## BACKLOG-052: Integration test suite
-**Phase:** 1.10  
-**Dependencies:** All prior Phase 1 tasks  
-**Description:** Create comprehensive integration tests covering all Phase 1 features.  
+## BACKLOG-052: Integration test suite ✅
+**Phase:** 1.10
+**Dependencies:** All prior Phase 1 tasks
+**Status:** Complete
+**Description:** Create comprehensive integration tests covering all Phase 1 features.
 **Acceptance Criteria:**
-- Tests for each participant type
-- Tests for each arrow type
-- Tests for fragments (nested, styled, else clauses)
-- Tests for comments, blank lines, title
-- Tests for text markup
-- Tests for error handling
-- All tests pass
+- Tests for each participant type ✅
+- Tests for each arrow type ✅
+- Tests for fragments (nested, styled, else clauses) ✅
+- Tests for comments, blank lines, title ✅
+- Tests for text markup ✅
+- Tests for error handling ✅
+- All tests pass ✅
 
 ## BACKLOG-053: Round-trip property tests
 **Phase:** 1.10  
