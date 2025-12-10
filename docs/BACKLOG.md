@@ -613,15 +613,16 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Canonical formatting is stable ✅
 - Edge cases covered (empty labels, special chars, etc.) ✅
 
-## BACKLOG-054: Example diagrams collection
-**Phase:** 1.10  
-**Dependencies:** All prior Phase 1 tasks  
-**Description:** Create examples/ directory with 5-10 sample diagrams exercising all Phase 1 features.  
+## BACKLOG-054: Example diagrams collection ✅
+**Phase:** 1.10
+**Dependencies:** All prior Phase 1 tasks
+**Status:** Complete
+**Description:** Create examples/ directory with 5-10 sample diagrams exercising all Phase 1 features.
 **Acceptance Criteria:**
-- Each example is a .txt file
-- Covers: basic flow, fragments, styling, multiple participant types, comments
-- All examples parse and render without errors
-- Serves as documentation and regression tests
+- Each example is a .txt file ✅
+- Covers: basic flow, fragments, styling, multiple participant types, comments ✅
+- All examples parse and render without errors ✅
+- Serves as documentation and regression tests ✅
 
 
 ---

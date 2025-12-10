@@ -1,0 +1,27 @@
+// Example 4: Basic Fragments (alt/else and loop)
+// Demonstrates conditional and loop fragments
+
+title Authentication Flow
+
+participant Browser
+participant "Auth Service" as Auth
+database "User DB" as DB
+
+Browser->Auth:Login request
+
+// Alt fragment for conditional logic
+alt valid credentials
+  Auth->DB:Verify user
+  DB-->Auth:User found
+  Auth-->Browser:Login success
+else invalid credentials
+  Auth-->Browser:401 Unauthorized
+else account locked
+  Auth-->Browser:Account locked message
+end
+
+// Loop fragment for retry logic
+loop max 3 retries
+  Browser->Auth:Retry login
+  Auth-->Browser:Response
+end

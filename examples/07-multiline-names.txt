@@ -1,0 +1,16 @@
+// Example 7: Multiline Participant Names
+// Demonstrates \n for line breaks in names
+
+title Multiline Names Example
+
+// Participants with multiline display names
+participant "User\nInterface" as UI
+participant "Backend\nService" as Backend
+database "Primary\nDatabase" as PrimaryDB
+actor "System\nAdmin" as Admin
+
+UI->Backend:Request
+Backend->PrimaryDB:Query
+PrimaryDB-->Backend:Response
+Backend-->UI:Data
+Admin->Backend:Monitor
