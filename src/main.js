@@ -44,6 +44,7 @@ let commandHistory = new CommandHistory(100);
 let previousText = '';
 let isUndoRedoInProgress = false;
 let currentSvg = null;
+let currentFileHandle = null; // File System Access API handle
 
 // DOM element references
 let editorContainer;
@@ -1516,6 +1517,17 @@ function initToolbar() {
     wrapToggleBtn.addEventListener('click', toggleWordWrap);
   }
 
+  // File buttons
+  const fileOpenBtn = document.getElementById('file-open');
+  const fileSaveBtn = document.getElementById('file-save');
+
+  if (fileOpenBtn) {
+    fileOpenBtn.addEventListener('click', handleFileOpen);
+  }
+  if (fileSaveBtn) {
+    fileSaveBtn.addEventListener('click', handleFileSave);
+  }
+
   // Export buttons
   const exportPngBtn = document.getElementById('export-png');
   const exportSvgBtn = document.getElementById('export-svg');
@@ -1530,6 +1542,9 @@ function initToolbar() {
   if (exportTxtBtn) {
     exportTxtBtn.addEventListener('click', handleExportTXT);
   }
+
+  // Keyboard shortcuts for file operations
+  document.addEventListener('keydown', handleFileKeydown);
 }
 
 /**
@@ -1604,6 +1619,259 @@ function handleExportTXT() {
   URL.revokeObjectURL(url);
 
   console.log('TXT exported successfully');
+}
+
+/**
+ * Handle keyboard shortcuts for file operations
+ * @param {KeyboardEvent} event
+ */
+function handleFileKeydown(event) {
+  const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+  const modKey = isMac ? event.metaKey : event.ctrlKey;
+
+  // Ctrl/Cmd-O: Open file
+  if (modKey && event.key === 'o') {
+    event.preventDefault();
+    handleFileOpen();
+  }
+
+  // Ctrl/Cmd-S: Save file
+  if (modKey && event.key === 's') {
+    event.preventDefault();
+    if (event.shiftKey) {
+      handleFileSaveAs();
+    } else {
+      handleFileSave();
+    }
+  }
+}
+
+/**
+ * Handle File Open button click
+ * Uses File System Access API when available, falls back to input element
+ */
+async function handleFileOpen() {
+  // Check for File System Access API support
+  if ('showOpenFilePicker' in window) {
+    try {
+      const [handle] = await window.showOpenFilePicker({
+        types: [
+          {
+            description: 'Sequence Diagram Files',
+            accept: {
+              'text/plain': ['.txt', '.sduml'],
+              'image/svg+xml': ['.svg']
+            }
+          }
+        ],
+        multiple: false
+      });
+
+      await loadFileFromHandle(handle);
+    } catch (err) {
+      // User cancelled or error
+      if (err.name !== 'AbortError') {
+        console.error('Failed to open file:', err);
+      }
+    }
+  } else {
+    // Fallback for browsers without File System Access API
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.txt,.sduml,.svg';
+
+    input.onchange = async (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        await loadFileFromFile(file);
+      }
+    };
+
+    input.click();
+  }
+}
+
+/**
+ * Load file content from File System Access API handle
+ * @param {FileSystemFileHandle} handle
+ */
+async function loadFileFromHandle(handle) {
+  try {
+    const file = await handle.getFile();
+    const text = await file.text();
+    const fileName = file.name.toLowerCase();
+
+    if (fileName.endsWith('.svg')) {
+      // Extract source from SVG
+      const source = extractSourceFromSVG(text);
+      if (source !== null) {
+        loadTextIntoEditor(source);
+        currentFileHandle = null; // Don't save over SVG file
+        console.log(`Loaded from SVG: ${file.name}`);
+      } else {
+        console.error('SVG file does not contain embedded source text');
+        alert('This SVG file does not contain embedded source text. It may not have been created by this tool.');
+      }
+    } else {
+      // Regular text file
+      loadTextIntoEditor(text);
+      currentFileHandle = handle;
+      console.log(`Opened file: ${file.name}`);
+    }
+  } catch (err) {
+    console.error('Failed to load file:', err);
+  }
+}
+
+/**
+ * Load file content from File object (fallback method)
+ * @param {File} file
+ */
+async function loadFileFromFile(file) {
+  try {
+    const text = await file.text();
+    const fileName = file.name.toLowerCase();
+
+    if (fileName.endsWith('.svg')) {
+      // Extract source from SVG
+      const source = extractSourceFromSVG(text);
+      if (source !== null) {
+        loadTextIntoEditor(source);
+        currentFileHandle = null;
+        console.log(`Loaded from SVG: ${file.name}`);
+      } else {
+        console.error('SVG file does not contain embedded source text');
+        alert('This SVG file does not contain embedded source text. It may not have been created by this tool.');
+      }
+    } else {
+      // Regular text file
+      loadTextIntoEditor(text);
+      currentFileHandle = null; // Can't save with File API fallback
+      console.log(`Opened file: ${file.name}`);
+    }
+  } catch (err) {
+    console.error('Failed to load file:', err);
+  }
+}
+
+/**
+ * Extract source text from SVG file's <desc> element
+ * @param {string} svgText - SVG file content
+ * @returns {string|null} Source text or null if not found
+ */
+function extractSourceFromSVG(svgText) {
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(svgText, 'image/svg+xml');
+
+    // Check for parse errors
+    const parseError = doc.querySelector('parsererror');
+    if (parseError) {
+      console.error('Failed to parse SVG:', parseError.textContent);
+      return null;
+    }
+
+    // Find <desc> element
+    const desc = doc.querySelector('desc');
+    if (desc && desc.textContent) {
+      return desc.textContent;
+    }
+
+    return null;
+  } catch (err) {
+    console.error('Failed to extract source from SVG:', err);
+    return null;
+  }
+}
+
+/**
+ * Load text content into editor and update diagram
+ * @param {string} text - Text content to load
+ */
+function loadTextIntoEditor(text) {
+  // Clear command history for new file
+  commandHistory.clear();
+
+  // Update editor
+  isUndoRedoInProgress = true;
+  editor.setValue(text);
+  isUndoRedoInProgress = false;
+
+  // Update from text
+  updateFromText(text, false);
+}
+
+/**
+ * Handle File Save button click
+ */
+async function handleFileSave() {
+  // If we have a file handle, save directly
+  if (currentFileHandle) {
+    await saveToHandle(currentFileHandle);
+  } else {
+    // Otherwise, show Save As dialog
+    await handleFileSaveAs();
+  }
+}
+
+/**
+ * Handle File Save As
+ */
+async function handleFileSaveAs() {
+  const text = serialize(currentAst);
+
+  // Check for File System Access API support
+  if ('showSaveFilePicker' in window) {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: 'diagram.txt',
+        types: [
+          {
+            description: 'Sequence Diagram Text',
+            accept: {
+              'text/plain': ['.txt', '.sduml']
+            }
+          }
+        ]
+      });
+
+      await saveToHandle(handle);
+      currentFileHandle = handle;
+    } catch (err) {
+      // User cancelled or error
+      if (err.name !== 'AbortError') {
+        console.error('Failed to save file:', err);
+      }
+    }
+  } else {
+    // Fallback: download as file
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'diagram.txt';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    console.log('File downloaded (fallback method)');
+  }
+}
+
+/**
+ * Save current text to file handle
+ * @param {FileSystemFileHandle} handle
+ */
+async function saveToHandle(handle) {
+  try {
+    const writable = await handle.createWritable();
+    const text = serialize(currentAst);
+    await writable.write(text);
+    await writable.close();
+    console.log(`Saved to: ${handle.name}`);
+  } catch (err) {
+    console.error('Failed to save file:', err);
+  }
 }
 
 /**

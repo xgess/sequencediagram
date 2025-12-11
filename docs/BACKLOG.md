@@ -1155,47 +1155,55 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 
 ### File System Access
 
-## BACKLOG-098: Open file from filesystem
-**Phase:** 4.2  
-**Dependencies:** None  
-**Description:** Implement File System Access API to open .txt/.sduml files per DESIGN.md.  
+## BACKLOG-098: Open file from filesystem ✅
+**Phase:** 4.2
+**Dependencies:** None
+**Status:** Complete
+**Description:** Implement File System Access API to open .txt/.sduml files per DESIGN.md.
 **Acceptance Criteria:**
-- Menu item: File > Open
-- Shows file picker with .txt/.sduml filter
-- Reads file content
-- Parses and loads into editor
-- Stores fileHandle for later save
+- Open button in editor toolbar ✅
+- Shows file picker with .txt/.sduml/.svg filter ✅
+- Reads file content ✅
+- Parses and loads into editor ✅
+- Stores fileHandle for later save ✅
+- Keyboard shortcut: Ctrl/Cmd-O ✅
+- Fallback for browsers without File System Access API ✅
 
-## BACKLOG-099: Open SVG file and extract source
-**Phase:** 4.2  
-**Dependencies:** BACKLOG-092  
-**Description:** When opening .svg file, extract source from <desc> element.  
+## BACKLOG-099: Open SVG file and extract source ✅
+**Phase:** 4.2
+**Dependencies:** BACKLOG-092
+**Status:** Complete
+**Description:** When opening .svg file, extract source from <desc> element.
 **Acceptance Criteria:**
-- File picker includes .svg in allowed types
-- Parses SVG XML with DOMParser
-- Extracts text from <desc>
-- Loads into editor
-- If <desc> missing, shows error
+- File picker includes .svg in allowed types ✅
+- Parses SVG XML with DOMParser ✅
+- Extracts text from <desc> ✅
+- Loads into editor ✅
+- If <desc> missing, shows error alert ✅
 
-## BACKLOG-100: Save file to filesystem
-**Phase:** 4.2  
-**Dependencies:** BACKLOG-092  
-**Description:** Save current text to filesystem, reusing fileHandle if available.  
+## BACKLOG-100: Save file to filesystem ✅
+**Phase:** 4.2
+**Dependencies:** BACKLOG-092
+**Status:** Complete
+**Description:** Save current text to filesystem, reusing fileHandle if available.
 **Acceptance Criteria:**
-- Menu item: File > Save (Ctrl-S)
-- If fileHandle exists, writes directly
-- If no handle, prompts for location with showSaveFilePicker
-- Saves as .txt
-- Status message confirms save
+- Save button in editor toolbar ✅
+- Keyboard shortcut: Ctrl/Cmd-S ✅
+- If fileHandle exists, writes directly ✅
+- If no handle, prompts for location with showSaveFilePicker ✅
+- Saves as .txt ✅
+- Console message confirms save ✅
+- Fallback download for browsers without File System Access API ✅
 
-## BACKLOG-101: Save As
-**Phase:** 4.2  
-**Dependencies:** BACKLOG-094  
-**Description:** Force save dialog even if fileHandle exists.  
+## BACKLOG-101: Save As ✅
+**Phase:** 4.2
+**Dependencies:** BACKLOG-094
+**Status:** Complete
+**Description:** Force save dialog even if fileHandle exists.
 **Acceptance Criteria:**
-- Menu item: File > Save As
-- Always shows save picker
-- Updates fileHandle after successful save
+- Keyboard shortcut: Ctrl/Cmd-Shift-S ✅
+- Always shows save picker ✅
+- Updates fileHandle after successful save ✅
 
 
 ### localStorage
