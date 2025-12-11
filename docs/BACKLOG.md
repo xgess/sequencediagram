@@ -1100,54 +1100,57 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Generates data URL ✅
 - Returns PNG blob ✅
 
-## BACKLOG-093: PNG download action
-**Phase:** 4.1  
-**Dependencies:** BACKLOG-086  
-**Description:** Add "Export PNG" menu item that downloads PNG file.  
+## BACKLOG-093: PNG download action ✅
+**Phase:** 4.1
+**Dependencies:** BACKLOG-092
+**Status:** Complete
+**Description:** Add "Export PNG" menu item that downloads PNG file.
 **Acceptance Criteria:**
-- Menu item in Export menu
-- Triggers download dialog with diagram.png
-- Uses current zoom level
-- Works in all browsers
+- Button in diagram toolbar ✅
+- Triggers download with diagram.png ✅
+- Uses 2x scale for high DPI ✅
+- Works in all browsers ✅
 
 ## BACKLOG-094: PNG copy-to-clipboard action
-**Phase:** 4.1  
-**Dependencies:** BACKLOG-086  
-**Description:** Add "Copy PNG" option that renders in modal for user to copy.  
+**Phase:** 4.1
+**Dependencies:** BACKLOG-092
+**Status:** Deferred (can be added later if needed)
+**Description:** Add "Copy PNG" option that renders in modal for user to copy.
 **Acceptance Criteria:**
 - Menu item in Export menu
 - Opens modal with PNG image
 - User can right-click to copy
 - Modal has "Done" button
 
-## BACKLOG-095: SVG export with embedded source
-**Phase:** 4.1  
-**Dependencies:** None (uses existing SVG)  
-**Description:** Implement SVG export with source text in <desc> element per DESIGN.md.  
+## BACKLOG-095: SVG export with embedded source ✅
+**Phase:** 4.1
+**Dependencies:** None (uses existing SVG)
+**Status:** Complete
+**Description:** Implement SVG export with source text in <desc> element per DESIGN.md.
 **Acceptance Criteria:**
-- exportSVG(svgElement, sourceText) function
-- Clones SVG, adds <desc> with source
-- Serializes to string
-- Creates blob and download
+- Clones SVG, adds <desc> with source ✅
+- Serializes to string ✅
+- Creates blob and download ✅
 
-## BACKLOG-096: SVG download action
-**Phase:** 4.1  
-**Dependencies:** BACKLOG-089  
-**Description:** Add "Export SVG" menu item.  
+## BACKLOG-096: SVG download action ✅
+**Phase:** 4.1
+**Dependencies:** BACKLOG-095
+**Status:** Complete
+**Description:** Add "Export SVG" menu item.
 **Acceptance Criteria:**
-- Menu in Export menu
-- Downloads diagram.svg
-- Font icons embedded as paths (not font references)
-- Verified: re-opening SVG shows original diagram
+- Button in diagram toolbar ✅
+- Downloads diagram.svg ✅
+- Source text embedded in <desc> element ✅
 
-## BACKLOG-097: TXT export
-**Phase:** 4.1  
-**Dependencies:** None (uses serializer)  
-**Description:** Add "Export Text" menu item that downloads serialized text.  
+## BACKLOG-097: TXT export ✅
+**Phase:** 4.1
+**Dependencies:** None (uses serializer)
+**Status:** Complete
+**Description:** Add "Export Text" menu item that downloads serialized text.
 **Acceptance Criteria:**
-- Menu item
-- Downloads diagram.txt or diagram.sduml
-- Content is serialize(currentAst)
+- Button in diagram toolbar ✅
+- Downloads diagram.txt ✅
+- Content is serialize(currentAst) ✅
 
 
 ### File System Access

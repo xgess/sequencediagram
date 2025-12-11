@@ -184,12 +184,40 @@ body {
   padding: 16px;
   overflow: auto;
   background: #fafafa;
+  display: flex;
+  flex-direction: column;
 }
 
-#diagram-pane h3 {
-  margin: 0 0 12px 0;
+#diagram-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+#diagram-header h3 {
+  margin: 0;
   font-size: 16px;
   color: #333;
+}
+
+#diagram-toolbar {
+  display: flex;
+  gap: 8px;
+}
+
+#diagram-toolbar button {
+  padding: 4px 10px;
+  font-size: 12px;
+  background: #f5f5f5;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+#diagram-toolbar button:hover {
+  background: #e5e5e5;
 }
 
 #diagram {

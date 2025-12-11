@@ -34,6 +34,7 @@ import { showAddMessageDialog, hideAddMessageDialog } from './interaction/addMes
 import { showAddFragmentDialog, hideAddFragmentDialog } from './interaction/addFragmentDialog.js';
 import { AddParticipantCommand } from './commands/AddParticipantCommand.js';
 import { AddFragmentCommand } from './commands/AddFragmentCommand.js';
+import { downloadPNG } from './export/png.js';
 
 // App state
 let currentAst = [];
@@ -1514,6 +1515,95 @@ function initToolbar() {
     // Handle click
     wrapToggleBtn.addEventListener('click', toggleWordWrap);
   }
+
+  // Export buttons
+  const exportPngBtn = document.getElementById('export-png');
+  const exportSvgBtn = document.getElementById('export-svg');
+  const exportTxtBtn = document.getElementById('export-txt');
+
+  if (exportPngBtn) {
+    exportPngBtn.addEventListener('click', handleExportPNG);
+  }
+  if (exportSvgBtn) {
+    exportSvgBtn.addEventListener('click', handleExportSVG);
+  }
+  if (exportTxtBtn) {
+    exportTxtBtn.addEventListener('click', handleExportTXT);
+  }
+}
+
+/**
+ * Handle Export PNG button click
+ */
+async function handleExportPNG() {
+  if (!currentSvg) return;
+
+  try {
+    await downloadPNG(currentSvg, 'diagram.png', 2);
+    console.log('PNG exported successfully');
+  } catch (error) {
+    console.error('Failed to export PNG:', error);
+  }
+}
+
+/**
+ * Handle Export SVG button click
+ */
+function handleExportSVG() {
+  if (!currentSvg) return;
+
+  // Clone the SVG
+  const clonedSvg = currentSvg.cloneNode(true);
+
+  // Get dimensions
+  const bbox = currentSvg.getBBox();
+  const width = Math.ceil(bbox.width + bbox.x + 20);
+  const height = Math.ceil(bbox.height + bbox.y + 20);
+
+  clonedSvg.setAttribute('width', width);
+  clonedSvg.setAttribute('height', height);
+  clonedSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+  // Add source text as description
+  const desc = document.createElementNS('http://www.w3.org/2000/svg', 'desc');
+  desc.textContent = serialize(currentAst);
+  clonedSvg.insertBefore(desc, clonedSvg.firstChild);
+
+  // Serialize
+  const serializer = new XMLSerializer();
+  const svgString = serializer.serializeToString(clonedSvg);
+
+  // Download
+  const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'diagram.svg';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+
+  console.log('SVG exported successfully');
+}
+
+/**
+ * Handle Export TXT button click
+ */
+function handleExportTXT() {
+  const text = serialize(currentAst);
+
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'diagram.txt';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+
+  console.log('TXT exported successfully');
 }
 
 /**
