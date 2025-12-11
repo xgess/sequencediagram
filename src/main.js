@@ -30,6 +30,7 @@ import { showConfirmDialog } from './interaction/confirmDialog.js';
 import { initLifelineDrag, removeLifelineDrag } from './interaction/lifelineDrag.js';
 import { showContextMenu, hideContextMenu } from './interaction/contextMenu.js';
 import { showAddParticipantDialog, hideAddParticipantDialog } from './interaction/addParticipantDialog.js';
+import { showAddMessageDialog, hideAddMessageDialog } from './interaction/addMessageDialog.js';
 import { AddParticipantCommand } from './commands/AddParticipantCommand.js';
 
 // App state
@@ -739,8 +740,17 @@ function handleContextMenuAction(action, nodeId) {
       break;
 
     case 'add-message':
+      // Get list of participants for the dropdown
+      const participants = currentAst.filter(n => n.type === 'participant');
+      if (participants.length < 2) {
+        console.warn('Need at least 2 participants to add a message');
+        break;
+      }
+      showAddMessageDialog(100, 100, participants, handleAddMessageComplete);
+      break;
+
     case 'add-fragment':
-      // These actions will be implemented in BACKLOG-090, 091
+      // This action will be implemented in BACKLOG-091
       console.log(`Action "${action}" will be implemented in future backlog items`);
       break;
 
@@ -788,6 +798,38 @@ function handleAddParticipantComplete(result) {
   selectElement(participantId);
 
   console.log(`Added ${type} ${alias} (${displayName})`);
+}
+
+/**
+ * Handle completion of add message dialog
+ * @param {Object|null} result - {from, to, arrowType, label} or null if cancelled
+ */
+function handleAddMessageComplete(result) {
+  if (!result) return;
+
+  const { from, to, arrowType, label } = result;
+
+  // Create and execute the command
+  const cmd = new AddMessageCommand(from, to, label, arrowType);
+  currentAst = commandHistory.execute(cmd, currentAst);
+
+  // Update text and re-render
+  const newText = serialize(currentAst);
+  previousText = newText;
+
+  // Update editor without creating another command
+  isUndoRedoInProgress = true;
+  editor.setValue(newText);
+  isUndoRedoInProgress = false;
+
+  // Re-render
+  renderCurrentAst();
+
+  // Select the new message
+  const messageId = cmd.getMessageId();
+  selectElement(messageId);
+
+  console.log(`Added message ${from}${arrowType}${to}: ${label}`);
 }
 
 /**

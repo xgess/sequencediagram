@@ -1057,16 +1057,17 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - New participant added at end or after selected participant ✅
 - Text updates ✅
 
-## BACKLOG-090: Add message from context menu
-**Phase:** 3.6  
-**Dependencies:** BACKLOG-100  
-**Description:** Context menu > Add Message prompts for source, target, arrow type, label.  
+## BACKLOG-090: Add message from context menu ✅
+**Phase:** 3.6
+**Dependencies:** BACKLOG-088
+**Status:** Complete
+**Description:** Context menu > Add Message prompts for source, target, arrow type, label.
 **Acceptance Criteria:**
-- Dialog with dropdowns for participants and arrow type
-- Text input for label
-- Creates AddMessage command
-- Inserted after selected element or at end
-- Text updates
+- Dialog with dropdowns for participants and arrow type ✅
+- Text input for label ✅
+- Creates AddMessage command ✅
+- Inserted after selected element or at end ✅
+- Text updates ✅
 
 ## BACKLOG-091: Add fragment from context menu
 **Phase:** 3.6  
