@@ -28,6 +28,7 @@ import { ChangeEntrySpacingCommand } from './commands/ChangeEntrySpacingCommand.
 import { showInlineEdit, showParticipantEdit, hideInlineEdit } from './interaction/inlineEdit.js';
 import { showConfirmDialog } from './interaction/confirmDialog.js';
 import { initLifelineDrag, removeLifelineDrag } from './interaction/lifelineDrag.js';
+import { showContextMenu, hideContextMenu } from './interaction/contextMenu.js';
 
 // App state
 let currentAst = [];
@@ -234,7 +235,7 @@ export function updateFromText(text, createCommand = false) {
 
   // Store reference and initialize interactions
   currentSvg = svg;
-  initSelection(svg, handleSelectionChange, handleDoubleClick);
+  initSelection(svg, handleSelectionChange, handleDoubleClick, handleContextMenu);
   initCursors(svg);
   initDrag(svg, handleDragComplete, handleEndpointChange, handleParticipantReorder, handleFragmentBoundaryChange, handleElseDividerChange);
   initLifelineDrag(svg, handleLifelineDrag);
@@ -436,7 +437,7 @@ function renderCurrentAst() {
 
   // Store reference and initialize interactions
   currentSvg = svg;
-  initSelection(svg, handleSelectionChange, handleDoubleClick);
+  initSelection(svg, handleSelectionChange, handleDoubleClick, handleContextMenu);
   initCursors(svg);
   initDrag(svg, handleDragComplete, handleEndpointChange, handleParticipantReorder, handleFragmentBoundaryChange, handleElseDividerChange);
   initLifelineDrag(svg, handleLifelineDrag);
@@ -678,6 +679,60 @@ function handleDoubleClick(nodeId, element, extra) {
       // Show inline edit for fragment condition
       showInlineEdit(element, nodeId, node.condition || '', handleFragmentConditionEditComplete);
     }
+  }
+}
+
+/**
+ * Handle right-click context menu on diagram
+ * @param {number} x - Client X coordinate
+ * @param {number} y - Client Y coordinate
+ * @param {string|null} nodeId - ID of the clicked node, null for background
+ * @param {string|null} nodeType - Type of the clicked node
+ */
+function handleContextMenu(x, y, nodeId, nodeType) {
+  showContextMenu(x, y, nodeId, nodeType, handleContextMenuAction);
+}
+
+/**
+ * Handle context menu action selection
+ * @param {string} action - The selected action
+ * @param {string|null} nodeId - ID of the clicked node
+ */
+function handleContextMenuAction(action, nodeId) {
+  console.log('Context menu action:', action, 'nodeId:', nodeId);
+
+  switch (action) {
+    case 'edit':
+      // Trigger edit on the selected element (same as double-click)
+      if (nodeId) {
+        const node = findNodeById(nodeId);
+        const element = currentSvg.querySelector(`[data-node-id="${nodeId}"]`);
+        if (node && element) {
+          handleDoubleClick(nodeId, element, null);
+        }
+      }
+      break;
+
+    case 'delete':
+      // Delete the selected element
+      if (nodeId) {
+        deleteSelectedElement();
+      }
+      break;
+
+    case 'add-participant':
+    case 'add-actor':
+    case 'add-database':
+    case 'add-queue':
+    case 'add-message':
+    case 'add-fragment':
+      // These actions will be implemented in BACKLOG-089, 090, 091
+      // For now, just log and show a placeholder message
+      console.log(`Action "${action}" will be implemented in future backlog items`);
+      break;
+
+    default:
+      console.log('Unknown action:', action);
   }
 }
 

@@ -1020,9 +1020,10 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Command for undo/redo ✅
 
 ## BACKLOG-087: Drag dividers and spaces to reposition
-**Phase:** 3.7  
-**Dependencies:** BACKLOG-066  
-**Description:** Make divider and space elements draggable per REQUIREMENTS.md drag operations.  
+**Phase:** 3.7
+**Dependencies:** BACKLOG-066, BACKLOG-126
+**Status:** Blocked (waiting for divider/space parsing in BACKLOG-126)
+**Description:** Make divider and space elements draggable per REQUIREMENTS.md drag operations.
 **Acceptance Criteria:**
 - Dividers (==text==) can be dragged up/down to reposition
 - Space directives can be dragged to move
@@ -1033,16 +1034,17 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 
 ### Context Menu
 
-## BACKLOG-088: Right-click context menu
-**Phase:** 3.6  
-**Dependencies:** BACKLOG-066  
-**Description:** Implement right-click menu with options to add elements.  
+## BACKLOG-088: Right-click context menu ✅
+**Phase:** 3.6
+**Dependencies:** BACKLOG-066
+**Status:** Complete
+**Description:** Implement right-click menu with options to add elements.
 **Acceptance Criteria:**
-- Right-click background or element shows menu
-- Categories: Participants, Messages, Fragments, Notes (Phase 4), Other
-- Menu positioned at click location
-- Selecting item initiates creation workflow
-- Esc closes menu
+- Right-click background or element shows menu ✅
+- Categories: Participants, Messages, Fragments, Notes (Phase 4), Other ✅
+- Menu positioned at click location ✅
+- Selecting item initiates creation workflow ✅
+- Esc closes menu ✅
 
 ## BACKLOG-089: Add participant from context menu
 **Phase:** 3.6  

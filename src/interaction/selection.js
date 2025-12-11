@@ -1,5 +1,5 @@
-// Selection handling for diagram elements (BACKLOG-069, BACKLOG-076)
-// Provides click-to-select and double-click-to-edit functionality
+// Selection handling for diagram elements (BACKLOG-069, BACKLOG-076, BACKLOG-088)
+// Provides click-to-select, double-click-to-edit, and right-click context menu functionality
 
 // Currently selected element ID
 let selectedElementId = null;
@@ -7,22 +7,26 @@ let selectedElementId = null;
 // Callbacks
 let onSelectionChange = null;
 let onDoubleClick = null;
+let onContextMenu = null;
 
 /**
  * Initialize selection handling on an SVG element
  * @param {SVGElement} svg - The SVG diagram element
  * @param {Function} selectionCallback - Callback called when selection changes: (nodeId) => void
  * @param {Function} dblClickCallback - Callback called on double-click: (nodeId, element) => void
+ * @param {Function} contextMenuCallback - Callback called on right-click: (x, y, nodeId, nodeType) => void
  */
-export function initSelection(svg, selectionCallback, dblClickCallback) {
+export function initSelection(svg, selectionCallback, dblClickCallback, contextMenuCallback) {
   if (!svg) return;
 
   onSelectionChange = selectionCallback;
   onDoubleClick = dblClickCallback;
+  onContextMenu = contextMenuCallback;
 
   // Add click handler to SVG for selection
   svg.addEventListener('click', handleSvgClick);
   svg.addEventListener('dblclick', handleSvgDoubleClick);
+  svg.addEventListener('contextmenu', handleSvgContextMenu);
 
   // Add CSS for selection highlight
   addSelectionStyles();
@@ -36,10 +40,12 @@ export function removeSelection(svg) {
   if (svg) {
     svg.removeEventListener('click', handleSvgClick);
     svg.removeEventListener('dblclick', handleSvgDoubleClick);
+    svg.removeEventListener('contextmenu', handleSvgContextMenu);
   }
   selectedElementId = null;
   onSelectionChange = null;
   onDoubleClick = null;
+  onContextMenu = null;
 }
 
 /**
@@ -91,6 +97,38 @@ function handleSvgDoubleClick(event) {
       onDoubleClick(nodeId, selectableGroup, null);
     }
   }
+}
+
+/**
+ * Handle context menu (right-click) on SVG
+ * @param {MouseEvent} event
+ */
+function handleSvgContextMenu(event) {
+  event.preventDefault();
+
+  if (!onContextMenu) return;
+
+  // Find the closest selectable group (has data-node-id attribute)
+  const target = event.target;
+  const selectableGroup = target.closest('[data-node-id]');
+
+  let nodeId = null;
+  let nodeType = null;
+
+  if (selectableGroup) {
+    nodeId = selectableGroup.getAttribute('data-node-id');
+    // Get the node type from the class (participant, message, fragment, etc.)
+    nodeType = selectableGroup.classList.contains('participant') ? 'participant' :
+               selectableGroup.classList.contains('message') ? 'message' :
+               selectableGroup.classList.contains('fragment') ? 'fragment' :
+               selectableGroup.classList.contains('error') ? 'error' : null;
+
+    // Select the element
+    selectElement(nodeId);
+  }
+
+  // Call the callback with position and node info
+  onContextMenu(event.clientX, event.clientY, nodeId, nodeType);
 }
 
 /**
