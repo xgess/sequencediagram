@@ -21,6 +21,7 @@ import { AddMessageCommand } from './commands/AddMessageCommand.js';
 import { ReorderParticipantCommand } from './commands/ReorderParticipantCommand.js';
 import { EditParticipantCommand } from './commands/EditParticipantCommand.js';
 import { showInlineEdit, showParticipantEdit, hideInlineEdit } from './interaction/inlineEdit.js';
+import { showConfirmDialog } from './interaction/confirmDialog.js';
 import { initLifelineDrag, removeLifelineDrag } from './interaction/lifelineDrag.js';
 
 // App state
@@ -958,6 +959,35 @@ export function deleteSelectedElement() {
 
   const { node, index, parentId, parentProperty, clauseIndex } = nodeInfo;
 
+  // Check if it's a participant with references
+  if (node.type === 'participant') {
+    const refCount = countParticipantReferences(node.alias);
+    if (refCount > 0) {
+      // Show warning dialog
+      const message = `${refCount} message${refCount > 1 ? 's' : ''} reference${refCount === 1 ? 's' : ''} this participant. Deleting it will cause those messages to show as errors.`;
+      showConfirmDialog(
+        'Delete Participant?',
+        message,
+        () => executeDelete(selectedId, node, index, parentId, parentProperty, clauseIndex)
+      );
+      return;
+    }
+  }
+
+  // No references or not a participant - delete directly
+  executeDelete(selectedId, node, index, parentId, parentProperty, clauseIndex);
+}
+
+/**
+ * Execute the actual deletion
+ * @param {string} selectedId
+ * @param {Object} node
+ * @param {number} index
+ * @param {string|null} parentId
+ * @param {string|null} parentProperty
+ * @param {number|null} clauseIndex
+ */
+function executeDelete(selectedId, node, index, parentId, parentProperty, clauseIndex) {
   // Create and execute the remove command
   const cmd = new RemoveNodeCommand(selectedId, node, index, parentId, parentProperty, clauseIndex);
   currentAst = commandHistory.execute(cmd, currentAst);
@@ -977,6 +1007,44 @@ export function deleteSelectedElement() {
 
   // Re-render
   renderCurrentAst();
+}
+
+/**
+ * Count how many messages reference a participant alias
+ * @param {string} alias - Participant alias to check
+ * @returns {number} Number of references
+ */
+function countParticipantReferences(alias) {
+  let count = 0;
+
+  function checkEntries(entries) {
+    for (const entry of entries) {
+      if (entry.type === 'message') {
+        if (entry.from === alias) count++;
+        if (entry.to === alias) count++;
+      }
+    }
+  }
+
+  for (const node of currentAst) {
+    if (node.type === 'message') {
+      if (node.from === alias) count++;
+      if (node.to === alias) count++;
+    } else if (node.type === 'fragment') {
+      if (node.entries) {
+        checkEntries(node.entries);
+      }
+      if (node.elseClauses) {
+        for (const clause of node.elseClauses) {
+          if (clause.entries) {
+            checkEntries(clause.entries);
+          }
+        }
+      }
+    }
+  }
+
+  return count;
 }
 
 /**

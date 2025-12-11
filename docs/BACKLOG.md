@@ -940,15 +940,16 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Text updates: `participant "New Name" as Alias` ✅
 - Messages still reference alias (updated if alias changes) ✅
 
-## BACKLOG-080: Delete participant (with warning)
-**Phase:** 3.4  
-**Dependencies:** BACKLOG-068  
-**Description:** Deleting participant shows warning if messages reference it.  
+## BACKLOG-080: Delete participant (with warning) ✅
+**Phase:** 3.4
+**Dependencies:** BACKLOG-068
+**Status:** Complete
+**Description:** Deleting participant shows warning if messages reference it.
 **Acceptance Criteria:**
-- Warning dialog: "X messages reference this participant. Delete anyway?"
-- If confirmed, participant removed
-- Orphaned messages become errors
-- Undo restores participant and fixes errors
+- Warning dialog: "X messages reference this participant. Delete anyway?" ✅
+- If confirmed, participant removed ✅
+- Orphaned messages become errors ✅
+- Undo restores participant and fixes errors ✅
 
 
 ### Fragment Interactions
