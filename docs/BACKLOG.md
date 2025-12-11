@@ -927,17 +927,18 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Text shows participants in new order ✅
 - Undo restores order ✅
 
-## BACKLOG-079: Double-click participant to edit name and alias
-**Phase:** 3.4  
-**Dependencies:** BACKLOG-066  
-**Description:** Double-click participant opens edit dialog for displayName and alias.  
+## BACKLOG-079: Double-click participant to edit name and alias ✅
+**Phase:** 3.4
+**Dependencies:** BACKLOG-066
+**Status:** Complete
+**Description:** Double-click participant opens edit dialog for displayName and alias.
 **Acceptance Criteria:**
-- Dialog with two text inputs: Display Name, Alias
-- Pre-filled with current values
-- Enter/OK commits changes
-- Creates EditParticipant command
-- Text updates: `participant "New Name" as Alias`
-- Messages still reference alias (no change)
+- Dialog with two text inputs: Display Name, Alias ✅
+- Pre-filled with current values ✅
+- Enter/OK commits changes ✅
+- Creates EditParticipant command ✅
+- Text updates: `participant "New Name" as Alias` ✅
+- Messages still reference alias (updated if alias changes) ✅
 
 ## BACKLOG-080: Delete participant (with warning)
 **Phase:** 3.4  

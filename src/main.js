@@ -19,7 +19,8 @@ import { MoveMessageSourceCommand } from './commands/MoveMessageSourceCommand.js
 import { EditMessageLabelCommand } from './commands/EditMessageLabelCommand.js';
 import { AddMessageCommand } from './commands/AddMessageCommand.js';
 import { ReorderParticipantCommand } from './commands/ReorderParticipantCommand.js';
-import { showInlineEdit, hideInlineEdit } from './interaction/inlineEdit.js';
+import { EditParticipantCommand } from './commands/EditParticipantCommand.js';
+import { showInlineEdit, showParticipantEdit, hideInlineEdit } from './interaction/inlineEdit.js';
 import { initLifelineDrag, removeLifelineDrag } from './interaction/lifelineDrag.js';
 
 // App state
@@ -652,8 +653,11 @@ function handleDoubleClick(nodeId, element) {
   if (node.type === 'message') {
     // Show inline edit for message label
     showInlineEdit(element, nodeId, node.label || '', handleLabelEditComplete);
+  } else if (node.type === 'participant') {
+    // Show participant edit dialog with display name and alias
+    const displayName = node.displayName || node.alias;
+    showParticipantEdit(element, nodeId, displayName, node.alias, handleParticipantEditComplete);
   }
-  // Future: handle other node types (participant, fragment condition, etc.)
 }
 
 /**
@@ -689,6 +693,52 @@ function handleLabelEditComplete(nodeId, newLabel) {
   renderCurrentAst();
 
   console.log(`Changed message ${nodeId} label to "${newLabel}"`);
+}
+
+/**
+ * Handle completion of participant edit
+ * @param {string} nodeId - ID of the edited node
+ * @param {Object|null} result - {displayName, alias} or null if cancelled
+ */
+function handleParticipantEditComplete(nodeId, result) {
+  // Cancelled
+  if (result === null) return;
+
+  // Find the node
+  const node = findNodeById(nodeId);
+  if (!node || node.type !== 'participant') return;
+
+  const { displayName, alias } = result;
+
+  // Validate alias - cannot be empty
+  if (!alias || alias.trim() === '') {
+    console.warn('Alias cannot be empty');
+    return;
+  }
+
+  const oldDisplayName = node.displayName || node.alias;
+  const oldAlias = node.alias;
+
+  // Don't create command if nothing changed
+  if (oldDisplayName === displayName && oldAlias === alias) return;
+
+  // Create and execute edit command
+  const cmd = new EditParticipantCommand(nodeId, oldDisplayName, displayName, oldAlias, alias);
+  currentAst = commandHistory.execute(cmd, currentAst);
+
+  // Update text and re-render
+  const newText = serialize(currentAst);
+  previousText = newText;
+
+  // Update editor without creating another command
+  isUndoRedoInProgress = true;
+  editor.setValue(newText);
+  isUndoRedoInProgress = false;
+
+  // Re-render
+  renderCurrentAst();
+
+  console.log(`Changed participant ${nodeId}: displayName="${displayName}", alias="${alias}"`);
 }
 
 /**

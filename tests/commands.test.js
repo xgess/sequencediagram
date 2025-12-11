@@ -10,6 +10,7 @@ import { MoveMessageSourceCommand } from '../src/commands/MoveMessageSourceComma
 import { EditMessageLabelCommand } from '../src/commands/EditMessageLabelCommand.js';
 import { AddMessageCommand } from '../src/commands/AddMessageCommand.js';
 import { ReorderParticipantCommand } from '../src/commands/ReorderParticipantCommand.js';
+import { EditParticipantCommand } from '../src/commands/EditParticipantCommand.js';
 
 // Test command that adds an item to AST
 class AddItemCommand extends Command {
@@ -1397,5 +1398,131 @@ describe('ReorderParticipantCommand (BACKLOG-078)', () => {
     expect(result[3].type).toBe('message');
     expect(result[3].from).toBe('Alice');
     expect(result[3].to).toBe('Bob');
+  });
+});
+
+describe('EditParticipantCommand (BACKLOG-079)', () => {
+  let history;
+  let initialAst;
+
+  beforeEach(() => {
+    history = new CommandHistory();
+    initialAst = [
+      { id: 'p_1', type: 'participant', alias: 'Alice', displayName: 'Alice User' },
+      { id: 'p_2', type: 'participant', alias: 'Bob', displayName: 'Bob User' },
+      { id: 'm_1', type: 'message', from: 'Alice', to: 'Bob', label: 'Hello' },
+      { id: 'm_2', type: 'message', from: 'Bob', to: 'Alice', label: 'Hi' }
+    ];
+  });
+
+  it('should change display name with do()', () => {
+    const cmd = new EditParticipantCommand('p_1', 'Alice User', 'Alice New', 'Alice', 'Alice');
+
+    const result = cmd.do(initialAst);
+    const participant = result.find(n => n.id === 'p_1');
+
+    expect(participant.displayName).toBe('Alice New');
+    expect(participant.alias).toBe('Alice');
+  });
+
+  it('should change alias and update message references', () => {
+    const cmd = new EditParticipantCommand('p_1', 'Alice User', 'Alice User', 'Alice', 'AliceNew');
+
+    const result = cmd.do(initialAst);
+    const participant = result.find(n => n.id === 'p_1');
+
+    expect(participant.alias).toBe('AliceNew');
+    expect(result[2].from).toBe('AliceNew'); // m_1
+    expect(result[3].to).toBe('AliceNew');   // m_2
+  });
+
+  it('should restore original values with undo()', () => {
+    const cmd = new EditParticipantCommand('p_1', 'Alice User', 'Alice New', 'Alice', 'AliceNew');
+
+    const afterDo = cmd.do(initialAst);
+    expect(afterDo.find(n => n.id === 'p_1').alias).toBe('AliceNew');
+    expect(afterDo[2].from).toBe('AliceNew');
+
+    const afterUndo = cmd.undo(afterDo);
+    expect(afterUndo.find(n => n.id === 'p_1').alias).toBe('Alice');
+    expect(afterUndo.find(n => n.id === 'p_1').displayName).toBe('Alice User');
+    expect(afterUndo[2].from).toBe('Alice');
+  });
+
+  it('should work with CommandHistory', () => {
+    const cmd = new EditParticipantCommand('p_1', 'Alice User', 'Alice New', 'Alice', 'AliceNew');
+
+    let current = history.execute(cmd, initialAst);
+    expect(current.find(n => n.id === 'p_1').alias).toBe('AliceNew');
+
+    current = history.undo(current);
+    expect(current.find(n => n.id === 'p_1').alias).toBe('Alice');
+
+    current = history.redo(current);
+    expect(current.find(n => n.id === 'p_1').alias).toBe('AliceNew');
+  });
+
+  it('should not change messages if alias unchanged', () => {
+    const cmd = new EditParticipantCommand('p_1', 'Alice User', 'Alice New Name', 'Alice', 'Alice');
+
+    const result = cmd.do(initialAst);
+
+    // Messages should be unchanged (same reference)
+    expect(result[2]).toBe(initialAst[2]);
+    expect(result[3]).toBe(initialAst[3]);
+  });
+
+  describe('fragment entries', () => {
+    let fragmentAst;
+
+    beforeEach(() => {
+      fragmentAst = [
+        { id: 'p_1', type: 'participant', alias: 'Alice', displayName: 'Alice' },
+        { id: 'p_2', type: 'participant', alias: 'Bob', displayName: 'Bob' },
+        {
+          id: 'f_1',
+          type: 'fragment',
+          fragmentType: 'alt',
+          condition: 'cond',
+          entries: [
+            { id: 'm_1', type: 'message', from: 'Alice', to: 'Bob', label: 'Hello' }
+          ],
+          elseClauses: [
+            {
+              condition: 'else',
+              entries: [
+                { id: 'm_2', type: 'message', from: 'Bob', to: 'Alice', label: 'Bye' }
+              ]
+            }
+          ]
+        }
+      ];
+    });
+
+    it('should update message references in fragment entries', () => {
+      const cmd = new EditParticipantCommand('p_1', 'Alice', 'Alice', 'Alice', 'AliceNew');
+
+      const result = cmd.do(fragmentAst);
+
+      expect(result[2].entries[0].from).toBe('AliceNew');
+    });
+
+    it('should update message references in else clauses', () => {
+      const cmd = new EditParticipantCommand('p_1', 'Alice', 'Alice', 'Alice', 'AliceNew');
+
+      const result = cmd.do(fragmentAst);
+
+      expect(result[2].elseClauses[0].entries[0].to).toBe('AliceNew');
+    });
+
+    it('should restore fragment messages on undo', () => {
+      const cmd = new EditParticipantCommand('p_1', 'Alice', 'Alice', 'Alice', 'AliceNew');
+
+      const afterDo = cmd.do(fragmentAst);
+      const afterUndo = cmd.undo(afterDo);
+
+      expect(afterUndo[2].entries[0].from).toBe('Alice');
+      expect(afterUndo[2].elseClauses[0].entries[0].to).toBe('Alice');
+    });
   });
 });
