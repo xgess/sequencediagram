@@ -13,6 +13,7 @@ import { ReorderParticipantCommand } from '../src/commands/ReorderParticipantCom
 import { EditParticipantCommand } from '../src/commands/EditParticipantCommand.js';
 import { AdjustFragmentBoundaryCommand } from '../src/commands/AdjustFragmentBoundaryCommand.js';
 import { MoveEntryBetweenClausesCommand } from '../src/commands/MoveEntryBetweenClausesCommand.js';
+import { EditFragmentConditionCommand } from '../src/commands/EditFragmentConditionCommand.js';
 
 // Test command that adds an item to AST
 class AddItemCommand extends Command {
@@ -1871,5 +1872,87 @@ describe('MoveEntryBetweenClausesCommand (BACKLOG-083)', () => {
       expect(frag.entries.length).toBe(2);
       expect(frag.elseClauses[0].entries.length).toBe(2);
     });
+  });
+});
+
+describe('EditFragmentConditionCommand (BACKLOG-084)', () => {
+  let ast;
+
+  beforeEach(() => {
+    ast = [
+      { id: 'p_1', type: 'participant', alias: 'A' },
+      { id: 'p_2', type: 'participant', alias: 'B' },
+      {
+        id: 'frag_1',
+        type: 'fragment',
+        fragmentType: 'alt',
+        condition: 'x > 0',
+        entries: [
+          { id: 'msg_1', type: 'message', from: 'A', to: 'B', label: 'msg1' }
+        ],
+        elseClauses: []
+      }
+    ];
+  });
+
+  it('should update fragment condition', () => {
+    const cmd = new EditFragmentConditionCommand('frag_1', 'x > 0', 'success');
+
+    const result = cmd.do(ast);
+
+    const frag = result.find(n => n.id === 'frag_1');
+    expect(frag.condition).toBe('success');
+  });
+
+  it('should undo condition change', () => {
+    const cmd = new EditFragmentConditionCommand('frag_1', 'x > 0', 'success');
+
+    const afterDo = cmd.do(ast);
+    const afterUndo = cmd.undo(afterDo);
+
+    const frag = afterUndo.find(n => n.id === 'frag_1');
+    expect(frag.condition).toBe('x > 0');
+  });
+
+  it('should handle empty condition', () => {
+    const cmd = new EditFragmentConditionCommand('frag_1', 'x > 0', '');
+
+    const result = cmd.do(ast);
+
+    const frag = result.find(n => n.id === 'frag_1');
+    expect(frag.condition).toBe('');
+  });
+
+  it('should not modify non-fragment nodes', () => {
+    const cmd = new EditFragmentConditionCommand('p_1', 'x > 0', 'success');
+
+    const result = cmd.do(ast);
+
+    // Participant should be unchanged
+    const participant = result.find(n => n.id === 'p_1');
+    expect(participant.condition).toBeUndefined();
+  });
+
+  it('should not modify other fragments', () => {
+    const astWithTwoFragments = [
+      ...ast,
+      {
+        id: 'frag_2',
+        type: 'fragment',
+        fragmentType: 'loop',
+        condition: 'i < 10',
+        entries: [],
+        elseClauses: []
+      }
+    ];
+
+    const cmd = new EditFragmentConditionCommand('frag_1', 'x > 0', 'success');
+
+    const result = cmd.do(astWithTwoFragments);
+
+    const frag1 = result.find(n => n.id === 'frag_1');
+    const frag2 = result.find(n => n.id === 'frag_2');
+    expect(frag1.condition).toBe('success');
+    expect(frag2.condition).toBe('i < 10');
   });
 });

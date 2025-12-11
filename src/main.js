@@ -22,6 +22,7 @@ import { ReorderParticipantCommand } from './commands/ReorderParticipantCommand.
 import { EditParticipantCommand } from './commands/EditParticipantCommand.js';
 import { AdjustFragmentBoundaryCommand } from './commands/AdjustFragmentBoundaryCommand.js';
 import { MoveEntryBetweenClausesCommand } from './commands/MoveEntryBetweenClausesCommand.js';
+import { EditFragmentConditionCommand } from './commands/EditFragmentConditionCommand.js';
 import { showInlineEdit, showParticipantEdit, hideInlineEdit } from './interaction/inlineEdit.js';
 import { showConfirmDialog } from './interaction/confirmDialog.js';
 import { initLifelineDrag, removeLifelineDrag } from './interaction/lifelineDrag.js';
@@ -660,6 +661,9 @@ function handleDoubleClick(nodeId, element) {
     // Show participant edit dialog with display name and alias
     const displayName = node.displayName || node.alias;
     showParticipantEdit(element, nodeId, displayName, node.alias, handleParticipantEditComplete);
+  } else if (node.type === 'fragment') {
+    // Show inline edit for fragment condition
+    showInlineEdit(element, nodeId, node.condition || '', handleFragmentConditionEditComplete);
   }
 }
 
@@ -742,6 +746,41 @@ function handleParticipantEditComplete(nodeId, result) {
   renderCurrentAst();
 
   console.log(`Changed participant ${nodeId}: displayName="${displayName}", alias="${alias}"`);
+}
+
+/**
+ * Handle completion of fragment condition edit
+ * @param {string} nodeId - ID of the edited node
+ * @param {string|null} newCondition - New condition value, or null if cancelled
+ */
+function handleFragmentConditionEditComplete(nodeId, newCondition) {
+  // Cancelled
+  if (newCondition === null) return;
+
+  // Find the node
+  const node = findNodeById(nodeId);
+  if (!node || node.type !== 'fragment') return;
+
+  // Don't create command if condition unchanged
+  if (node.condition === newCondition) return;
+
+  // Create and execute edit command
+  const cmd = new EditFragmentConditionCommand(nodeId, node.condition || '', newCondition);
+  currentAst = commandHistory.execute(cmd, currentAst);
+
+  // Update text and re-render
+  const newText = serialize(currentAst);
+  previousText = newText;
+
+  // Update editor without creating another command
+  isUndoRedoInProgress = true;
+  editor.setValue(newText);
+  isUndoRedoInProgress = false;
+
+  // Re-render
+  renderCurrentAst();
+
+  console.log(`Changed fragment ${nodeId} condition to "${newCondition}"`);
 }
 
 /**

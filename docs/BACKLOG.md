@@ -985,15 +985,16 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Text updates ✅
 - Undo restores ✅
 
-## BACKLOG-084: Double-click fragment label to edit condition
-**Phase:** 3.5  
-**Dependencies:** BACKLOG-066  
-**Description:** Double-click fragment top label to edit condition text.  
+## BACKLOG-084: Double-click fragment label to edit condition ✅
+**Phase:** 3.5
+**Dependencies:** BACKLOG-066
+**Status:** Complete
+**Description:** Double-click fragment top label to edit condition text.
 **Acceptance Criteria:**
-- Dialog with text input for condition
-- Enter/OK commits
-- Creates EditFragmentCondition command
-- Text updates: `alt new condition`
+- Dialog with text input for condition ✅
+- Enter/OK commits ✅
+- Creates EditFragmentCondition command ✅
+- Text updates: `alt new condition` ✅
 
 ## BACKLOG-085: Double-click else label to edit else condition
 **Phase:** 3.5  
