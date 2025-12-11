@@ -1046,15 +1046,16 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Selecting item initiates creation workflow ✅
 - Esc closes menu ✅
 
-## BACKLOG-089: Add participant from context menu
-**Phase:** 3.6  
-**Dependencies:** BACKLOG-100  
-**Description:** Context menu > Add Participant prompts for type, name, alias.  
+## BACKLOG-089: Add participant from context menu ✅
+**Phase:** 3.6
+**Dependencies:** BACKLOG-088
+**Status:** Complete
+**Description:** Context menu > Add Participant prompts for type, name, alias.
 **Acceptance Criteria:**
-- Dialog with dropdowns and text inputs
-- Creates AddParticipant command
-- New participant added at end or after selected participant
-- Text updates
+- Dialog with dropdowns and text inputs ✅
+- Creates AddParticipant command ✅
+- New participant added at end or after selected participant ✅
+- Text updates ✅
 
 ## BACKLOG-090: Add message from context menu
 **Phase:** 3.6  

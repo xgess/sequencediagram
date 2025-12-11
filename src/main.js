@@ -29,6 +29,8 @@ import { showInlineEdit, showParticipantEdit, hideInlineEdit } from './interacti
 import { showConfirmDialog } from './interaction/confirmDialog.js';
 import { initLifelineDrag, removeLifelineDrag } from './interaction/lifelineDrag.js';
 import { showContextMenu, hideContextMenu } from './interaction/contextMenu.js';
+import { showAddParticipantDialog, hideAddParticipantDialog } from './interaction/addParticipantDialog.js';
+import { AddParticipantCommand } from './commands/AddParticipantCommand.js';
 
 // App state
 let currentAst = [];
@@ -721,19 +723,71 @@ function handleContextMenuAction(action, nodeId) {
       break;
 
     case 'add-participant':
+      showAddParticipantDialog(100, 100, 'participant', handleAddParticipantComplete);
+      break;
+
     case 'add-actor':
+      showAddParticipantDialog(100, 100, 'actor', handleAddParticipantComplete);
+      break;
+
     case 'add-database':
+      showAddParticipantDialog(100, 100, 'database', handleAddParticipantComplete);
+      break;
+
     case 'add-queue':
+      showAddParticipantDialog(100, 100, 'queue', handleAddParticipantComplete);
+      break;
+
     case 'add-message':
     case 'add-fragment':
-      // These actions will be implemented in BACKLOG-089, 090, 091
-      // For now, just log and show a placeholder message
+      // These actions will be implemented in BACKLOG-090, 091
       console.log(`Action "${action}" will be implemented in future backlog items`);
       break;
 
     default:
       console.log('Unknown action:', action);
   }
+}
+
+/**
+ * Handle completion of add participant dialog
+ * @param {Object|null} result - {type, alias, displayName} or null if cancelled
+ */
+function handleAddParticipantComplete(result) {
+  if (!result) return;
+
+  const { type, alias, displayName } = result;
+
+  // Check if alias already exists
+  const existingParticipant = currentAst.find(
+    n => n.type === 'participant' && n.alias === alias
+  );
+  if (existingParticipant) {
+    console.warn(`Participant with alias "${alias}" already exists`);
+    return;
+  }
+
+  // Create and execute the command
+  const cmd = new AddParticipantCommand(type, alias, displayName);
+  currentAst = commandHistory.execute(cmd, currentAst);
+
+  // Update text and re-render
+  const newText = serialize(currentAst);
+  previousText = newText;
+
+  // Update editor without creating another command
+  isUndoRedoInProgress = true;
+  editor.setValue(newText);
+  isUndoRedoInProgress = false;
+
+  // Re-render
+  renderCurrentAst();
+
+  // Select the new participant
+  const participantId = cmd.getParticipantId();
+  selectElement(participantId);
+
+  console.log(`Added ${type} ${alias} (${displayName})`);
 }
 
 /**

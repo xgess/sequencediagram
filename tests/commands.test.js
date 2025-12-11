@@ -16,6 +16,7 @@ import { MoveEntryBetweenClausesCommand } from '../src/commands/MoveEntryBetween
 import { EditFragmentConditionCommand } from '../src/commands/EditFragmentConditionCommand.js';
 import { EditElseConditionCommand } from '../src/commands/EditElseConditionCommand.js';
 import { ChangeEntrySpacingCommand } from '../src/commands/ChangeEntrySpacingCommand.js';
+import { AddParticipantCommand } from '../src/commands/AddParticipantCommand.js';
 
 // Test command that adds an item to AST
 class AddItemCommand extends Command {
@@ -2131,6 +2132,139 @@ describe('ChangeEntrySpacingCommand (BACKLOG-086)', () => {
       const directive = afterUndo.find(n => n.type === 'directive' && n.directiveType === 'entryspacing');
       expect(directive).toBeUndefined();
       expect(afterUndo.length).toBe(3);
+    });
+  });
+});
+
+// ============================================================================
+// AddParticipantCommand Tests (BACKLOG-089)
+// ============================================================================
+
+describe('AddParticipantCommand (BACKLOG-089)', () => {
+  let ast;
+
+  beforeEach(() => {
+    ast = [
+      { id: 'p_1', type: 'participant', participantType: 'participant', alias: 'Alice', displayName: 'Alice' },
+      { id: 'p_2', type: 'participant', participantType: 'participant', alias: 'Bob', displayName: 'Bob' },
+      { id: 'msg_1', type: 'message', from: 'Alice', to: 'Bob', label: 'Hello' }
+    ];
+  });
+
+  describe('do', () => {
+    it('should add a participant', () => {
+      const cmd = new AddParticipantCommand('participant', 'Charlie', 'Charlie');
+
+      const result = cmd.do(ast);
+
+      expect(result.length).toBe(4);
+      const charlie = result.find(n => n.alias === 'Charlie');
+      expect(charlie).toBeDefined();
+      expect(charlie.type).toBe('participant');
+      expect(charlie.participantType).toBe('participant');
+    });
+
+    it('should add participant after existing participants', () => {
+      const cmd = new AddParticipantCommand('participant', 'Charlie', 'Charlie');
+
+      const result = cmd.do(ast);
+
+      // Should be: Alice, Bob, Charlie, message
+      expect(result[0].alias).toBe('Alice');
+      expect(result[1].alias).toBe('Bob');
+      expect(result[2].alias).toBe('Charlie');
+      expect(result[3].type).toBe('message');
+    });
+
+    it('should add actor type', () => {
+      const cmd = new AddParticipantCommand('actor', 'User', 'End User');
+
+      const result = cmd.do(ast);
+
+      const user = result.find(n => n.alias === 'User');
+      expect(user.participantType).toBe('actor');
+      expect(user.displayName).toBe('End User');
+    });
+
+    it('should add database type', () => {
+      const cmd = new AddParticipantCommand('database', 'DB', 'Database');
+
+      const result = cmd.do(ast);
+
+      const db = result.find(n => n.alias === 'DB');
+      expect(db.participantType).toBe('database');
+    });
+
+    it('should add queue type', () => {
+      const cmd = new AddParticipantCommand('queue', 'Q', 'Message Queue');
+
+      const result = cmd.do(ast);
+
+      const q = result.find(n => n.alias === 'Q');
+      expect(q.participantType).toBe('queue');
+    });
+
+    it('should handle empty AST', () => {
+      const cmd = new AddParticipantCommand('participant', 'First', 'First');
+
+      const result = cmd.do([]);
+
+      expect(result.length).toBe(1);
+      expect(result[0].alias).toBe('First');
+    });
+
+    it('should insert at specific index', () => {
+      const cmd = new AddParticipantCommand('participant', 'Middle', 'Middle', 1);
+
+      const result = cmd.do(ast);
+
+      expect(result[1].alias).toBe('Middle');
+    });
+
+    it('should generate unique ID', () => {
+      const cmd = new AddParticipantCommand('participant', 'Charlie', 'Charlie');
+
+      const result = cmd.do(ast);
+
+      const charlie = result.find(n => n.alias === 'Charlie');
+      expect(charlie.id).toMatch(/^p_/);
+    });
+  });
+
+  describe('undo', () => {
+    it('should remove the added participant', () => {
+      const cmd = new AddParticipantCommand('participant', 'Charlie', 'Charlie');
+
+      const afterDo = cmd.do(ast);
+      const afterUndo = cmd.undo(afterDo);
+
+      expect(afterUndo.length).toBe(3);
+      const charlie = afterUndo.find(n => n.alias === 'Charlie');
+      expect(charlie).toBeUndefined();
+    });
+
+    it('should restore original AST structure', () => {
+      const cmd = new AddParticipantCommand('participant', 'Charlie', 'Charlie');
+
+      const afterDo = cmd.do(ast);
+      const afterUndo = cmd.undo(afterDo);
+
+      expect(afterUndo[0].alias).toBe('Alice');
+      expect(afterUndo[1].alias).toBe('Bob');
+      expect(afterUndo[2].type).toBe('message');
+    });
+  });
+
+  describe('getParticipantId', () => {
+    it('should return the generated participant ID', () => {
+      const cmd = new AddParticipantCommand('participant', 'Test', 'Test');
+
+      const result = cmd.do(ast);
+      const participantId = cmd.getParticipantId();
+
+      const participant = result.find(n => n.id === participantId);
+      expect(participant).toBeDefined();
+      expect(participant.alias).toBe('Test');
     });
   });
 });
