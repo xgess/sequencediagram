@@ -92,7 +92,7 @@ function parseAt(lines, lineIndex, ast) {
 
 /**
  * Parse a directive line
- * Syntax: title Text
+ * Syntax: title Text, entryspacing N
  * @param {string} line - Trimmed source line
  * @param {number} lineNumber - 1-indexed line number
  * @returns {Object|null} Directive AST node or null
@@ -110,6 +110,20 @@ function parseDirective(line, lineNumber) {
       sourceLineEnd: lineNumber
     };
   }
+
+  // Match entryspacing directive
+  const entryspacingMatch = line.match(/^entryspacing\s+([\d.]+)$/);
+  if (entryspacingMatch) {
+    return {
+      id: generateId('directive'),
+      type: 'directive',
+      directiveType: 'entryspacing',
+      value: parseFloat(entryspacingMatch[1]),
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
+  }
+
   return null;
 }
 

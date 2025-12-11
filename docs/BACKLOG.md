@@ -1007,16 +1007,17 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 
 ### Additional Interactions
 
-## BACKLOG-086: Keyboard shortcut: +/- for entry spacing
-**Phase:** 3.7  
-**Dependencies:** Phase 3 interactions  
-**Description:** Add keyboard shortcuts to adjust entry spacing when element selected or clicked anywhere.  
+## BACKLOG-086: Keyboard shortcut: +/- for entry spacing ✅
+**Phase:** 3.7
+**Dependencies:** Phase 3 interactions
+**Status:** Complete
+**Description:** Add keyboard shortcuts to adjust entry spacing when element selected or clicked anywhere.
 **Acceptance Criteria:**
-- Click anywhere or select element, press + increases entryspacing
-- Press - decreases entryspacing
-- Updates entryspacing directive in text
-- Visual feedback shows new spacing immediately
-- Command for undo/redo
+- Click anywhere or select element, press + increases entryspacing ✅
+- Press - decreases entryspacing ✅
+- Updates entryspacing directive in text ✅
+- Visual feedback shows new spacing immediately ✅
+- Command for undo/redo ✅
 
 ## BACKLOG-087: Drag dividers and spaces to reposition
 **Phase:** 3.7  

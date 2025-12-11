@@ -244,6 +244,9 @@ function serializeDirective(node) {
   if (node.directiveType === 'title') {
     return `title ${node.value}`;
   }
+  if (node.directiveType === 'entryspacing') {
+    return `entryspacing ${node.value}`;
+  }
   return '';
 }
 

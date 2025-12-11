@@ -532,6 +532,29 @@ end`;
     });
   });
 
+  describe('entryspacing directive parsing (BACKLOG-086)', () => {
+    it('should parse entryspacing directive with integer', () => {
+      const ast = parse('entryspacing 2');
+      const directive = ast.find(n => n.type === 'directive' && n.directiveType === 'entryspacing');
+      expect(directive).not.toBeNull();
+      expect(directive.value).toBe(2);
+    });
+
+    it('should parse entryspacing directive with decimal', () => {
+      const ast = parse('entryspacing 1.5');
+      const directive = ast.find(n => n.type === 'directive' && n.directiveType === 'entryspacing');
+      expect(directive).not.toBeNull();
+      expect(directive.value).toBe(1.5);
+    });
+
+    it('should parse entryspacing with participants and messages', () => {
+      const ast = parse('participant A\nentryspacing 0.8\nA->B:msg');
+      expect(ast).toHaveLength(3);
+      expect(ast[1].directiveType).toBe('entryspacing');
+      expect(ast[1].value).toBe(0.8);
+    });
+  });
+
   describe('error node creation (BACKLOG-048)', () => {
     it('should create error node for unrecognized syntax', () => {
       const ast = parse('this is not valid syntax');

@@ -24,6 +24,7 @@ import { AdjustFragmentBoundaryCommand } from './commands/AdjustFragmentBoundary
 import { MoveEntryBetweenClausesCommand } from './commands/MoveEntryBetweenClausesCommand.js';
 import { EditFragmentConditionCommand } from './commands/EditFragmentConditionCommand.js';
 import { EditElseConditionCommand } from './commands/EditElseConditionCommand.js';
+import { ChangeEntrySpacingCommand } from './commands/ChangeEntrySpacingCommand.js';
 import { showInlineEdit, showParticipantEdit, hideInlineEdit } from './interaction/inlineEdit.js';
 import { showConfirmDialog } from './interaction/confirmDialog.js';
 import { initLifelineDrag, removeLifelineDrag } from './interaction/lifelineDrag.js';
@@ -1112,6 +1113,55 @@ function handleDiagramKeydown(event) {
     deselectAll();
     clearLineHighlight();
   }
+
+  // +/= key - increase entry spacing
+  if (event.key === '+' || event.key === '=') {
+    changeEntrySpacing(0.1);
+    event.preventDefault();
+  }
+
+  // - key - decrease entry spacing
+  if (event.key === '-' || event.key === '_') {
+    changeEntrySpacing(-0.1);
+    event.preventDefault();
+  }
+}
+
+/**
+ * Change entry spacing by delta amount
+ * @param {number} delta - Amount to change (positive = increase, negative = decrease)
+ */
+function changeEntrySpacing(delta) {
+  // Find existing entryspacing directive
+  const directive = currentAst.find(n => n.type === 'directive' && n.directiveType === 'entryspacing');
+
+  const currentValue = directive ? directive.value : 1.0;
+  const newValue = Math.max(0.1, Math.round((currentValue + delta) * 10) / 10); // Round to 1 decimal, min 0.1
+
+  // Don't create command if value unchanged
+  if (newValue === currentValue) return;
+
+  // Create and execute command
+  const cmd = new ChangeEntrySpacingCommand(
+    currentValue,
+    newValue,
+    directive ? directive.id : null
+  );
+  currentAst = commandHistory.execute(cmd, currentAst);
+
+  // Update text and re-render
+  const newText = serialize(currentAst);
+  previousText = newText;
+
+  // Update editor without creating another command
+  isUndoRedoInProgress = true;
+  editor.setValue(newText);
+  isUndoRedoInProgress = false;
+
+  // Re-render
+  renderCurrentAst();
+
+  console.log(`Entry spacing changed to ${newValue}`);
 }
 
 /**

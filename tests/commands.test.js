@@ -15,6 +15,7 @@ import { AdjustFragmentBoundaryCommand } from '../src/commands/AdjustFragmentBou
 import { MoveEntryBetweenClausesCommand } from '../src/commands/MoveEntryBetweenClausesCommand.js';
 import { EditFragmentConditionCommand } from '../src/commands/EditFragmentConditionCommand.js';
 import { EditElseConditionCommand } from '../src/commands/EditElseConditionCommand.js';
+import { ChangeEntrySpacingCommand } from '../src/commands/ChangeEntrySpacingCommand.js';
 
 // Test command that adds an item to AST
 class AddItemCommand extends Command {
@@ -2055,5 +2056,81 @@ describe('EditElseConditionCommand (BACKLOG-085)', () => {
     // Participant should be unchanged
     const participant = result.find(n => n.id === 'p_1');
     expect(participant.elseClauses).toBeUndefined();
+  });
+});
+
+describe('ChangeEntrySpacingCommand (BACKLOG-086)', () => {
+  let ast;
+
+  beforeEach(() => {
+    ast = [
+      { id: 'p_1', type: 'participant', alias: 'A' },
+      { id: 'p_2', type: 'participant', alias: 'B' },
+      { id: 'msg_1', type: 'message', from: 'A', to: 'B', label: 'msg1' }
+    ];
+  });
+
+  describe('with existing directive', () => {
+    beforeEach(() => {
+      ast = [
+        { id: 'p_1', type: 'participant', alias: 'A' },
+        { id: 'd_1', type: 'directive', directiveType: 'entryspacing', value: 1.0 },
+        { id: 'msg_1', type: 'message', from: 'A', to: 'B', label: 'msg1' }
+      ];
+    });
+
+    it('should update existing directive value', () => {
+      const cmd = new ChangeEntrySpacingCommand(1.0, 1.5, 'd_1');
+
+      const result = cmd.do(ast);
+
+      const directive = result.find(n => n.id === 'd_1');
+      expect(directive.value).toBe(1.5);
+    });
+
+    it('should undo directive value change', () => {
+      const cmd = new ChangeEntrySpacingCommand(1.0, 1.5, 'd_1');
+
+      const afterDo = cmd.do(ast);
+      const afterUndo = cmd.undo(afterDo);
+
+      const directive = afterUndo.find(n => n.id === 'd_1');
+      expect(directive.value).toBe(1.0);
+    });
+  });
+
+  describe('without existing directive', () => {
+    it('should create new directive', () => {
+      const cmd = new ChangeEntrySpacingCommand(1.0, 1.2, null);
+
+      const result = cmd.do(ast);
+
+      const directive = result.find(n => n.type === 'directive' && n.directiveType === 'entryspacing');
+      expect(directive).toBeDefined();
+      expect(directive.value).toBe(1.2);
+    });
+
+    it('should insert directive after participants', () => {
+      const cmd = new ChangeEntrySpacingCommand(1.0, 1.2, null);
+
+      const result = cmd.do(ast);
+
+      // Should be: p_1, p_2, directive, msg_1
+      expect(result[0].type).toBe('participant');
+      expect(result[1].type).toBe('participant');
+      expect(result[2].type).toBe('directive');
+      expect(result[3].type).toBe('message');
+    });
+
+    it('should undo by removing created directive', () => {
+      const cmd = new ChangeEntrySpacingCommand(1.0, 1.2, null);
+
+      const afterDo = cmd.do(ast);
+      const afterUndo = cmd.undo(afterDo);
+
+      const directive = afterUndo.find(n => n.type === 'directive' && n.directiveType === 'entryspacing');
+      expect(directive).toBeUndefined();
+      expect(afterUndo.length).toBe(3);
+    });
   });
 });

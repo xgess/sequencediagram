@@ -458,6 +458,29 @@ describe('Serializer', () => {
     });
   });
 
+  describe('entryspacing directive serialization (BACKLOG-086)', () => {
+    it('should serialize entryspacing directive', () => {
+      const ast = parse('entryspacing 1.5');
+      const text = serialize(ast);
+      expect(text).toBe('entryspacing 1.5');
+    });
+
+    it('should serialize entryspacing with other elements', () => {
+      const ast = parse('participant A\nentryspacing 2\nA->B:msg');
+      const text = serialize(ast);
+      expect(text).toBe('participant A\nentryspacing 2\nA->B:msg');
+    });
+
+    it('should round-trip entryspacing directive', () => {
+      const input = 'entryspacing 0.8';
+      const ast1 = parse(input);
+      const serialized = serialize(ast1);
+      const ast2 = parse(serialized);
+      const directive = ast2.find(n => n.type === 'directive' && n.directiveType === 'entryspacing');
+      expect(directive.value).toBe(0.8);
+    });
+  });
+
   describe('error node serialization (BACKLOG-051)', () => {
     it('should serialize error node as comment', () => {
       const ast = parse('invalidSyntax!!!');

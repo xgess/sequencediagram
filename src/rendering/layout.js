@@ -9,7 +9,7 @@ const PARTICIPANT_START_X = 50;
 const PARTICIPANT_START_Y = 50;
 const TITLE_HEIGHT = 30; // Extra space when title present
 const MESSAGE_START_Y = 130; // Below participants
-const MESSAGE_SPACING = 50;
+const DEFAULT_MESSAGE_SPACING = 50;
 const BLANKLINE_SPACING = 20;
 const ERROR_HEIGHT = 40;
 const FRAGMENT_PADDING = 30;
@@ -27,6 +27,10 @@ export function calculateLayout(ast) {
   // Check for title directive
   const titleDirective = ast.find(n => n.type === 'directive' && n.directiveType === 'title');
   const titleOffset = titleDirective ? TITLE_HEIGHT : 0;
+
+  // Check for entryspacing directive
+  const entryspacingDirective = ast.find(n => n.type === 'directive' && n.directiveType === 'entryspacing');
+  const messageSpacing = entryspacingDirective ? DEFAULT_MESSAGE_SPACING * entryspacingDirective.value : DEFAULT_MESSAGE_SPACING;
 
   // Calculate participant positions
   const participantLayout = new Map();
@@ -109,17 +113,17 @@ export function calculateLayout(ast) {
           y: currentY,
           fromX: fromLayout.centerX,
           toX: toLayout.centerX,
-          height: MESSAGE_SPACING
+          height: messageSpacing
         });
       }
-      currentY += MESSAGE_SPACING;
+      currentY += messageSpacing;
     } else if (node.type === 'fragment') {
       const fragmentStart = currentY;
       currentY += FRAGMENT_PADDING; // Top padding
 
       // Layout entries in the main section
       for (const entryId of node.entries) {
-        currentY = layoutEntry(entryId, nodeById, participantLayout, layout, currentY);
+        currentY = layoutEntry(entryId, nodeById, participantLayout, layout, currentY, messageSpacing);
       }
 
       // Layout else clauses
@@ -128,7 +132,7 @@ export function calculateLayout(ast) {
         elseClause.dividerY = currentY;
 
         for (const entryId of elseClause.entries) {
-          currentY = layoutEntry(entryId, nodeById, participantLayout, layout, currentY);
+          currentY = layoutEntry(entryId, nodeById, participantLayout, layout, currentY, messageSpacing);
         }
       }
 
@@ -159,9 +163,16 @@ export function calculateLayout(ast) {
 
 /**
  * Layout a single entry (message or nested fragment) and return the new Y position
+ * @param {string|Object} entryId - Entry ID or entry object
+ * @param {Map} nodeById - Node lookup map
+ * @param {Map} participantLayout - Participant positions
+ * @param {Map} layout - Layout result map
+ * @param {number} currentY - Current Y position
+ * @param {number} messageSpacing - Spacing between messages
+ * @returns {number} New Y position
  */
-function layoutEntry(entryId, nodeById, participantLayout, layout, currentY) {
-  const entry = nodeById.get(entryId);
+function layoutEntry(entryId, nodeById, participantLayout, layout, currentY, messageSpacing) {
+  const entry = typeof entryId === 'object' ? entryId : nodeById.get(entryId);
   if (!entry) return currentY;
 
   // Skip comments (they don't affect layout)
@@ -200,10 +211,10 @@ function layoutEntry(entryId, nodeById, participantLayout, layout, currentY) {
         y: currentY,
         fromX: fromLayout.centerX,
         toX: toLayout.centerX,
-        height: MESSAGE_SPACING
+        height: messageSpacing
       });
     }
-    return currentY + MESSAGE_SPACING;
+    return currentY + messageSpacing;
   }
 
   if (entry.type === 'fragment') {
@@ -212,13 +223,13 @@ function layoutEntry(entryId, nodeById, participantLayout, layout, currentY) {
     currentY += FRAGMENT_PADDING;
 
     for (const nestedEntryId of entry.entries) {
-      currentY = layoutEntry(nestedEntryId, nodeById, participantLayout, layout, currentY);
+      currentY = layoutEntry(nestedEntryId, nodeById, participantLayout, layout, currentY, messageSpacing);
     }
 
     for (const elseClause of entry.elseClauses) {
       elseClause.dividerY = currentY;
       for (const nestedEntryId of elseClause.entries) {
-        currentY = layoutEntry(nestedEntryId, nodeById, participantLayout, layout, currentY);
+        currentY = layoutEntry(nestedEntryId, nodeById, participantLayout, layout, currentY, messageSpacing);
       }
     }
 
