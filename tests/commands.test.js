@@ -17,6 +17,7 @@ import { EditFragmentConditionCommand } from '../src/commands/EditFragmentCondit
 import { EditElseConditionCommand } from '../src/commands/EditElseConditionCommand.js';
 import { ChangeEntrySpacingCommand } from '../src/commands/ChangeEntrySpacingCommand.js';
 import { AddParticipantCommand } from '../src/commands/AddParticipantCommand.js';
+import { AddFragmentCommand } from '../src/commands/AddFragmentCommand.js';
 
 // Test command that adds an item to AST
 class AddItemCommand extends Command {
@@ -2265,6 +2266,136 @@ describe('AddParticipantCommand (BACKLOG-089)', () => {
       const participant = result.find(n => n.id === participantId);
       expect(participant).toBeDefined();
       expect(participant.alias).toBe('Test');
+    });
+  });
+});
+
+// ============================================================================
+// AddFragmentCommand Tests (BACKLOG-091)
+// ============================================================================
+
+describe('AddFragmentCommand (BACKLOG-091)', () => {
+  let ast;
+
+  beforeEach(() => {
+    ast = [
+      { id: 'p_1', type: 'participant', participantType: 'participant', alias: 'Alice', displayName: 'Alice' },
+      { id: 'p_2', type: 'participant', participantType: 'participant', alias: 'Bob', displayName: 'Bob' },
+      { id: 'msg_1', type: 'message', from: 'Alice', to: 'Bob', label: 'Hello' }
+    ];
+  });
+
+  describe('do', () => {
+    it('should add an alt fragment', () => {
+      const cmd = new AddFragmentCommand('alt', 'success');
+
+      const result = cmd.do(ast);
+
+      expect(result.length).toBe(4);
+      const fragment = result.find(n => n.type === 'fragment');
+      expect(fragment).toBeDefined();
+      expect(fragment.fragmentType).toBe('alt');
+      expect(fragment.condition).toBe('success');
+    });
+
+    it('should add a loop fragment', () => {
+      const cmd = new AddFragmentCommand('loop', '10 times');
+
+      const result = cmd.do(ast);
+
+      const fragment = result.find(n => n.type === 'fragment');
+      expect(fragment.fragmentType).toBe('loop');
+      expect(fragment.condition).toBe('10 times');
+    });
+
+    it('should add an opt fragment', () => {
+      const cmd = new AddFragmentCommand('opt', 'optional');
+
+      const result = cmd.do(ast);
+
+      const fragment = result.find(n => n.type === 'fragment');
+      expect(fragment.fragmentType).toBe('opt');
+    });
+
+    it('should create empty fragment', () => {
+      const cmd = new AddFragmentCommand('alt', 'test');
+
+      const result = cmd.do(ast);
+
+      const fragment = result.find(n => n.type === 'fragment');
+      expect(fragment.entries).toEqual([]);
+      expect(fragment.elseClauses).toEqual([]);
+    });
+
+    it('should insert at end by default', () => {
+      const cmd = new AddFragmentCommand('alt', 'test');
+
+      const result = cmd.do(ast);
+
+      expect(result[3].type).toBe('fragment');
+    });
+
+    it('should insert at specific index', () => {
+      const cmd = new AddFragmentCommand('alt', 'test', 1);
+
+      const result = cmd.do(ast);
+
+      expect(result[1].type).toBe('fragment');
+    });
+
+    it('should generate unique ID', () => {
+      const cmd = new AddFragmentCommand('alt', 'test');
+
+      const result = cmd.do(ast);
+
+      const fragment = result.find(n => n.type === 'fragment');
+      expect(fragment.id).toMatch(/^f_/);
+    });
+
+    it('should handle empty AST', () => {
+      const cmd = new AddFragmentCommand('alt', 'test');
+
+      const result = cmd.do([]);
+
+      expect(result.length).toBe(1);
+      expect(result[0].type).toBe('fragment');
+    });
+  });
+
+  describe('undo', () => {
+    it('should remove the added fragment', () => {
+      const cmd = new AddFragmentCommand('alt', 'test');
+
+      const afterDo = cmd.do(ast);
+      const afterUndo = cmd.undo(afterDo);
+
+      expect(afterUndo.length).toBe(3);
+      const fragment = afterUndo.find(n => n.type === 'fragment');
+      expect(fragment).toBeUndefined();
+    });
+
+    it('should restore original AST structure', () => {
+      const cmd = new AddFragmentCommand('alt', 'test');
+
+      const afterDo = cmd.do(ast);
+      const afterUndo = cmd.undo(afterDo);
+
+      expect(afterUndo[0].type).toBe('participant');
+      expect(afterUndo[1].type).toBe('participant');
+      expect(afterUndo[2].type).toBe('message');
+    });
+  });
+
+  describe('getFragmentId', () => {
+    it('should return the generated fragment ID', () => {
+      const cmd = new AddFragmentCommand('loop', 'forever');
+
+      const result = cmd.do(ast);
+      const fragmentId = cmd.getFragmentId();
+
+      const fragment = result.find(n => n.id === fragmentId);
+      expect(fragment).toBeDefined();
+      expect(fragment.fragmentType).toBe('loop');
     });
   });
 });

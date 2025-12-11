@@ -1069,17 +1069,18 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Inserted after selected element or at end ✅
 - Text updates ✅
 
-## BACKLOG-091: Add fragment from context menu
-**Phase:** 3.6  
-**Dependencies:** BACKLOG-100  
-**Description:** Context menu > Add Fragment prompts for type and condition.  
+## BACKLOG-091: Add fragment from context menu ✅
+**Phase:** 3.6
+**Dependencies:** BACKLOG-088
+**Status:** Complete
+**Description:** Context menu > Add Fragment prompts for type and condition.
 **Acceptance Criteria:**
-- Dialog with fragment type dropdown
-- Text input for condition
-- Creates AddFragment command
-- Empty fragment initially (entries=[])
-- User can drag boundaries to include entries
-- Text updates
+- Dialog with fragment type dropdown ✅
+- Text input for condition ✅
+- Creates AddFragment command ✅
+- Empty fragment initially (entries=[]) ✅
+- User can drag boundaries to include entries ✅
+- Text updates ✅
 
 
 ---

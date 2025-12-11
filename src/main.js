@@ -31,7 +31,9 @@ import { initLifelineDrag, removeLifelineDrag } from './interaction/lifelineDrag
 import { showContextMenu, hideContextMenu } from './interaction/contextMenu.js';
 import { showAddParticipantDialog, hideAddParticipantDialog } from './interaction/addParticipantDialog.js';
 import { showAddMessageDialog, hideAddMessageDialog } from './interaction/addMessageDialog.js';
+import { showAddFragmentDialog, hideAddFragmentDialog } from './interaction/addFragmentDialog.js';
 import { AddParticipantCommand } from './commands/AddParticipantCommand.js';
+import { AddFragmentCommand } from './commands/AddFragmentCommand.js';
 
 // App state
 let currentAst = [];
@@ -750,8 +752,7 @@ function handleContextMenuAction(action, nodeId) {
       break;
 
     case 'add-fragment':
-      // This action will be implemented in BACKLOG-091
-      console.log(`Action "${action}" will be implemented in future backlog items`);
+      showAddFragmentDialog(100, 100, handleAddFragmentComplete);
       break;
 
     default:
@@ -830,6 +831,38 @@ function handleAddMessageComplete(result) {
   selectElement(messageId);
 
   console.log(`Added message ${from}${arrowType}${to}: ${label}`);
+}
+
+/**
+ * Handle completion of add fragment dialog
+ * @param {Object|null} result - {fragmentType, condition} or null if cancelled
+ */
+function handleAddFragmentComplete(result) {
+  if (!result) return;
+
+  const { fragmentType, condition } = result;
+
+  // Create and execute the command
+  const cmd = new AddFragmentCommand(fragmentType, condition);
+  currentAst = commandHistory.execute(cmd, currentAst);
+
+  // Update text and re-render
+  const newText = serialize(currentAst);
+  previousText = newText;
+
+  // Update editor without creating another command
+  isUndoRedoInProgress = true;
+  editor.setValue(newText);
+  isUndoRedoInProgress = false;
+
+  // Re-render
+  renderCurrentAst();
+
+  // Select the new fragment
+  const fragmentId = cmd.getFragmentId();
+  selectElement(fragmentId);
+
+  console.log(`Added ${fragmentType} fragment: ${condition}`);
 }
 
 /**
