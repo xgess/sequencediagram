@@ -14,6 +14,7 @@ import { EditParticipantCommand } from '../src/commands/EditParticipantCommand.j
 import { AdjustFragmentBoundaryCommand } from '../src/commands/AdjustFragmentBoundaryCommand.js';
 import { MoveEntryBetweenClausesCommand } from '../src/commands/MoveEntryBetweenClausesCommand.js';
 import { EditFragmentConditionCommand } from '../src/commands/EditFragmentConditionCommand.js';
+import { EditElseConditionCommand } from '../src/commands/EditElseConditionCommand.js';
 
 // Test command that adds an item to AST
 class AddItemCommand extends Command {
@@ -1954,5 +1955,105 @@ describe('EditFragmentConditionCommand (BACKLOG-084)', () => {
     const frag2 = result.find(n => n.id === 'frag_2');
     expect(frag1.condition).toBe('success');
     expect(frag2.condition).toBe('i < 10');
+  });
+});
+
+describe('EditElseConditionCommand (BACKLOG-085)', () => {
+  let ast;
+
+  beforeEach(() => {
+    ast = [
+      { id: 'p_1', type: 'participant', alias: 'A' },
+      { id: 'p_2', type: 'participant', alias: 'B' },
+      {
+        id: 'frag_1',
+        type: 'fragment',
+        fragmentType: 'alt',
+        condition: 'success',
+        entries: [
+          { id: 'msg_1', type: 'message', from: 'A', to: 'B', label: 'msg1' }
+        ],
+        elseClauses: [
+          {
+            condition: 'failure',
+            entries: [
+              { id: 'msg_2', type: 'message', from: 'A', to: 'B', label: 'else msg' }
+            ]
+          }
+        ]
+      }
+    ];
+  });
+
+  it('should update else clause condition', () => {
+    const cmd = new EditElseConditionCommand('frag_1', 0, 'failure', 'error');
+
+    const result = cmd.do(ast);
+
+    const frag = result.find(n => n.id === 'frag_1');
+    expect(frag.elseClauses[0].condition).toBe('error');
+  });
+
+  it('should undo else condition change', () => {
+    const cmd = new EditElseConditionCommand('frag_1', 0, 'failure', 'error');
+
+    const afterDo = cmd.do(ast);
+    const afterUndo = cmd.undo(afterDo);
+
+    const frag = afterUndo.find(n => n.id === 'frag_1');
+    expect(frag.elseClauses[0].condition).toBe('failure');
+  });
+
+  it('should handle empty else condition', () => {
+    const cmd = new EditElseConditionCommand('frag_1', 0, 'failure', '');
+
+    const result = cmd.do(ast);
+
+    const frag = result.find(n => n.id === 'frag_1');
+    expect(frag.elseClauses[0].condition).toBe('');
+  });
+
+  it('should not modify main fragment condition', () => {
+    const cmd = new EditElseConditionCommand('frag_1', 0, 'failure', 'error');
+
+    const result = cmd.do(ast);
+
+    const frag = result.find(n => n.id === 'frag_1');
+    expect(frag.condition).toBe('success');
+    expect(frag.elseClauses[0].condition).toBe('error');
+  });
+
+  it('should handle multiple else clauses', () => {
+    const astWithMultipleElse = [
+      {
+        id: 'frag_1',
+        type: 'fragment',
+        fragmentType: 'alt',
+        condition: 'case 1',
+        entries: [],
+        elseClauses: [
+          { condition: 'case 2', entries: [] },
+          { condition: 'case 3', entries: [] }
+        ]
+      }
+    ];
+
+    const cmd = new EditElseConditionCommand('frag_1', 1, 'case 3', 'default');
+
+    const result = cmd.do(astWithMultipleElse);
+
+    const frag = result.find(n => n.id === 'frag_1');
+    expect(frag.elseClauses[0].condition).toBe('case 2');
+    expect(frag.elseClauses[1].condition).toBe('default');
+  });
+
+  it('should not modify non-fragment nodes', () => {
+    const cmd = new EditElseConditionCommand('p_1', 0, 'failure', 'error');
+
+    const result = cmd.do(ast);
+
+    // Participant should be unchanged
+    const participant = result.find(n => n.id === 'p_1');
+    expect(participant.elseClauses).toBeUndefined();
   });
 });

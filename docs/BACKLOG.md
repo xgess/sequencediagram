@@ -996,12 +996,13 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Creates EditFragmentCondition command ✅
 - Text updates: `alt new condition` ✅
 
-## BACKLOG-085: Double-click else label to edit else condition
-**Phase:** 3.5  
-**Dependencies:** BACKLOG-098  
-**Description:** Same as BACKLOG-098 for else clause labels.  
+## BACKLOG-085: Double-click else label to edit else condition ✅
+**Phase:** 3.5
+**Dependencies:** BACKLOG-084
+**Status:** Complete
+**Description:** Same as BACKLOG-084 for else clause labels.
 **Acceptance Criteria:**
-- Edit else clause condition
+- Edit else clause condition ✅
 
 
 ### Additional Interactions

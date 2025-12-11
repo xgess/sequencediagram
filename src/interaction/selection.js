@@ -74,7 +74,22 @@ function handleSvgDoubleClick(event) {
     const nodeId = selectableGroup.getAttribute('data-node-id');
     event.preventDefault();
     event.stopPropagation();
-    onDoubleClick(nodeId, selectableGroup);
+
+    // Check if we clicked on an else label specifically
+    if (target.classList.contains('fragment-else-label')) {
+      // Find which else clause this label belongs to (by index)
+      const allElseLabels = selectableGroup.querySelectorAll('.fragment-else-label');
+      let elseIndex = 0;
+      for (let i = 0; i < allElseLabels.length; i++) {
+        if (allElseLabels[i] === target) {
+          elseIndex = i;
+          break;
+        }
+      }
+      onDoubleClick(nodeId, selectableGroup, { type: 'else', index: elseIndex });
+    } else {
+      onDoubleClick(nodeId, selectableGroup, null);
+    }
   }
 }
 

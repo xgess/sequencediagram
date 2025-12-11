@@ -23,6 +23,7 @@ import { EditParticipantCommand } from './commands/EditParticipantCommand.js';
 import { AdjustFragmentBoundaryCommand } from './commands/AdjustFragmentBoundaryCommand.js';
 import { MoveEntryBetweenClausesCommand } from './commands/MoveEntryBetweenClausesCommand.js';
 import { EditFragmentConditionCommand } from './commands/EditFragmentConditionCommand.js';
+import { EditElseConditionCommand } from './commands/EditElseConditionCommand.js';
 import { showInlineEdit, showParticipantEdit, hideInlineEdit } from './interaction/inlineEdit.js';
 import { showConfirmDialog } from './interaction/confirmDialog.js';
 import { initLifelineDrag, removeLifelineDrag } from './interaction/lifelineDrag.js';
@@ -645,8 +646,9 @@ function handleEndpointChange(nodeId, endpointType, newParticipant) {
  * Handle double-click on diagram element
  * @param {string} nodeId - ID of the double-clicked node
  * @param {SVGElement} element - The SVG element that was clicked
+ * @param {Object|null} extra - Extra info (e.g., { type: 'else', index: 0 } for else labels)
  */
-function handleDoubleClick(nodeId, element) {
+function handleDoubleClick(nodeId, element, extra) {
   if (!nodeId) return;
 
   // Find the node
@@ -662,8 +664,19 @@ function handleDoubleClick(nodeId, element) {
     const displayName = node.displayName || node.alias;
     showParticipantEdit(element, nodeId, displayName, node.alias, handleParticipantEditComplete);
   } else if (node.type === 'fragment') {
-    // Show inline edit for fragment condition
-    showInlineEdit(element, nodeId, node.condition || '', handleFragmentConditionEditComplete);
+    // Check if this is an else label click
+    if (extra && extra.type === 'else') {
+      const elseClause = node.elseClauses && node.elseClauses[extra.index];
+      if (elseClause) {
+        // Store the else index for the callback
+        showInlineEdit(element, nodeId, elseClause.condition || '', (id, newValue) => {
+          handleElseConditionEditComplete(id, extra.index, newValue);
+        });
+      }
+    } else {
+      // Show inline edit for fragment condition
+      showInlineEdit(element, nodeId, node.condition || '', handleFragmentConditionEditComplete);
+    }
   }
 }
 
@@ -781,6 +794,46 @@ function handleFragmentConditionEditComplete(nodeId, newCondition) {
   renderCurrentAst();
 
   console.log(`Changed fragment ${nodeId} condition to "${newCondition}"`);
+}
+
+/**
+ * Handle completion of else condition edit
+ * @param {string} nodeId - ID of the fragment
+ * @param {number} clauseIndex - Index of the else clause
+ * @param {string|null} newCondition - New condition value, or null if cancelled
+ */
+function handleElseConditionEditComplete(nodeId, clauseIndex, newCondition) {
+  // Cancelled
+  if (newCondition === null) return;
+
+  // Find the node
+  const node = findNodeById(nodeId);
+  if (!node || node.type !== 'fragment') return;
+
+  // Get the else clause
+  const elseClause = node.elseClauses && node.elseClauses[clauseIndex];
+  if (!elseClause) return;
+
+  // Don't create command if condition unchanged
+  if (elseClause.condition === newCondition) return;
+
+  // Create and execute edit command
+  const cmd = new EditElseConditionCommand(nodeId, clauseIndex, elseClause.condition || '', newCondition);
+  currentAst = commandHistory.execute(cmd, currentAst);
+
+  // Update text and re-render
+  const newText = serialize(currentAst);
+  previousText = newText;
+
+  // Update editor without creating another command
+  isUndoRedoInProgress = true;
+  editor.setValue(newText);
+  isUndoRedoInProgress = false;
+
+  // Re-render
+  renderCurrentAst();
+
+  console.log(`Changed fragment ${nodeId} else clause ${clauseIndex} condition to "${newCondition}"`);
 }
 
 /**
