@@ -11,6 +11,7 @@ import { EditMessageLabelCommand } from '../src/commands/EditMessageLabelCommand
 import { AddMessageCommand } from '../src/commands/AddMessageCommand.js';
 import { ReorderParticipantCommand } from '../src/commands/ReorderParticipantCommand.js';
 import { EditParticipantCommand } from '../src/commands/EditParticipantCommand.js';
+import { AdjustFragmentBoundaryCommand } from '../src/commands/AdjustFragmentBoundaryCommand.js';
 
 // Test command that adds an item to AST
 class AddItemCommand extends Command {
@@ -1523,6 +1524,197 @@ describe('EditParticipantCommand (BACKLOG-079)', () => {
 
       expect(afterUndo[2].entries[0].from).toBe('Alice');
       expect(afterUndo[2].elseClauses[0].entries[0].to).toBe('Alice');
+    });
+  });
+});
+
+describe('AdjustFragmentBoundaryCommand (BACKLOG-081, BACKLOG-082)', () => {
+  let ast;
+
+  beforeEach(() => {
+    // AST: msg1, msg2, fragment(msg3, msg4), msg5, msg6
+    ast = [
+      { id: 'msg_1', type: 'message', from: 'A', to: 'B', label: 'msg1' },
+      { id: 'msg_2', type: 'message', from: 'B', to: 'A', label: 'msg2' },
+      {
+        id: 'frag_1',
+        type: 'fragment',
+        fragmentType: 'opt',
+        condition: 'test',
+        entries: [
+          { id: 'msg_3', type: 'message', from: 'A', to: 'B', label: 'msg3' },
+          { id: 'msg_4', type: 'message', from: 'B', to: 'A', label: 'msg4' }
+        ],
+        elseClauses: []
+      },
+      { id: 'msg_5', type: 'message', from: 'A', to: 'B', label: 'msg5' },
+      { id: 'msg_6', type: 'message', from: 'B', to: 'A', label: 'msg6' }
+    ];
+  });
+
+  describe('expand top boundary', () => {
+    it('should pull one message into fragment from above', () => {
+      const cmd = new AdjustFragmentBoundaryCommand('frag_1', 'top', 1, [], 2);
+
+      const result = cmd.do(ast);
+
+      // msg2 should now be inside fragment
+      expect(result.length).toBe(4); // 5 - 1 = 4 top level
+      const frag = result.find(n => n.id === 'frag_1');
+      expect(frag.entries.length).toBe(3);
+      expect(frag.entries[0].id).toBe('msg_2');
+      expect(frag.entries[1].id).toBe('msg_3');
+    });
+
+    it('should pull multiple messages into fragment from above', () => {
+      const cmd = new AdjustFragmentBoundaryCommand('frag_1', 'top', 2, [], 2);
+
+      const result = cmd.do(ast);
+
+      // msg1 and msg2 should now be inside fragment
+      expect(result.length).toBe(3);
+      const frag = result.find(n => n.id === 'frag_1');
+      expect(frag.entries.length).toBe(4);
+      expect(frag.entries[0].id).toBe('msg_1');
+      expect(frag.entries[1].id).toBe('msg_2');
+    });
+
+    it('should undo expanding top boundary', () => {
+      const cmd = new AdjustFragmentBoundaryCommand('frag_1', 'top', 1, [], 2);
+
+      const afterDo = cmd.do(ast);
+      const afterUndo = cmd.undo(afterDo);
+
+      expect(afterUndo.length).toBe(5);
+      const frag = afterUndo.find(n => n.id === 'frag_1');
+      expect(frag.entries.length).toBe(2);
+      expect(afterUndo[1].id).toBe('msg_2');
+    });
+  });
+
+  describe('contract top boundary', () => {
+    it('should push one message out of fragment to above', () => {
+      const cmd = new AdjustFragmentBoundaryCommand('frag_1', 'top', -1, [], 2);
+
+      const result = cmd.do(ast);
+
+      // msg3 should now be before fragment
+      expect(result.length).toBe(6);
+      const frag = result.find(n => n.id === 'frag_1');
+      expect(frag.entries.length).toBe(1);
+      expect(frag.entries[0].id).toBe('msg_4');
+      // msg3 should be before fragment
+      const fragIdx = result.findIndex(n => n.id === 'frag_1');
+      expect(result[fragIdx - 1].id).toBe('msg_3');
+    });
+
+    it('should undo contracting top boundary', () => {
+      const cmd = new AdjustFragmentBoundaryCommand('frag_1', 'top', -1, [], 2);
+
+      const afterDo = cmd.do(ast);
+      const afterUndo = cmd.undo(afterDo);
+
+      expect(afterUndo.length).toBe(5);
+      const frag = afterUndo.find(n => n.id === 'frag_1');
+      expect(frag.entries.length).toBe(2);
+    });
+  });
+
+  describe('expand bottom boundary', () => {
+    it('should pull one message into fragment from below', () => {
+      const cmd = new AdjustFragmentBoundaryCommand('frag_1', 'bottom', 1, [], 2);
+
+      const result = cmd.do(ast);
+
+      // msg5 should now be inside fragment
+      expect(result.length).toBe(4);
+      const frag = result.find(n => n.id === 'frag_1');
+      expect(frag.entries.length).toBe(3);
+      expect(frag.entries[2].id).toBe('msg_5');
+    });
+
+    it('should pull multiple messages into fragment from below', () => {
+      const cmd = new AdjustFragmentBoundaryCommand('frag_1', 'bottom', 2, [], 2);
+
+      const result = cmd.do(ast);
+
+      // msg5 and msg6 should now be inside fragment
+      expect(result.length).toBe(3);
+      const frag = result.find(n => n.id === 'frag_1');
+      expect(frag.entries.length).toBe(4);
+      expect(frag.entries[2].id).toBe('msg_5');
+      expect(frag.entries[3].id).toBe('msg_6');
+    });
+
+    it('should undo expanding bottom boundary', () => {
+      const cmd = new AdjustFragmentBoundaryCommand('frag_1', 'bottom', 1, [], 2);
+
+      const afterDo = cmd.do(ast);
+      const afterUndo = cmd.undo(afterDo);
+
+      expect(afterUndo.length).toBe(5);
+      const frag = afterUndo.find(n => n.id === 'frag_1');
+      expect(frag.entries.length).toBe(2);
+    });
+  });
+
+  describe('contract bottom boundary', () => {
+    it('should push one message out of fragment to below', () => {
+      const cmd = new AdjustFragmentBoundaryCommand('frag_1', 'bottom', -1, [], 2);
+
+      const result = cmd.do(ast);
+
+      // msg4 should now be after fragment
+      expect(result.length).toBe(6);
+      const frag = result.find(n => n.id === 'frag_1');
+      expect(frag.entries.length).toBe(1);
+      expect(frag.entries[0].id).toBe('msg_3');
+      // msg4 should be after fragment
+      const fragIdx = result.findIndex(n => n.id === 'frag_1');
+      expect(result[fragIdx + 1].id).toBe('msg_4');
+    });
+
+    it('should undo contracting bottom boundary', () => {
+      const cmd = new AdjustFragmentBoundaryCommand('frag_1', 'bottom', -1, [], 2);
+
+      const afterDo = cmd.do(ast);
+      const afterUndo = cmd.undo(afterDo);
+
+      expect(afterUndo.length).toBe(5);
+      const frag = afterUndo.find(n => n.id === 'frag_1');
+      expect(frag.entries.length).toBe(2);
+    });
+  });
+
+  describe('edge cases', () => {
+    it('should return unchanged AST if fragment not found', () => {
+      const cmd = new AdjustFragmentBoundaryCommand('nonexistent', 'top', 1, [], 2);
+
+      const result = cmd.do(ast);
+
+      expect(result).toEqual(ast);
+    });
+
+    it('should not expand beyond available messages', () => {
+      // Try to expand by 10 but only 2 messages above
+      const cmd = new AdjustFragmentBoundaryCommand('frag_1', 'top', 10, [], 2);
+
+      const result = cmd.do(ast);
+
+      // Should only pull in the 2 available messages
+      const frag = result.find(n => n.id === 'frag_1');
+      expect(frag.entries.length).toBe(4); // original 2 + 2 from above
+    });
+
+    it('should not contract beyond available entries', () => {
+      // Try to contract by 10 but only 2 entries in fragment
+      const cmd = new AdjustFragmentBoundaryCommand('frag_1', 'top', -10, [], 2);
+
+      const result = cmd.do(ast);
+
+      // Should only push out the 2 available entries
+      const frag = result.find(n => n.id === 'frag_1');
+      expect(frag.entries.length).toBe(0);
     });
   });
 });

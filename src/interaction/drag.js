@@ -1,6 +1,6 @@
-// Drag interaction handling (BACKLOG-073, 074, 075, 078)
+// Drag interaction handling (BACKLOG-073, 074, 075, 078, 081, 082)
 // Provides drag-to-reorder and endpoint drag functionality for messages
-// Also handles participant reordering
+// Also handles participant reordering and fragment boundary adjustment
 
 // Drag modes
 const DRAG_MODE = {
@@ -8,7 +8,9 @@ const DRAG_MODE = {
   REORDER: 'reorder',           // Drag message line to reorder vertically
   ENDPOINT_TARGET: 'target',    // Drag target endpoint
   ENDPOINT_SOURCE: 'source',    // Drag source endpoint
-  PARTICIPANT: 'participant'    // Drag participant to reorder horizontally
+  PARTICIPANT: 'participant',   // Drag participant to reorder horizontally
+  FRAGMENT_TOP: 'fragment_top', // Drag fragment top boundary
+  FRAGMENT_BOTTOM: 'fragment_bottom' // Drag fragment bottom boundary
 };
 
 // Drag state
@@ -27,6 +29,10 @@ let dragLine = null;  // For endpoint dragging
 let onReorderComplete = null;
 let onEndpointChange = null;
 let onParticipantReorder = null;
+let onFragmentBoundaryChange = null;
+
+// Fragment drag state
+let dragFragmentBoundaryY = 0;
 
 // SVG and layout reference
 let svg = null;
@@ -38,14 +44,16 @@ let participantPositions = [];
  * @param {Function} reorderCallback - Callback for reorder: (nodeId, deltaIndex) => void
  * @param {Function} endpointCallback - Callback for endpoint: (nodeId, 'source'|'target', newParticipant) => void
  * @param {Function} participantCallback - Callback for participant reorder: (nodeId, oldIndex, newIndex) => void
+ * @param {Function} fragmentCallback - Callback for fragment boundary: (nodeId, boundary, delta) => void
  */
-export function initDrag(svgElement, reorderCallback, endpointCallback, participantCallback) {
+export function initDrag(svgElement, reorderCallback, endpointCallback, participantCallback, fragmentCallback) {
   if (!svgElement) return;
 
   svg = svgElement;
   onReorderComplete = reorderCallback;
   onEndpointChange = endpointCallback;
   onParticipantReorder = participantCallback;
+  onFragmentBoundaryChange = fragmentCallback;
 
   // Add drag styles
   addDragStyles();
@@ -74,6 +82,7 @@ export function removeDrag(svgElement) {
   onReorderComplete = null;
   onEndpointChange = null;
   onParticipantReorder = null;
+  onFragmentBoundaryChange = null;
   participantPositions = [];
   cleanupDrag();
 }
@@ -111,6 +120,19 @@ function handleMouseDown(event) {
   if (event.button !== 0) return;
 
   const target = event.target;
+
+  // Check for fragment boundary drag
+  const fragmentGroup = target.closest('.fragment');
+  if (fragmentGroup && target.classList.contains('fragment-box')) {
+    const svgPoint = getSvgPoint(event);
+    if (svgPoint) {
+      const boundaryType = detectFragmentBoundary(fragmentGroup, svgPoint);
+      if (boundaryType) {
+        startFragmentBoundaryDrag(event, fragmentGroup, boundaryType);
+        return;
+      }
+    }
+  }
 
   // Check for participant drag first
   const participantGroup = target.closest('.participant');
@@ -202,6 +224,106 @@ function startParticipantDrag(event, participantGroup) {
 }
 
 /**
+ * Detect if click is near a fragment boundary
+ * @param {SVGElement} fragmentGroup
+ * @param {Object} svgPoint - {x, y}
+ * @returns {string|null} 'top', 'bottom', or null
+ */
+function detectFragmentBoundary(fragmentGroup, svgPoint) {
+  const rect = fragmentGroup.querySelector('.fragment-box');
+  if (!rect) return null;
+
+  const y = parseFloat(rect.getAttribute('y') || 0);
+  const height = parseFloat(rect.getAttribute('height') || 0);
+  const threshold = 15; // pixels
+
+  // Check top boundary (but not in the label area - below y + 22)
+  if (Math.abs(svgPoint.y - y) < threshold && svgPoint.y > y + 22) {
+    return 'top';
+  }
+
+  // Check bottom boundary
+  if (Math.abs(svgPoint.y - (y + height)) < threshold) {
+    return 'bottom';
+  }
+
+  return null;
+}
+
+/**
+ * Start fragment boundary drag
+ * @param {MouseEvent} event
+ * @param {SVGElement} fragmentGroup
+ * @param {string} boundaryType - 'top' or 'bottom'
+ */
+function startFragmentBoundaryDrag(event, fragmentGroup, boundaryType) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  isDragging = true;
+  dragMode = boundaryType === 'top' ? DRAG_MODE.FRAGMENT_TOP : DRAG_MODE.FRAGMENT_BOTTOM;
+  dragNode = fragmentGroup;
+  dragNodeId = fragmentGroup.getAttribute('data-node-id');
+  dragStartX = event.clientX;
+  dragStartY = event.clientY;
+  dragCurrentX = event.clientX;
+  dragCurrentY = event.clientY;
+
+  // Store the boundary Y position
+  const rect = fragmentGroup.querySelector('.fragment-box');
+  if (rect) {
+    const y = parseFloat(rect.getAttribute('y') || 0);
+    const height = parseFloat(rect.getAttribute('height') || 0);
+    dragFragmentBoundaryY = boundaryType === 'top' ? y : y + height;
+  }
+
+  // Add dragging class
+  fragmentGroup.classList.add('dragging');
+  svg.classList.add('dragging-active');
+
+  // Create visual feedback line
+  createFragmentBoundaryLine(boundaryType);
+}
+
+/**
+ * Create visual line for fragment boundary drag
+ * @param {string} boundaryType - 'top' or 'bottom'
+ */
+function createFragmentBoundaryLine(boundaryType) {
+  const rect = dragNode.querySelector('.fragment-box');
+  if (!rect) return;
+
+  const x = parseFloat(rect.getAttribute('x') || 0);
+  const width = parseFloat(rect.getAttribute('width') || 0);
+
+  dragLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  dragLine.setAttribute('class', 'fragment-boundary-line');
+  dragLine.setAttribute('x1', x);
+  dragLine.setAttribute('y1', dragFragmentBoundaryY);
+  dragLine.setAttribute('x2', x + width);
+  dragLine.setAttribute('y2', dragFragmentBoundaryY);
+  dragLine.setAttribute('stroke', '#4a90d9');
+  dragLine.setAttribute('stroke-width', '3');
+  dragLine.setAttribute('stroke-dasharray', '5,5');
+  dragLine.setAttribute('pointer-events', 'none');
+
+  svg.appendChild(dragLine);
+}
+
+/**
+ * Update fragment boundary line position during drag
+ */
+function updateFragmentBoundaryLine() {
+  if (!dragLine) return;
+
+  const svgPoint = getSvgPointFromClient(dragCurrentX, dragCurrentY);
+  if (!svgPoint) return;
+
+  dragLine.setAttribute('y1', svgPoint.y);
+  dragLine.setAttribute('y2', svgPoint.y);
+}
+
+/**
  * Handle mousemove during drag
  * @param {MouseEvent} event
  */
@@ -229,6 +351,9 @@ function handleMouseMove(event) {
     }
     // Highlight drop target
     highlightParticipantDropTarget();
+  } else if (dragMode === DRAG_MODE.FRAGMENT_TOP || dragMode === DRAG_MODE.FRAGMENT_BOTTOM) {
+    // Update drag line for fragment boundary
+    updateFragmentBoundaryLine();
   }
 }
 
@@ -264,6 +389,20 @@ function handleMouseUp(event) {
     const result = calculateParticipantDropPosition();
     if (result && result.newIndex !== result.oldIndex && onParticipantReorder) {
       onParticipantReorder(dragNodeId, result.oldIndex, result.newIndex);
+    }
+  } else if (dragMode === DRAG_MODE.FRAGMENT_TOP || dragMode === DRAG_MODE.FRAGMENT_BOTTOM) {
+    // Calculate boundary change
+    const deltaY = dragCurrentY - dragStartY;
+    const entryHeight = 30; // Approximate height of one entry
+    const delta = Math.round(deltaY / entryHeight);
+
+    // For top boundary: negative deltaY = expand (delta positive), positive deltaY = contract
+    // For bottom boundary: positive deltaY = expand (delta positive), negative deltaY = contract
+    const adjustedDelta = dragMode === DRAG_MODE.FRAGMENT_TOP ? -delta : delta;
+
+    if (adjustedDelta !== 0 && onFragmentBoundaryChange) {
+      const boundary = dragMode === DRAG_MODE.FRAGMENT_TOP ? 'top' : 'bottom';
+      onFragmentBoundaryChange(dragNodeId, boundary, adjustedDelta);
     }
   }
 

@@ -954,23 +954,25 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 
 ### Fragment Interactions
 
-## BACKLOG-081: Drag fragment top boundary to include/exclude entries
-**Phase:** 3.5  
-**Dependencies:** BACKLOG-066  
-**Description:** Drag top edge of fragment box up/down to change which entries are inside.  
+## BACKLOG-081: Drag fragment top boundary to include/exclude entries ✅
+**Phase:** 3.5
+**Dependencies:** BACKLOG-066
+**Status:** Complete
+**Description:** Drag top edge of fragment box up/down to change which entries are inside.
 **Acceptance Criteria:**
-- Dragging boundary shows visual feedback
-- Drop adjusts fragment.entries array
-- Creates AdjustFragmentBoundary command
-- Text updates with entries moved in/out of fragment
-- Undo restores
+- Dragging boundary shows visual feedback ✅
+- Drop adjusts fragment.entries array ✅
+- Creates AdjustFragmentBoundary command ✅
+- Text updates with entries moved in/out of fragment ✅
+- Undo restores ✅
 
-## BACKLOG-082: Drag fragment bottom boundary
-**Phase:** 3.5  
-**Dependencies:** BACKLOG-095  
-**Description:** Same as BACKLOG-095 for bottom edge.  
+## BACKLOG-082: Drag fragment bottom boundary ✅
+**Phase:** 3.5
+**Dependencies:** BACKLOG-081
+**Status:** Complete
+**Description:** Same as BACKLOG-081 for bottom edge.
 **Acceptance Criteria:**
-- Drag bottom edge to include/exclude trailing entries
+- Drag bottom edge to include/exclude trailing entries ✅
 
 ## BACKLOG-083: Drag fragment else divider
 **Phase:** 3.5  

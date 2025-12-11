@@ -20,6 +20,7 @@ import { EditMessageLabelCommand } from './commands/EditMessageLabelCommand.js';
 import { AddMessageCommand } from './commands/AddMessageCommand.js';
 import { ReorderParticipantCommand } from './commands/ReorderParticipantCommand.js';
 import { EditParticipantCommand } from './commands/EditParticipantCommand.js';
+import { AdjustFragmentBoundaryCommand } from './commands/AdjustFragmentBoundaryCommand.js';
 import { showInlineEdit, showParticipantEdit, hideInlineEdit } from './interaction/inlineEdit.js';
 import { showConfirmDialog } from './interaction/confirmDialog.js';
 import { initLifelineDrag, removeLifelineDrag } from './interaction/lifelineDrag.js';
@@ -231,7 +232,7 @@ export function updateFromText(text, createCommand = false) {
   currentSvg = svg;
   initSelection(svg, handleSelectionChange, handleDoubleClick);
   initCursors(svg);
-  initDrag(svg, handleDragComplete, handleEndpointChange, handleParticipantReorder);
+  initDrag(svg, handleDragComplete, handleEndpointChange, handleParticipantReorder, handleFragmentBoundaryChange);
   initLifelineDrag(svg, handleLifelineDrag);
 
   // Check for errors in AST and display them
@@ -433,7 +434,7 @@ function renderCurrentAst() {
   currentSvg = svg;
   initSelection(svg, handleSelectionChange, handleDoubleClick);
   initCursors(svg);
-  initDrag(svg, handleDragComplete, handleEndpointChange, handleParticipantReorder);
+  initDrag(svg, handleDragComplete, handleEndpointChange, handleParticipantReorder, handleFragmentBoundaryChange);
   initLifelineDrag(svg, handleLifelineDrag);
 
   // Check for errors in AST and display them
@@ -845,6 +846,45 @@ function handleParticipantReorder(nodeId, oldIndex, newIndex) {
   renderCurrentAst();
 
   console.log(`Reordered participant from position ${oldIndex} to ${newIndex}`);
+}
+
+/**
+ * Handle fragment boundary change via drag
+ * @param {string} nodeId - ID of the fragment
+ * @param {string} boundary - 'top' or 'bottom'
+ * @param {number} delta - Number of entries to move (positive = expand, negative = contract)
+ */
+function handleFragmentBoundaryChange(nodeId, boundary, delta) {
+  if (!nodeId || delta === 0) return;
+
+  // Find the fragment
+  const fragment = findNodeById(nodeId);
+  if (!fragment || fragment.type !== 'fragment') return;
+
+  // Find AST index of the fragment
+  const astIndex = currentAst.findIndex(n => n.id === nodeId);
+  if (astIndex === -1) return;
+
+  // Calculate what entries will be moved for undo info
+  const movedEntries = [];
+
+  // Create and execute the command
+  const cmd = new AdjustFragmentBoundaryCommand(nodeId, boundary, delta, movedEntries, astIndex);
+  currentAst = commandHistory.execute(cmd, currentAst);
+
+  // Update text and re-render
+  const newText = serialize(currentAst);
+  previousText = newText;
+
+  // Update editor without creating another command
+  isUndoRedoInProgress = true;
+  editor.setValue(newText);
+  isUndoRedoInProgress = false;
+
+  // Re-render
+  renderCurrentAst();
+
+  console.log(`Adjusted fragment ${nodeId} ${boundary} boundary by ${delta}`);
 }
 
 /**
