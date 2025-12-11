@@ -18,6 +18,7 @@ import { MoveMessageTargetCommand } from './commands/MoveMessageTargetCommand.js
 import { MoveMessageSourceCommand } from './commands/MoveMessageSourceCommand.js';
 import { EditMessageLabelCommand } from './commands/EditMessageLabelCommand.js';
 import { AddMessageCommand } from './commands/AddMessageCommand.js';
+import { ReorderParticipantCommand } from './commands/ReorderParticipantCommand.js';
 import { showInlineEdit, hideInlineEdit } from './interaction/inlineEdit.js';
 import { initLifelineDrag, removeLifelineDrag } from './interaction/lifelineDrag.js';
 
@@ -228,7 +229,7 @@ export function updateFromText(text, createCommand = false) {
   currentSvg = svg;
   initSelection(svg, handleSelectionChange, handleDoubleClick);
   initCursors(svg);
-  initDrag(svg, handleDragComplete, handleEndpointChange);
+  initDrag(svg, handleDragComplete, handleEndpointChange, handleParticipantReorder);
   initLifelineDrag(svg, handleLifelineDrag);
 
   // Check for errors in AST and display them
@@ -430,7 +431,7 @@ function renderCurrentAst() {
   currentSvg = svg;
   initSelection(svg, handleSelectionChange, handleDoubleClick);
   initCursors(svg);
-  initDrag(svg, handleDragComplete, handleEndpointChange);
+  initDrag(svg, handleDragComplete, handleEndpointChange, handleParticipantReorder);
   initLifelineDrag(svg, handleLifelineDrag);
 
   // Check for errors in AST and display them
@@ -752,6 +753,47 @@ function findInsertIndexByY(y) {
   }
 
   return lastMessageIndex >= 0 ? lastMessageIndex + 1 : currentAst.length;
+}
+
+/**
+ * Handle participant reorder via drag
+ * @param {string} nodeId - ID of the dragged participant
+ * @param {number} oldIndex - Original visual position (0-based from left)
+ * @param {number} newIndex - Target visual position (0-based from left)
+ */
+function handleParticipantReorder(nodeId, oldIndex, newIndex) {
+  if (!nodeId || oldIndex === newIndex) return;
+
+  // Find the AST indices for participants
+  // oldIndex/newIndex are visual positions, need to map to AST indices
+  const participants = currentAst.filter(n => n.type === 'participant');
+
+  if (oldIndex >= participants.length || newIndex >= participants.length) return;
+  if (oldIndex < 0 || newIndex < 0) return;
+
+  // Get AST indices
+  const oldAstIndex = currentAst.findIndex(n => n.id === participants[oldIndex].id);
+  const newAstIndex = currentAst.findIndex(n => n.id === participants[newIndex].id);
+
+  if (oldAstIndex === -1 || newAstIndex === -1) return;
+
+  // Create and execute reorder command
+  const cmd = new ReorderParticipantCommand(nodeId, oldAstIndex, newAstIndex);
+  currentAst = commandHistory.execute(cmd, currentAst);
+
+  // Update text and re-render
+  const newText = serialize(currentAst);
+  previousText = newText;
+
+  // Update editor without creating another command
+  isUndoRedoInProgress = true;
+  editor.setValue(newText);
+  isUndoRedoInProgress = false;
+
+  // Re-render
+  renderCurrentAst();
+
+  console.log(`Reordered participant from position ${oldIndex} to ${newIndex}`);
 }
 
 /**

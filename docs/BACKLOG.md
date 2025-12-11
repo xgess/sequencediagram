@@ -915,16 +915,17 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 
 ### Participant Interactions
 
-## BACKLOG-078: Drag participant to reorder horizontally
-**Phase:** 3.4  
-**Dependencies:** BACKLOG-066  
-**Description:** Drag participant left/right past another to reorder.  
+## BACKLOG-078: Drag participant to reorder horizontally ✅
+**Phase:** 3.4
+**Dependencies:** BACKLOG-066
+**Status:** Complete
+**Description:** Drag participant left/right past another to reorder.
 **Acceptance Criteria:**
-- Dragging participant past neighbor swaps positions
-- Creates ReorderParticipant command
-- All messages to/from reordered participants update visually
-- Text shows participants in new order
-- Undo restores order
+- Dragging participant past neighbor swaps positions ✅
+- Creates ReorderParticipant command ✅
+- All messages to/from reordered participants update visually ✅
+- Text shows participants in new order ✅
+- Undo restores order ✅
 
 ## BACKLOG-079: Double-click participant to edit name and alias
 **Phase:** 3.4  

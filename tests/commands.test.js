@@ -9,6 +9,7 @@ import { MoveMessageTargetCommand } from '../src/commands/MoveMessageTargetComma
 import { MoveMessageSourceCommand } from '../src/commands/MoveMessageSourceCommand.js';
 import { EditMessageLabelCommand } from '../src/commands/EditMessageLabelCommand.js';
 import { AddMessageCommand } from '../src/commands/AddMessageCommand.js';
+import { ReorderParticipantCommand } from '../src/commands/ReorderParticipantCommand.js';
 
 // Test command that adds an item to AST
 class AddItemCommand extends Command {
@@ -1302,5 +1303,99 @@ describe('AddMessageCommand (BACKLOG-077)', () => {
       const afterUndo = cmd.undo(afterDo);
       expect(afterUndo[2].elseClauses[0].entries).toHaveLength(0);
     });
+  });
+});
+
+describe('ReorderParticipantCommand (BACKLOG-078)', () => {
+  let history;
+  let initialAst;
+
+  beforeEach(() => {
+    history = new CommandHistory();
+    initialAst = [
+      { id: 'p_1', type: 'participant', alias: 'Alice' },
+      { id: 'p_2', type: 'participant', alias: 'Bob' },
+      { id: 'p_3', type: 'participant', alias: 'Charlie' },
+      { id: 'm_1', type: 'message', from: 'Alice', to: 'Bob', label: 'Hello' }
+    ];
+  });
+
+  it('should move participant forward with do()', () => {
+    const cmd = new ReorderParticipantCommand('p_1', 0, 2);
+
+    const result = cmd.do(initialAst);
+
+    expect(result[0].alias).toBe('Bob');
+    expect(result[1].alias).toBe('Charlie');
+    expect(result[2].alias).toBe('Alice');
+    expect(result[3].type).toBe('message'); // Message unchanged
+  });
+
+  it('should move participant backward with do()', () => {
+    const cmd = new ReorderParticipantCommand('p_3', 2, 0);
+
+    const result = cmd.do(initialAst);
+
+    expect(result[0].alias).toBe('Charlie');
+    expect(result[1].alias).toBe('Alice');
+    expect(result[2].alias).toBe('Bob');
+  });
+
+  it('should restore original order with undo()', () => {
+    const cmd = new ReorderParticipantCommand('p_1', 0, 2);
+
+    const afterDo = cmd.do(initialAst);
+    expect(afterDo[2].alias).toBe('Alice');
+
+    const afterUndo = cmd.undo(afterDo);
+    expect(afterUndo[0].alias).toBe('Alice');
+    expect(afterUndo[1].alias).toBe('Bob');
+    expect(afterUndo[2].alias).toBe('Charlie');
+  });
+
+  it('should work with CommandHistory', () => {
+    const cmd = new ReorderParticipantCommand('p_1', 0, 2);
+
+    let current = history.execute(cmd, initialAst);
+    expect(current[0].alias).toBe('Bob');
+    expect(current[2].alias).toBe('Alice');
+
+    current = history.undo(current);
+    expect(current[0].alias).toBe('Alice');
+
+    current = history.redo(current);
+    expect(current[0].alias).toBe('Bob');
+    expect(current[2].alias).toBe('Alice');
+  });
+
+  it('should handle swap between adjacent participants', () => {
+    const cmd = new ReorderParticipantCommand('p_1', 0, 1);
+
+    const result = cmd.do(initialAst);
+
+    expect(result[0].alias).toBe('Bob');
+    expect(result[1].alias).toBe('Alice');
+    expect(result[2].alias).toBe('Charlie');
+  });
+
+  it('should not change anything if same index', () => {
+    const cmd = new ReorderParticipantCommand('p_2', 1, 1);
+
+    const result = cmd.do(initialAst);
+
+    expect(result[0].alias).toBe('Alice');
+    expect(result[1].alias).toBe('Bob');
+    expect(result[2].alias).toBe('Charlie');
+  });
+
+  it('should preserve messages after reorder', () => {
+    const cmd = new ReorderParticipantCommand('p_1', 0, 2);
+
+    const result = cmd.do(initialAst);
+
+    // Message should still be at index 3
+    expect(result[3].type).toBe('message');
+    expect(result[3].from).toBe('Alice');
+    expect(result[3].to).toBe('Bob');
   });
 });

@@ -1,12 +1,14 @@
-// Drag interaction handling (BACKLOG-073, 074, 075)
+// Drag interaction handling (BACKLOG-073, 074, 075, 078)
 // Provides drag-to-reorder and endpoint drag functionality for messages
+// Also handles participant reordering
 
 // Drag modes
 const DRAG_MODE = {
   NONE: 'none',
-  REORDER: 'reorder',       // Drag message line to reorder
-  ENDPOINT_TARGET: 'target', // Drag target endpoint
-  ENDPOINT_SOURCE: 'source'  // Drag source endpoint
+  REORDER: 'reorder',           // Drag message line to reorder vertically
+  ENDPOINT_TARGET: 'target',    // Drag target endpoint
+  ENDPOINT_SOURCE: 'source',    // Drag source endpoint
+  PARTICIPANT: 'participant'    // Drag participant to reorder horizontally
 };
 
 // Drag state
@@ -24,6 +26,7 @@ let dragLine = null;  // For endpoint dragging
 // Callbacks
 let onReorderComplete = null;
 let onEndpointChange = null;
+let onParticipantReorder = null;
 
 // SVG and layout reference
 let svg = null;
@@ -34,13 +37,15 @@ let participantPositions = [];
  * @param {SVGElement} svgElement - The SVG diagram element
  * @param {Function} reorderCallback - Callback for reorder: (nodeId, deltaIndex) => void
  * @param {Function} endpointCallback - Callback for endpoint: (nodeId, 'source'|'target', newParticipant) => void
+ * @param {Function} participantCallback - Callback for participant reorder: (nodeId, oldIndex, newIndex) => void
  */
-export function initDrag(svgElement, reorderCallback, endpointCallback) {
+export function initDrag(svgElement, reorderCallback, endpointCallback, participantCallback) {
   if (!svgElement) return;
 
   svg = svgElement;
   onReorderComplete = reorderCallback;
   onEndpointChange = endpointCallback;
+  onParticipantReorder = participantCallback;
 
   // Add drag styles
   addDragStyles();
@@ -68,6 +73,7 @@ export function removeDrag(svgElement) {
   svg = null;
   onReorderComplete = null;
   onEndpointChange = null;
+  onParticipantReorder = null;
   participantPositions = [];
   cleanupDrag();
 }
@@ -104,11 +110,17 @@ function handleMouseDown(event) {
   // Only left click
   if (event.button !== 0) return;
 
-  // Find draggable element (message line)
   const target = event.target;
-  const messageGroup = target.closest('.message');
 
-  // Only drag on message elements
+  // Check for participant drag first
+  const participantGroup = target.closest('.participant');
+  if (participantGroup) {
+    startParticipantDrag(event, participantGroup);
+    return;
+  }
+
+  // Check for message drag
+  const messageGroup = target.closest('.message');
   if (!messageGroup) return;
 
   // Get mouse position in SVG coordinates
@@ -141,7 +153,7 @@ function handleMouseDown(event) {
     return; // Not a draggable element
   }
 
-  // Start drag
+  // Start message drag
   event.preventDefault();
   event.stopPropagation();
   isDragging = true;
@@ -164,6 +176,32 @@ function handleMouseDown(event) {
 }
 
 /**
+ * Start participant drag for horizontal reordering
+ * @param {MouseEvent} event
+ * @param {SVGElement} participantGroup
+ */
+function startParticipantDrag(event, participantGroup) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  isDragging = true;
+  dragMode = DRAG_MODE.PARTICIPANT;
+  dragNode = participantGroup;
+  dragNodeId = participantGroup.getAttribute('data-node-id');
+  dragStartX = event.clientX;
+  dragStartY = event.clientY;
+  dragCurrentX = event.clientX;
+  dragCurrentY = event.clientY;
+
+  // Add dragging class
+  participantGroup.classList.add('dragging');
+  svg.classList.add('dragging-active');
+
+  // Create ghost for participant
+  createParticipantGhost(participantGroup);
+}
+
+/**
  * Handle mousemove during drag
  * @param {MouseEvent} event
  */
@@ -183,6 +221,14 @@ function handleMouseMove(event) {
   } else if (dragMode === DRAG_MODE.ENDPOINT_SOURCE || dragMode === DRAG_MODE.ENDPOINT_TARGET) {
     // Update drag line for endpoint drag
     updateDragLine(event);
+  } else if (dragMode === DRAG_MODE.PARTICIPANT) {
+    // Update ghost position for participant drag
+    if (dragGhost) {
+      const deltaX = dragCurrentX - dragStartX;
+      dragGhost.setAttribute('transform', `translate(${deltaX}, 0)`);
+    }
+    // Highlight drop target
+    highlightParticipantDropTarget();
   }
 }
 
@@ -212,6 +258,12 @@ function handleMouseUp(event) {
         const endpointType = dragMode === DRAG_MODE.ENDPOINT_SOURCE ? 'source' : 'target';
         onEndpointChange(dragNodeId, endpointType, nearestParticipant.alias);
       }
+    }
+  } else if (dragMode === DRAG_MODE.PARTICIPANT) {
+    // Calculate new position for participant
+    const result = calculateParticipantDropPosition();
+    if (result && result.newIndex !== result.oldIndex && onParticipantReorder) {
+      onParticipantReorder(dragNodeId, result.oldIndex, result.newIndex);
     }
   }
 
@@ -253,6 +305,12 @@ function cleanupDrag() {
   if (highlightedParticipant && highlightedParticipant.element) {
     highlightedParticipant.element.classList.remove('drag-target');
     highlightedParticipant = null;
+  }
+
+  // Remove participant drop target highlight
+  if (highlightedDropTarget) {
+    highlightedDropTarget.classList.remove('participant-drop-target');
+    highlightedDropTarget = null;
   }
 
   // Remove dragging-active class from SVG
@@ -412,6 +470,117 @@ function highlightNearestParticipant(participant) {
 }
 
 /**
+ * Create ghost element for participant drag
+ * @param {SVGElement} participantGroup
+ */
+function createParticipantGhost(participantGroup) {
+  dragGhost = participantGroup.cloneNode(true);
+  dragGhost.classList.add('drag-ghost', 'participant-ghost');
+  dragGhost.removeAttribute('data-node-id');
+
+  // Insert after original
+  participantGroup.parentNode.appendChild(dragGhost);
+}
+
+// Track highlighted drop target for participant drag
+let highlightedDropTarget = null;
+
+/**
+ * Highlight potential drop position during participant drag
+ */
+function highlightParticipantDropTarget() {
+  const svgPoint = getSvgPointFromClient(dragCurrentX, dragCurrentY);
+  if (!svgPoint) return;
+
+  // Find which participant position we're closest to
+  let closestIndex = -1;
+  let closestDist = Infinity;
+
+  for (let i = 0; i < participantPositions.length; i++) {
+    const dist = Math.abs(participantPositions[i].x - svgPoint.x);
+    if (dist < closestDist) {
+      closestDist = dist;
+      closestIndex = i;
+    }
+  }
+
+  // Clear previous highlight
+  if (highlightedDropTarget) {
+    highlightedDropTarget.classList.remove('participant-drop-target');
+    highlightedDropTarget = null;
+  }
+
+  // Don't highlight self
+  const draggedAlias = dragNode.getAttribute('data-alias');
+  if (closestIndex >= 0 && participantPositions[closestIndex].alias !== draggedAlias) {
+    const target = participantPositions[closestIndex].element;
+    if (target) {
+      target.classList.add('participant-drop-target');
+      highlightedDropTarget = target;
+    }
+  }
+}
+
+/**
+ * Calculate where participant should be dropped
+ * @returns {Object|null} {oldIndex, newIndex}
+ */
+function calculateParticipantDropPosition() {
+  const svgPoint = getSvgPointFromClient(dragCurrentX, dragCurrentY);
+  if (!svgPoint) return null;
+
+  // Find current participant's position in the sorted list
+  const draggedAlias = dragNode.getAttribute('data-alias');
+  const sortedPositions = [...participantPositions].sort((a, b) => a.x - b.x);
+
+  let oldIndex = -1;
+  for (let i = 0; i < sortedPositions.length; i++) {
+    if (sortedPositions[i].alias === draggedAlias) {
+      oldIndex = i;
+      break;
+    }
+  }
+
+  if (oldIndex === -1) return null;
+
+  // Find new position based on current X
+  let newIndex = 0;
+  for (let i = 0; i < sortedPositions.length; i++) {
+    if (sortedPositions[i].alias === draggedAlias) continue;
+    if (svgPoint.x > sortedPositions[i].x) {
+      newIndex = i + 1;
+    }
+  }
+
+  // Adjust for the removal of the dragged item
+  if (newIndex > oldIndex) {
+    newIndex--;
+  }
+
+  return { oldIndex, newIndex };
+}
+
+/**
+ * Get SVG point from client coordinates
+ * @param {number} clientX
+ * @param {number} clientY
+ * @returns {Object|null}
+ */
+function getSvgPointFromClient(clientX, clientY) {
+  if (!svg) return null;
+
+  const pt = svg.createSVGPoint();
+  pt.x = clientX;
+  pt.y = clientY;
+
+  const ctm = svg.getScreenCTM();
+  if (!ctm) return null;
+
+  const svgPoint = pt.matrixTransform(ctm.inverse());
+  return { x: svgPoint.x, y: svgPoint.y };
+}
+
+/**
  * Check if currently dragging
  * @returns {boolean}
  */
@@ -464,6 +633,39 @@ function addDragStyles() {
     .participant.drag-target ellipse {
       stroke: #4a90d9 !important;
       stroke-width: 3 !important;
+    }
+
+    /* Participant drag ghost */
+    .participant-ghost rect {
+      stroke: #4a90d9 !important;
+      stroke-width: 2 !important;
+      stroke-dasharray: 5, 5;
+    }
+
+    .participant-ghost ellipse {
+      stroke: #4a90d9 !important;
+      stroke-width: 2 !important;
+      stroke-dasharray: 5, 5;
+    }
+
+    /* Drop target highlight for participant reorder */
+    .participant.participant-drop-target rect {
+      stroke: #2ecc71 !important;
+      stroke-width: 3 !important;
+    }
+
+    .participant.participant-drop-target ellipse {
+      stroke: #2ecc71 !important;
+      stroke-width: 3 !important;
+    }
+
+    /* Participant drag cursor */
+    .participant {
+      cursor: grab;
+    }
+
+    .participant.dragging {
+      cursor: grabbing;
     }
   `;
 
