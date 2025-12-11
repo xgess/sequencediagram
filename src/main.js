@@ -21,6 +21,7 @@ import { AddMessageCommand } from './commands/AddMessageCommand.js';
 import { ReorderParticipantCommand } from './commands/ReorderParticipantCommand.js';
 import { EditParticipantCommand } from './commands/EditParticipantCommand.js';
 import { AdjustFragmentBoundaryCommand } from './commands/AdjustFragmentBoundaryCommand.js';
+import { MoveEntryBetweenClausesCommand } from './commands/MoveEntryBetweenClausesCommand.js';
 import { showInlineEdit, showParticipantEdit, hideInlineEdit } from './interaction/inlineEdit.js';
 import { showConfirmDialog } from './interaction/confirmDialog.js';
 import { initLifelineDrag, removeLifelineDrag } from './interaction/lifelineDrag.js';
@@ -232,7 +233,7 @@ export function updateFromText(text, createCommand = false) {
   currentSvg = svg;
   initSelection(svg, handleSelectionChange, handleDoubleClick);
   initCursors(svg);
-  initDrag(svg, handleDragComplete, handleEndpointChange, handleParticipantReorder, handleFragmentBoundaryChange);
+  initDrag(svg, handleDragComplete, handleEndpointChange, handleParticipantReorder, handleFragmentBoundaryChange, handleElseDividerChange);
   initLifelineDrag(svg, handleLifelineDrag);
 
   // Check for errors in AST and display them
@@ -434,7 +435,7 @@ function renderCurrentAst() {
   currentSvg = svg;
   initSelection(svg, handleSelectionChange, handleDoubleClick);
   initCursors(svg);
-  initDrag(svg, handleDragComplete, handleEndpointChange, handleParticipantReorder, handleFragmentBoundaryChange);
+  initDrag(svg, handleDragComplete, handleEndpointChange, handleParticipantReorder, handleFragmentBoundaryChange, handleElseDividerChange);
   initLifelineDrag(svg, handleLifelineDrag);
 
   // Check for errors in AST and display them
@@ -885,6 +886,41 @@ function handleFragmentBoundaryChange(nodeId, boundary, delta) {
   renderCurrentAst();
 
   console.log(`Adjusted fragment ${nodeId} ${boundary} boundary by ${delta}`);
+}
+
+/**
+ * Handle else divider change via drag
+ * @param {string} nodeId - ID of the fragment
+ * @param {number} clauseIndex - Index of the else clause (0 for first else)
+ * @param {number} delta - Number of entries to move (positive = main to else, negative = else to main)
+ */
+function handleElseDividerChange(nodeId, clauseIndex, delta) {
+  if (!nodeId || delta === 0) return;
+
+  // Find the fragment
+  const fragment = findNodeById(nodeId);
+  if (!fragment || fragment.type !== 'fragment') return;
+
+  // Check if else clause exists
+  if (!fragment.elseClauses || !fragment.elseClauses[clauseIndex]) return;
+
+  // Create and execute the command
+  const cmd = new MoveEntryBetweenClausesCommand(nodeId, clauseIndex, delta);
+  currentAst = commandHistory.execute(cmd, currentAst);
+
+  // Update text and re-render
+  const newText = serialize(currentAst);
+  previousText = newText;
+
+  // Update editor without creating another command
+  isUndoRedoInProgress = true;
+  editor.setValue(newText);
+  isUndoRedoInProgress = false;
+
+  // Re-render
+  renderCurrentAst();
+
+  console.log(`Moved entries between fragment ${nodeId} main and else clause ${clauseIndex} by ${delta}`);
 }
 
 /**

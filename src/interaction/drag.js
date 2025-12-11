@@ -1,4 +1,4 @@
-// Drag interaction handling (BACKLOG-073, 074, 075, 078, 081, 082)
+// Drag interaction handling (BACKLOG-073, 074, 075, 078, 081, 082, 083)
 // Provides drag-to-reorder and endpoint drag functionality for messages
 // Also handles participant reordering and fragment boundary adjustment
 
@@ -10,7 +10,8 @@ const DRAG_MODE = {
   ENDPOINT_SOURCE: 'source',    // Drag source endpoint
   PARTICIPANT: 'participant',   // Drag participant to reorder horizontally
   FRAGMENT_TOP: 'fragment_top', // Drag fragment top boundary
-  FRAGMENT_BOTTOM: 'fragment_bottom' // Drag fragment bottom boundary
+  FRAGMENT_BOTTOM: 'fragment_bottom', // Drag fragment bottom boundary
+  ELSE_DIVIDER: 'else_divider'  // Drag else divider line
 };
 
 // Drag state
@@ -30,9 +31,11 @@ let onReorderComplete = null;
 let onEndpointChange = null;
 let onParticipantReorder = null;
 let onFragmentBoundaryChange = null;
+let onElseDividerChange = null;
 
 // Fragment drag state
 let dragFragmentBoundaryY = 0;
+let dragElseClauseIndex = -1;
 
 // SVG and layout reference
 let svg = null;
@@ -45,8 +48,9 @@ let participantPositions = [];
  * @param {Function} endpointCallback - Callback for endpoint: (nodeId, 'source'|'target', newParticipant) => void
  * @param {Function} participantCallback - Callback for participant reorder: (nodeId, oldIndex, newIndex) => void
  * @param {Function} fragmentCallback - Callback for fragment boundary: (nodeId, boundary, delta) => void
+ * @param {Function} elseDividerCallback - Callback for else divider: (nodeId, clauseIndex, delta) => void
  */
-export function initDrag(svgElement, reorderCallback, endpointCallback, participantCallback, fragmentCallback) {
+export function initDrag(svgElement, reorderCallback, endpointCallback, participantCallback, fragmentCallback, elseDividerCallback) {
   if (!svgElement) return;
 
   svg = svgElement;
@@ -54,6 +58,7 @@ export function initDrag(svgElement, reorderCallback, endpointCallback, particip
   onEndpointChange = endpointCallback;
   onParticipantReorder = participantCallback;
   onFragmentBoundaryChange = fragmentCallback;
+  onElseDividerChange = elseDividerCallback;
 
   // Add drag styles
   addDragStyles();
@@ -83,6 +88,7 @@ export function removeDrag(svgElement) {
   onEndpointChange = null;
   onParticipantReorder = null;
   onFragmentBoundaryChange = null;
+  onElseDividerChange = null;
   participantPositions = [];
   cleanupDrag();
 }
@@ -121,8 +127,14 @@ function handleMouseDown(event) {
 
   const target = event.target;
 
-  // Check for fragment boundary drag
+  // Check for else divider drag
   const fragmentGroup = target.closest('.fragment');
+  if (fragmentGroup && target.classList.contains('fragment-divider')) {
+    startElseDividerDrag(event, fragmentGroup, target);
+    return;
+  }
+
+  // Check for fragment boundary drag
   if (fragmentGroup && target.classList.contains('fragment-box')) {
     const svgPoint = getSvgPoint(event);
     if (svgPoint) {
@@ -286,6 +298,63 @@ function startFragmentBoundaryDrag(event, fragmentGroup, boundaryType) {
 }
 
 /**
+ * Start else divider drag
+ * @param {MouseEvent} event
+ * @param {SVGElement} fragmentGroup
+ * @param {SVGElement} dividerLine - The divider line element
+ */
+function startElseDividerDrag(event, fragmentGroup, dividerLine) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  isDragging = true;
+  dragMode = DRAG_MODE.ELSE_DIVIDER;
+  dragNode = fragmentGroup;
+  dragNodeId = fragmentGroup.getAttribute('data-node-id');
+  dragStartX = event.clientX;
+  dragStartY = event.clientY;
+  dragCurrentX = event.clientX;
+  dragCurrentY = event.clientY;
+
+  // Determine which else clause this divider belongs to
+  // For now, assume it's the first (index 0) - fragments typically have one else
+  // Could be enhanced to support multiple else clauses by tracking divider index
+  dragElseClauseIndex = 0;
+
+  // Store the divider Y position
+  dragFragmentBoundaryY = parseFloat(dividerLine.getAttribute('y1') || 0);
+
+  // Add dragging class
+  fragmentGroup.classList.add('dragging');
+  svg.classList.add('dragging-active');
+
+  // Create visual feedback line
+  createElseDividerLine(dividerLine);
+}
+
+/**
+ * Create visual line for else divider drag
+ * @param {SVGElement} dividerLine - The original divider line
+ */
+function createElseDividerLine(dividerLine) {
+  const x1 = parseFloat(dividerLine.getAttribute('x1') || 0);
+  const x2 = parseFloat(dividerLine.getAttribute('x2') || 0);
+
+  dragLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  dragLine.setAttribute('class', 'else-divider-drag-line');
+  dragLine.setAttribute('x1', x1);
+  dragLine.setAttribute('y1', dragFragmentBoundaryY);
+  dragLine.setAttribute('x2', x2);
+  dragLine.setAttribute('y2', dragFragmentBoundaryY);
+  dragLine.setAttribute('stroke', '#4a90d9');
+  dragLine.setAttribute('stroke-width', '3');
+  dragLine.setAttribute('stroke-dasharray', '5,5');
+  dragLine.setAttribute('pointer-events', 'none');
+
+  svg.appendChild(dragLine);
+}
+
+/**
  * Create visual line for fragment boundary drag
  * @param {string} boundaryType - 'top' or 'bottom'
  */
@@ -354,6 +423,9 @@ function handleMouseMove(event) {
   } else if (dragMode === DRAG_MODE.FRAGMENT_TOP || dragMode === DRAG_MODE.FRAGMENT_BOTTOM) {
     // Update drag line for fragment boundary
     updateFragmentBoundaryLine();
+  } else if (dragMode === DRAG_MODE.ELSE_DIVIDER) {
+    // Update drag line for else divider
+    updateFragmentBoundaryLine(); // Reuse the same function
   }
 }
 
@@ -403,6 +475,19 @@ function handleMouseUp(event) {
     if (adjustedDelta !== 0 && onFragmentBoundaryChange) {
       const boundary = dragMode === DRAG_MODE.FRAGMENT_TOP ? 'top' : 'bottom';
       onFragmentBoundaryChange(dragNodeId, boundary, adjustedDelta);
+    }
+  } else if (dragMode === DRAG_MODE.ELSE_DIVIDER) {
+    // Calculate else divider change
+    const deltaY = dragCurrentY - dragStartY;
+    const entryHeight = 30; // Approximate height of one entry
+    const delta = Math.round(deltaY / entryHeight);
+
+    // Positive deltaY = move divider down = move entries from else to main (negative delta for command)
+    // Negative deltaY = move divider up = move entries from main to else (positive delta for command)
+    const adjustedDelta = -delta;
+
+    if (adjustedDelta !== 0 && onElseDividerChange) {
+      onElseDividerChange(dragNodeId, dragElseClauseIndex, adjustedDelta);
     }
   }
 

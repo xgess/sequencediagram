@@ -12,6 +12,7 @@ import { AddMessageCommand } from '../src/commands/AddMessageCommand.js';
 import { ReorderParticipantCommand } from '../src/commands/ReorderParticipantCommand.js';
 import { EditParticipantCommand } from '../src/commands/EditParticipantCommand.js';
 import { AdjustFragmentBoundaryCommand } from '../src/commands/AdjustFragmentBoundaryCommand.js';
+import { MoveEntryBetweenClausesCommand } from '../src/commands/MoveEntryBetweenClausesCommand.js';
 
 // Test command that adds an item to AST
 class AddItemCommand extends Command {
@@ -1715,6 +1716,160 @@ describe('AdjustFragmentBoundaryCommand (BACKLOG-081, BACKLOG-082)', () => {
       // Should only push out the 2 available entries
       const frag = result.find(n => n.id === 'frag_1');
       expect(frag.entries.length).toBe(0);
+    });
+  });
+});
+
+describe('MoveEntryBetweenClausesCommand (BACKLOG-083)', () => {
+  let ast;
+
+  beforeEach(() => {
+    // AST: fragment with alt/else containing entries in both clauses
+    ast = [
+      { id: 'p_1', type: 'participant', alias: 'A' },
+      { id: 'p_2', type: 'participant', alias: 'B' },
+      {
+        id: 'frag_1',
+        type: 'fragment',
+        fragmentType: 'alt',
+        condition: 'success',
+        entries: [
+          { id: 'msg_1', type: 'message', from: 'A', to: 'B', label: 'msg1' },
+          { id: 'msg_2', type: 'message', from: 'B', to: 'A', label: 'msg2' }
+        ],
+        elseClauses: [
+          {
+            condition: 'failure',
+            entries: [
+              { id: 'msg_3', type: 'message', from: 'A', to: 'B', label: 'else1' },
+              { id: 'msg_4', type: 'message', from: 'B', to: 'A', label: 'else2' }
+            ]
+          }
+        ]
+      }
+    ];
+  });
+
+  describe('move from main to else', () => {
+    it('should move one entry from main to else', () => {
+      const cmd = new MoveEntryBetweenClausesCommand('frag_1', 0, 1);
+
+      const result = cmd.do(ast);
+
+      const frag = result.find(n => n.id === 'frag_1');
+      expect(frag.entries.length).toBe(1);
+      expect(frag.entries[0].id).toBe('msg_1');
+      expect(frag.elseClauses[0].entries.length).toBe(3);
+      expect(frag.elseClauses[0].entries[0].id).toBe('msg_2');
+      expect(frag.elseClauses[0].entries[1].id).toBe('msg_3');
+    });
+
+    it('should move multiple entries from main to else', () => {
+      const cmd = new MoveEntryBetweenClausesCommand('frag_1', 0, 2);
+
+      const result = cmd.do(ast);
+
+      const frag = result.find(n => n.id === 'frag_1');
+      expect(frag.entries.length).toBe(0);
+      expect(frag.elseClauses[0].entries.length).toBe(4);
+      expect(frag.elseClauses[0].entries[0].id).toBe('msg_1');
+      expect(frag.elseClauses[0].entries[1].id).toBe('msg_2');
+    });
+
+    it('should undo moving from main to else', () => {
+      const cmd = new MoveEntryBetweenClausesCommand('frag_1', 0, 1);
+
+      const afterDo = cmd.do(ast);
+      const afterUndo = cmd.undo(afterDo);
+
+      const frag = afterUndo.find(n => n.id === 'frag_1');
+      expect(frag.entries.length).toBe(2);
+      expect(frag.elseClauses[0].entries.length).toBe(2);
+    });
+  });
+
+  describe('move from else to main', () => {
+    it('should move one entry from else to main', () => {
+      const cmd = new MoveEntryBetweenClausesCommand('frag_1', 0, -1);
+
+      const result = cmd.do(ast);
+
+      const frag = result.find(n => n.id === 'frag_1');
+      expect(frag.entries.length).toBe(3);
+      expect(frag.entries[2].id).toBe('msg_3');
+      expect(frag.elseClauses[0].entries.length).toBe(1);
+      expect(frag.elseClauses[0].entries[0].id).toBe('msg_4');
+    });
+
+    it('should move multiple entries from else to main', () => {
+      const cmd = new MoveEntryBetweenClausesCommand('frag_1', 0, -2);
+
+      const result = cmd.do(ast);
+
+      const frag = result.find(n => n.id === 'frag_1');
+      expect(frag.entries.length).toBe(4);
+      expect(frag.entries[2].id).toBe('msg_3');
+      expect(frag.entries[3].id).toBe('msg_4');
+      expect(frag.elseClauses[0].entries.length).toBe(0);
+    });
+
+    it('should undo moving from else to main', () => {
+      const cmd = new MoveEntryBetweenClausesCommand('frag_1', 0, -1);
+
+      const afterDo = cmd.do(ast);
+      const afterUndo = cmd.undo(afterDo);
+
+      const frag = afterUndo.find(n => n.id === 'frag_1');
+      expect(frag.entries.length).toBe(2);
+      expect(frag.elseClauses[0].entries.length).toBe(2);
+    });
+  });
+
+  describe('edge cases', () => {
+    it('should return unchanged AST if fragment not found', () => {
+      const cmd = new MoveEntryBetweenClausesCommand('nonexistent', 0, 1);
+
+      const result = cmd.do(ast);
+
+      expect(result).toEqual(ast);
+    });
+
+    it('should return unchanged AST if else clause not found', () => {
+      const cmd = new MoveEntryBetweenClausesCommand('frag_1', 5, 1);
+
+      const result = cmd.do(ast);
+
+      expect(result).toEqual(ast);
+    });
+
+    it('should not move more than available from main', () => {
+      const cmd = new MoveEntryBetweenClausesCommand('frag_1', 0, 10);
+
+      const result = cmd.do(ast);
+
+      const frag = result.find(n => n.id === 'frag_1');
+      expect(frag.entries.length).toBe(0);
+      expect(frag.elseClauses[0].entries.length).toBe(4);
+    });
+
+    it('should not move more than available from else', () => {
+      const cmd = new MoveEntryBetweenClausesCommand('frag_1', 0, -10);
+
+      const result = cmd.do(ast);
+
+      const frag = result.find(n => n.id === 'frag_1');
+      expect(frag.entries.length).toBe(4);
+      expect(frag.elseClauses[0].entries.length).toBe(0);
+    });
+
+    it('should do nothing for delta of 0', () => {
+      const cmd = new MoveEntryBetweenClausesCommand('frag_1', 0, 0);
+
+      const result = cmd.do(ast);
+
+      const frag = result.find(n => n.id === 'frag_1');
+      expect(frag.entries.length).toBe(2);
+      expect(frag.elseClauses[0].entries.length).toBe(2);
     });
   });
 });

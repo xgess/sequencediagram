@@ -974,15 +974,16 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 **Acceptance Criteria:**
 - Drag bottom edge to include/exclude trailing entries ✅
 
-## BACKLOG-083: Drag fragment else divider
-**Phase:** 3.5  
-**Dependencies:** BACKLOG-095  
-**Description:** Drag else divider line to move entries between main and else clause.  
+## BACKLOG-083: Drag fragment else divider ✅
+**Phase:** 3.5
+**Dependencies:** BACKLOG-081
+**Status:** Complete
+**Description:** Drag else divider line to move entries between main and else clause.
 **Acceptance Criteria:**
-- Dragging divider moves entries between fragment.entries and elseClauses[0].entries
-- Creates MoveEntryBetweenClauses command
-- Text updates
-- Undo restores
+- Dragging divider moves entries between fragment.entries and elseClauses[0].entries ✅
+- Creates MoveEntryBetweenClauses command ✅
+- Text updates ✅
+- Undo restores ✅
 
 ## BACKLOG-084: Double-click fragment label to edit condition
 **Phase:** 3.5  
