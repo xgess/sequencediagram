@@ -17,7 +17,9 @@ import { ReorderNodeCommand } from './commands/ReorderNodeCommand.js';
 import { MoveMessageTargetCommand } from './commands/MoveMessageTargetCommand.js';
 import { MoveMessageSourceCommand } from './commands/MoveMessageSourceCommand.js';
 import { EditMessageLabelCommand } from './commands/EditMessageLabelCommand.js';
+import { AddMessageCommand } from './commands/AddMessageCommand.js';
 import { showInlineEdit, hideInlineEdit } from './interaction/inlineEdit.js';
+import { initLifelineDrag, removeLifelineDrag } from './interaction/lifelineDrag.js';
 
 // App state
 let currentAst = [];
@@ -212,6 +214,7 @@ export function updateFromText(text, createCommand = false) {
     removeSelection(currentSvg);
     removeCursors(currentSvg);
     removeDrag(currentSvg);
+    removeLifelineDrag(currentSvg);
   }
 
   // Replace diagram in container
@@ -226,6 +229,7 @@ export function updateFromText(text, createCommand = false) {
   initSelection(svg, handleSelectionChange, handleDoubleClick);
   initCursors(svg);
   initDrag(svg, handleDragComplete, handleEndpointChange);
+  initLifelineDrag(svg, handleLifelineDrag);
 
   // Check for errors in AST and display them
   displayErrors(currentAst);
@@ -412,6 +416,7 @@ function renderCurrentAst() {
     removeSelection(currentSvg);
     removeCursors(currentSvg);
     removeDrag(currentSvg);
+    removeLifelineDrag(currentSvg);
   }
 
   // Replace diagram in container
@@ -426,6 +431,7 @@ function renderCurrentAst() {
   initSelection(svg, handleSelectionChange, handleDoubleClick);
   initCursors(svg);
   initDrag(svg, handleDragComplete, handleEndpointChange);
+  initLifelineDrag(svg, handleLifelineDrag);
 
   // Check for errors in AST and display them
   displayErrors(currentAst);
@@ -682,6 +688,70 @@ function handleLabelEditComplete(nodeId, newLabel) {
   renderCurrentAst();
 
   console.log(`Changed message ${nodeId} label to "${newLabel}"`);
+}
+
+/**
+ * Handle lifeline drag to create new message
+ * @param {string} from - Source participant alias
+ * @param {string} to - Target participant alias
+ * @param {string} arrowType - Arrow type based on modifier keys
+ * @param {number} yPosition - Y position where drag occurred (for insert position)
+ */
+function handleLifelineDrag(from, to, arrowType, yPosition) {
+  if (!from || !to || from === to) return;
+
+  // Find insert index based on Y position
+  // For now, insert at end of AST after all messages
+  const insertIndex = findInsertIndexByY(yPosition);
+
+  // Create the message with empty label first
+  const cmd = new AddMessageCommand(from, to, '', arrowType, insertIndex);
+  currentAst = commandHistory.execute(cmd, currentAst);
+
+  // Update text and re-render
+  const newText = serialize(currentAst);
+  previousText = newText;
+
+  // Update editor without creating another command
+  isUndoRedoInProgress = true;
+  editor.setValue(newText);
+  isUndoRedoInProgress = false;
+
+  // Re-render
+  renderCurrentAst();
+
+  // Find the new message element and show edit dialog for label
+  const messageId = cmd.getMessageId();
+  const messageElement = currentSvg.querySelector(`[data-node-id="${messageId}"]`);
+
+  if (messageElement) {
+    // Select the new message
+    selectElement(messageId);
+
+    // Show inline edit for the label
+    showInlineEdit(messageElement, messageId, '', handleLabelEditComplete);
+  }
+
+  console.log(`Created message ${from}->${to} with type ${arrowType}`);
+}
+
+/**
+ * Find insert index in AST based on Y position
+ * @param {number} y - Y coordinate
+ * @returns {number} Insert index
+ */
+function findInsertIndexByY(y) {
+  // Simple approach: insert after last message or at end
+  // Future: could calculate exact position based on layout
+  let lastMessageIndex = -1;
+
+  for (let i = 0; i < currentAst.length; i++) {
+    if (currentAst[i].type === 'message') {
+      lastMessageIndex = i;
+    }
+  }
+
+  return lastMessageIndex >= 0 ? lastMessageIndex + 1 : currentAst.length;
 }
 
 /**

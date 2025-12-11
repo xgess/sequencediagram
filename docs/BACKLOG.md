@@ -898,18 +898,19 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Creates EditMessageLabel command ✅
 - Text updates ✅
 
-## BACKLOG-077: Create message by dragging between lifelines
-**Phase:** 3.3  
-**Dependencies:** BACKLOG-066  
-**Description:** Click participant lifeline and drag to another to create new message.  
+## BACKLOG-077: Create message by dragging between lifelines ✅
+**Phase:** 3.3
+**Dependencies:** BACKLOG-066
+**Status:** Complete
+**Description:** Click participant lifeline and drag to another to create new message.
 **Acceptance Criteria:**
-- Click lifeline initiates drag
-- Rubber-band line follows cursor
-- Drop on other lifeline creates message
-- Default arrow type: ->
-- Modifier keys: Shift=dashed, Ctrl=open arrow
-- Creates AddMessage command
-- Prompt for label text after creation
+- Click lifeline initiates drag ✅
+- Rubber-band line follows cursor ✅
+- Drop on other lifeline creates message ✅
+- Default arrow type: -> ✅
+- Modifier keys: Shift=dashed, Ctrl=open arrow ✅
+- Creates AddMessage command ✅
+- Prompt for label text after creation ✅
 
 
 ### Participant Interactions

@@ -8,6 +8,7 @@ import { ReorderNodeCommand } from '../src/commands/ReorderNodeCommand.js';
 import { MoveMessageTargetCommand } from '../src/commands/MoveMessageTargetCommand.js';
 import { MoveMessageSourceCommand } from '../src/commands/MoveMessageSourceCommand.js';
 import { EditMessageLabelCommand } from '../src/commands/EditMessageLabelCommand.js';
+import { AddMessageCommand } from '../src/commands/AddMessageCommand.js';
 
 // Test command that adds an item to AST
 class AddItemCommand extends Command {
@@ -1137,6 +1138,169 @@ describe('EditMessageLabelCommand (BACKLOG-076)', () => {
       const afterUndo = cmd.undo(afterDo);
 
       expect(afterUndo[2].entries[0].label).toBe('Hello');
+    });
+  });
+});
+
+describe('AddMessageCommand (BACKLOG-077)', () => {
+  let history;
+  let initialAst;
+
+  beforeEach(() => {
+    history = new CommandHistory();
+    initialAst = [
+      { id: 'p_1', type: 'participant', alias: 'Alice' },
+      { id: 'p_2', type: 'participant', alias: 'Bob' },
+      { id: 'm_1', type: 'message', from: 'Alice', to: 'Bob', label: 'Hello' }
+    ];
+  });
+
+  it('should add message at end with do()', () => {
+    const cmd = new AddMessageCommand('Bob', 'Alice', 'Response', '-->');
+
+    const result = cmd.do(initialAst);
+
+    expect(result).toHaveLength(4);
+    const newMsg = result[3];
+    expect(newMsg.type).toBe('message');
+    expect(newMsg.from).toBe('Bob');
+    expect(newMsg.to).toBe('Alice');
+    expect(newMsg.label).toBe('Response');
+    expect(newMsg.arrowType).toBe('-->');
+  });
+
+  it('should add message at specific index', () => {
+    const cmd = new AddMessageCommand('Bob', 'Alice', 'Response', '->', 2);
+
+    const result = cmd.do(initialAst);
+
+    expect(result).toHaveLength(4);
+    expect(result[2].from).toBe('Bob');
+    expect(result[3].id).toBe('m_1'); // Original message moved
+  });
+
+  it('should remove message with undo()', () => {
+    const cmd = new AddMessageCommand('Bob', 'Alice', 'Response', '-->');
+
+    const afterDo = cmd.do(initialAst);
+    expect(afterDo).toHaveLength(4);
+
+    const afterUndo = cmd.undo(afterDo);
+    expect(afterUndo).toHaveLength(3);
+    expect(afterUndo.find(n => n.label === 'Response')).toBeUndefined();
+  });
+
+  it('should default to -> arrow type', () => {
+    const cmd = new AddMessageCommand('Alice', 'Bob', 'Test');
+
+    const result = cmd.do(initialAst);
+    const newMsg = result[result.length - 1];
+
+    expect(newMsg.arrowType).toBe('->');
+  });
+
+  it('should generate unique message ID', () => {
+    const cmd1 = new AddMessageCommand('Alice', 'Bob', 'Test1');
+    const cmd2 = new AddMessageCommand('Alice', 'Bob', 'Test2');
+
+    expect(cmd1.getMessageId()).not.toBe(cmd2.getMessageId());
+  });
+
+  it('should work with CommandHistory', () => {
+    const cmd = new AddMessageCommand('Bob', 'Alice', 'Response', '-->');
+
+    let current = history.execute(cmd, initialAst);
+    expect(current).toHaveLength(4);
+
+    current = history.undo(current);
+    expect(current).toHaveLength(3);
+
+    current = history.redo(current);
+    expect(current).toHaveLength(4);
+    expect(current[3].label).toBe('Response');
+  });
+
+  it('should handle all arrow types', () => {
+    const types = ['->', '->>', '-->', '-->>'];
+
+    for (const arrowType of types) {
+      const cmd = new AddMessageCommand('Alice', 'Bob', 'Test', arrowType);
+      const result = cmd.do(initialAst);
+      expect(result[result.length - 1].arrowType).toBe(arrowType);
+    }
+  });
+
+  describe('fragment entries', () => {
+    let fragmentAst;
+
+    beforeEach(() => {
+      fragmentAst = [
+        { id: 'p_1', type: 'participant', alias: 'Alice' },
+        { id: 'p_2', type: 'participant', alias: 'Bob' },
+        {
+          id: 'f_1',
+          type: 'fragment',
+          fragmentType: 'alt',
+          condition: 'cond',
+          entries: [
+            { id: 'm_1', type: 'message', from: 'Alice', to: 'Bob', label: 'Hello' }
+          ],
+          elseClauses: [
+            {
+              condition: 'else',
+              entries: []
+            }
+          ]
+        }
+      ];
+    });
+
+    it('should add message to fragment entries', () => {
+      const cmd = new AddMessageCommand('Bob', 'Alice', 'Response', '-->', -1, 'f_1', 'entries');
+
+      const result = cmd.do(fragmentAst);
+
+      expect(result[2].entries).toHaveLength(2);
+      expect(result[2].entries[1].label).toBe('Response');
+    });
+
+    it('should add message at specific index in fragment', () => {
+      const cmd = new AddMessageCommand('Bob', 'Alice', 'First', '->', 0, 'f_1', 'entries');
+
+      const result = cmd.do(fragmentAst);
+
+      expect(result[2].entries).toHaveLength(2);
+      expect(result[2].entries[0].label).toBe('First');
+      expect(result[2].entries[1].label).toBe('Hello');
+    });
+
+    it('should add message to else clause', () => {
+      const cmd = new AddMessageCommand('Alice', 'Bob', 'Else msg', '->', -1, 'f_1', 'elseClauses', 0);
+
+      const result = cmd.do(fragmentAst);
+
+      expect(result[2].elseClauses[0].entries).toHaveLength(1);
+      expect(result[2].elseClauses[0].entries[0].label).toBe('Else msg');
+    });
+
+    it('should remove message from fragment on undo', () => {
+      const cmd = new AddMessageCommand('Bob', 'Alice', 'Response', '-->', -1, 'f_1', 'entries');
+
+      const afterDo = cmd.do(fragmentAst);
+      expect(afterDo[2].entries).toHaveLength(2);
+
+      const afterUndo = cmd.undo(afterDo);
+      expect(afterUndo[2].entries).toHaveLength(1);
+    });
+
+    it('should remove message from else clause on undo', () => {
+      const cmd = new AddMessageCommand('Alice', 'Bob', 'Else msg', '->', -1, 'f_1', 'elseClauses', 0);
+
+      const afterDo = cmd.do(fragmentAst);
+      expect(afterDo[2].elseClauses[0].entries).toHaveLength(1);
+
+      const afterUndo = cmd.undo(afterDo);
+      expect(afterUndo[2].elseClauses[0].entries).toHaveLength(0);
     });
   });
 });
