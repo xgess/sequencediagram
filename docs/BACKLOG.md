@@ -1089,15 +1089,16 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 
 ### Export Formats
 
-## BACKLOG-092: PNG export implementation
-**Phase:** 4.1  
-**Dependencies:** Phase 3 complete  
-**Description:** Implement PNG export using SVG → Canvas → Data URL approach per DESIGN.md.  
+## BACKLOG-092: PNG export implementation ✅
+**Phase:** 4.1
+**Dependencies:** Phase 3 complete
+**Status:** Complete
+**Description:** Implement PNG export using SVG → Canvas → Data URL approach per DESIGN.md.
 **Acceptance Criteria:**
-- exportPNG(svgElement, zoom) function
-- Canvas sized based on SVG bbox * zoom
-- Generates data URL
-- Returns PNG blob
+- exportPNG(svgElement, zoom) function ✅
+- Canvas sized based on SVG bbox * zoom ✅
+- Generates data URL ✅
+- Returns PNG blob ✅
 
 ## BACKLOG-093: PNG download action
 **Phase:** 4.1  
