@@ -35,6 +35,10 @@ import { showAddFragmentDialog, hideAddFragmentDialog } from './interaction/addF
 import { AddParticipantCommand } from './commands/AddParticipantCommand.js';
 import { AddFragmentCommand } from './commands/AddFragmentCommand.js';
 import { downloadPNG } from './export/png.js';
+import { showShareDialog } from './interaction/share.js';
+import { showDiagramManager } from './interaction/diagramManager.js';
+import { startAutosave, recoverAutosave } from './storage/autosave.js';
+import { loadFromURL } from './storage/url.js';
 
 // App state
 let currentAst = [];
@@ -81,6 +85,25 @@ export function init() {
 
   // Initialize keyboard shortcuts for diagram
   initDiagramKeyboard();
+
+  // Handle initial URL load
+  const data = loadFromURL();
+  if (data) {
+    const { text, presentation, shrinkToFit } = data;
+    if (text) {
+      loadTextIntoEditor(text);
+    }
+    // TODO: Implement presentation and shrinkToFit mode toggling
+  } else {
+    // If no URL data, check for autosave
+    const autosavedText = recoverAutosave();
+    if (autosavedText) {
+      loadTextIntoEditor(autosavedText);
+    }
+  }
+
+  // Start autosave
+  startAutosave(() => editor.getValue());
 
   console.log('Sequence Diagram Tool initialized');
 }
@@ -1545,6 +1568,13 @@ function initToolbar() {
 
   // Keyboard shortcuts for file operations
   document.addEventListener('keydown', handleFileKeydown);
+
+  const shareBtn = document.getElementById('share');
+  if (shareBtn) {
+    shareBtn.addEventListener('click', () => {
+      showShareDialog(() => editor.getValue());
+    });
+  }
 }
 
 /**
