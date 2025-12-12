@@ -19,11 +19,16 @@ body {
 /* Editor Pane */
 #editor-pane {
   flex: 0 0 50%;
-  border-right: 1px solid #ccc;
   padding: 16px;
   display: flex;
   flex-direction: column;
   overflow: auto;
+}
+
+#splitter {
+  flex: 0 0 5px;
+  background: #ccc;
+  cursor: col-resize;
 }
 
 #editor-pane h3 {

@@ -39,6 +39,7 @@ import { showShareDialog } from './interaction/share.js';
 import { showDiagramManager } from './interaction/diagramManager.js';
 import { startAutosave, recoverAutosave } from './storage/autosave.js';
 import { loadFromURL } from './storage/url.js';
+import { initSplitter } from './interaction/splitter.js';
 
 // App state
 let currentAst = [];
@@ -66,16 +67,23 @@ const STORAGE_KEY_TAB_SIZE = 'sequencediagram.tabSize';
 /**
  * Initialize the application
  */
+import { initSplitter } from './interaction/splitter.js';
+
 export function init() {
   // Get DOM elements
   editorContainer = document.getElementById('editor');
   diagramContainer = document.getElementById('diagram-pane');
   errorsDiv = document.getElementById('errors');
+  const splitter = document.getElementById('splitter');
+  const editorPane = document.getElementById('editor-pane');
 
-  if (!editorContainer || !diagramContainer) {
+  if (!editorContainer || !diagramContainer || !splitter || !editorPane) {
     console.error('Required DOM elements not found');
     return;
   }
+
+  // Initialize splitter
+  initSplitter(splitter, editorPane, diagramContainer);
 
   // Initialize CodeMirror
   initCodeMirror();
