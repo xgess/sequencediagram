@@ -316,6 +316,11 @@ function serializeDirective(node) {
   if (node.directiveType === 'bottomparticipants') {
     return 'bottomparticipants';
   }
+  if (node.directiveType === 'fontfamily') {
+    // Quote if contains spaces
+    const value = node.value.includes(' ') ? `"${node.value}"` : node.value;
+    return `fontfamily ${value}`;
+  }
   if (node.directiveType === 'frame') {
     let output = 'frame';
     const style = node.style || {};

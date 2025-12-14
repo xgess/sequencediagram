@@ -247,6 +247,20 @@ function parseDirective(line, lineNumber) {
     };
   }
 
+  // Match fontfamily directive: fontfamily sans-serif or fontfamily "Custom Font"
+  const fontfamilyMatch = line.match(/^fontfamily\s+(?:"([^"]+)"|(\S+))$/);
+  if (fontfamilyMatch) {
+    const value = fontfamilyMatch[1] || fontfamilyMatch[2];
+    return {
+      id: generateId('directive'),
+      type: 'directive',
+      directiveType: 'fontfamily',
+      value,
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
+  }
+
   // Match frame directive: frame Title or frame#operatorColor #fill #border;width;style Title
   const frameMatch = line.match(/^frame(#[^\s#]+)?(?:\s+(#[^\s;]+))?(?:\s+(#[^\s;]+)(?:;(\d+))?(?:;(solid|dashed|dotted))?)?(?:\s+(.+))?$/);
   if (frameMatch) {

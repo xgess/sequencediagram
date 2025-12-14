@@ -78,6 +78,7 @@ export function render(ast) {
   const titleDirective = ast.find(node => node.type === 'directive' && node.directiveType === 'title');
   const frameDirective = ast.find(node => node.type === 'directive' && node.directiveType === 'frame');
   const bottomParticipantsDirective = ast.find(node => node.type === 'directive' && node.directiveType === 'bottomparticipants');
+  const fontfamilyDirective = ast.find(node => node.type === 'directive' && node.directiveType === 'fontfamily');
 
   // Build lifeline styles map from lifelinestyle directives
   const lifelineStyles = buildLifelineStyles(ast);
@@ -209,6 +210,15 @@ export function render(ast) {
   svg.setAttribute('width', width);
   svg.setAttribute('height', height);
   svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+  // Apply font family to all text elements if directive present
+  if (fontfamilyDirective) {
+    const fontFamily = fontfamilyDirective.value;
+    const textElements = svg.querySelectorAll('text');
+    textElements.forEach(text => {
+      text.setAttribute('font-family', fontFamily);
+    });
+  }
 
   return svg;
 }

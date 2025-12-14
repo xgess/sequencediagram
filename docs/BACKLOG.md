@@ -1620,14 +1620,16 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Serialize directive ✅
 - 10 unit tests verify bottom participants functionality ✅
 
-## BACKLOG-138: Font family directive
-**Phase:** 5.7  
-**Dependencies:** None  
-**Description:** Add fontfamily directive.  
+## BACKLOG-138: Font family directive ✅
+**Phase:** 5.7
+**Dependencies:** None
+**Status:** Complete
+**Description:** Add fontfamily directive.
 **Acceptance Criteria:**
-- Parse: `fontfamily sans-serif`, `fontfamily "Custom Font"`
-- Apply to all text in diagram
-- Serialize correctly
+- Parse: `fontfamily sans-serif`, `fontfamily "Custom Font"` ✅
+- Apply to all text in diagram ✅
+- Serialize correctly ✅
+- 10 unit tests verify font family functionality ✅
 
 ## BACKLOG-139: Advanced text markup
 **Phase:** 5.8  
@@ -1784,7 +1786,7 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 
 ## Current Progress Summary
 
-**Last Updated:** After BACKLOG-137 (Bottom participants)
+**Last Updated:** After BACKLOG-138 (Font family directive)
 
 ### Phases Complete
 - Phase 0: Requirements & Design ✅
@@ -1792,7 +1794,7 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Phase 2: Editor Integration ✅
 - Phase 3: Interactivity ✅
 - Phase 4: File I/O & Export ✅
-- Phase 5: In Progress (19 of ~40 tasks done)
+- Phase 5: In Progress (20 of ~40 tasks done)
 
 ### Implemented Features
 Core functionality is complete and usable:
@@ -1820,6 +1822,7 @@ Core functionality is complete and usable:
 - Frame directive (border around diagram with label)
 - Participant groups (visual grouping with background box)
 - Bottom participants (duplicate participant boxes at bottom)
+- Font family directive (custom fonts for all text)
 
 ### Recommended Next Steps (Priority Order)
 1. **BACKLOG-117-119: Icon participant types** - Font Awesome, Material Design Icons, custom images (requires vendoring)
