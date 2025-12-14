@@ -213,6 +213,115 @@ describe('Arrow Types (BACKLOG-120)', () => {
   });
 });
 
+describe('Boundary Messages (BACKLOG-122)', () => {
+
+  describe('Parsing boundary messages', () => {
+    it('should parse incoming from left [->A', () => {
+      const ast = parse('participant A\n[->A:incoming');
+      const msg = ast.find(n => n.type === 'message');
+      expect(msg.from).toBe('[');
+      expect(msg.to).toBe('A');
+      expect(msg.arrowType).toBe('->');
+      expect(msg.label).toBe('incoming');
+    });
+
+    it('should parse outgoing to right A->]', () => {
+      const ast = parse('participant A\nA->]:outgoing');
+      const msg = ast.find(n => n.type === 'message');
+      expect(msg.from).toBe('A');
+      expect(msg.to).toBe(']');
+      expect(msg.label).toBe('outgoing');
+    });
+
+    it('should parse incoming with reversed arrow [<-A', () => {
+      const ast = parse('participant A\n[<-A:reversed incoming');
+      const msg = ast.find(n => n.type === 'message');
+      expect(msg.from).toBe('[');
+      expect(msg.to).toBe('A');
+      expect(msg.arrowType).toBe('<-');
+    });
+
+    it('should parse outgoing with reversed arrow A<-]', () => {
+      const ast = parse('participant A\nA<-]:reversed outgoing');
+      const msg = ast.find(n => n.type === 'message');
+      expect(msg.from).toBe('A');
+      expect(msg.to).toBe(']');
+      expect(msg.arrowType).toBe('<-');
+    });
+
+    it('should parse boundary with return arrow', () => {
+      const ast = parse('participant A\n[-->A:dashed incoming');
+      const msg = ast.find(n => n.type === 'message');
+      expect(msg.from).toBe('[');
+      expect(msg.arrowType).toBe('-->');
+    });
+  });
+
+  describe('Serialization', () => {
+    it('should serialize [->A correctly', () => {
+      const ast = parse('participant A\n[->A:incoming');
+      const output = serialize(ast);
+      expect(output).toContain('[->A:incoming');
+    });
+
+    it('should serialize A->] correctly', () => {
+      const ast = parse('participant A\nA->]:outgoing');
+      const output = serialize(ast);
+      expect(output).toContain('A->]:outgoing');
+    });
+  });
+
+  describe('Rendering', () => {
+    it('should render incoming message from diagram edge', () => {
+      const ast = parse('participant A\n[->A:incoming');
+      const svg = render(ast);
+      const line = svg.querySelector('.message line');
+      // fromX should be less than toX (coming from left)
+      const x1 = parseFloat(line.getAttribute('x1'));
+      const x2 = parseFloat(line.getAttribute('x2'));
+      expect(x1).toBeLessThan(x2);
+    });
+
+    it('should render outgoing message to diagram edge', () => {
+      const ast = parse('participant A\nA->]:outgoing');
+      const svg = render(ast);
+      const line = svg.querySelector('.message line');
+      // toX should be greater than fromX (going to right)
+      const x1 = parseFloat(line.getAttribute('x1'));
+      const x2 = parseFloat(line.getAttribute('x2'));
+      expect(x2).toBeGreaterThan(x1);
+    });
+  });
+
+  describe('Round-trip', () => {
+    it('should round-trip [->A', () => {
+      const input = 'participant A\n[->A:test';
+      const ast1 = parse(input);
+      const output = serialize(ast1);
+      const ast2 = parse(output);
+
+      const msg1 = ast1.find(n => n.type === 'message');
+      const msg2 = ast2.find(n => n.type === 'message');
+
+      expect(msg2.from).toBe(msg1.from);
+      expect(msg2.to).toBe(msg1.to);
+    });
+
+    it('should round-trip A->]', () => {
+      const input = 'participant A\nA->]:test';
+      const ast1 = parse(input);
+      const output = serialize(ast1);
+      const ast2 = parse(output);
+
+      const msg1 = ast1.find(n => n.type === 'message');
+      const msg2 = ast2.find(n => n.type === 'message');
+
+      expect(msg2.from).toBe(msg1.from);
+      expect(msg2.to).toBe(msg1.to);
+    });
+  });
+});
+
 describe('Message Delays (BACKLOG-121)', () => {
 
   describe('Parsing delays', () => {

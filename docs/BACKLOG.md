@@ -1429,15 +1429,17 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Serialize with delay ✅
 - 11 unit tests verify delay functionality ✅
 
-## BACKLOG-122: Boundary messages
-**Phase:** 5.3  
-**Dependencies:** BACKLOG-114  
-**Description:** Add support for [->A, A->], [<-A, A<-] syntax.  
+## BACKLOG-122: Boundary messages ✅
+**Phase:** 5.3
+**Dependencies:** BACKLOG-114
+**Status:** Complete
+**Description:** Add support for [->A, A->], [<-A, A<-] syntax.
 **Acceptance Criteria:**
-- Parse boundary message syntax
-- '[' and ']' are valid from/to values
-- Render arrows to/from diagram edge
-- Serialize correctly
+- Parse boundary message syntax ✅
+- '[' and ']' are valid from/to values ✅
+- Render arrows to/from diagram edge ✅
+- Serialize correctly ✅
+- 11 unit tests verify boundary messages ✅
 
 ## BACKLOG-123: Message styling with brackets
 **Phase:** 5.3  

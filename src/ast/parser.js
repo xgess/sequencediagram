@@ -513,38 +513,35 @@ function parseParticipantStyle(styleStr) {
  * Syntax: From->To:Label or From->>To:Label etc.
  * Arrow types: -> ->> --> -->> <- <->> <-- <-->> <-> <->> -x --x
  * Delay syntax: From->(N)To:Label where N is delay units
+ * Boundary syntax: [->A, A->], [<-A, A<-] for edge messages
  * @param {string} line - Trimmed source line
  * @param {number} lineNumber - 1-indexed line number
  * @returns {Object|null} Message AST node or null
  */
 function parseMessage(line, lineNumber) {
-  // Match: From ARROW [delay] To : Label
-  // Arrow types ordered by length for correct matching:
-  // Bidirectional: <->> <->
-  // Reversed: <-->> <->> <-- <-
-  // Forward: -->> --> ->> ->
-  // Lost: --x -x
-  // Optional delay: (N) after arrow, before target
-  const match = line.match(/^([^\s\-<]+)(<-->>|<->>|<-->|<->|<--|<-|-->>|-->|->>|->|--x|-x)(\(\d+\))?([^\s:]+):(.*)$/);
-  if (!match) {
-    return null;
+  // Try boundary message first: [->A or A->]
+  // Incoming from left: [->A:label or [<-A:label
+  // Outgoing to right: A->]:label or A<-]:label
+  const boundaryMatch = line.match(/^(\[|[^\s\-<\[]+)(<-->>|<->>|<-->|<->|<--|<-|-->>|-->|->>|->|--x|-x)(\(\d+\))?(\]|[^\s:\]]+):(.*)$/);
+  if (boundaryMatch) {
+    const [, from, arrowType, delayStr, to, label] = boundaryMatch;
+    const delay = delayStr ? parseInt(delayStr.slice(1, -1), 10) : null;
+
+    return {
+      id: generateId('message'),
+      type: 'message',
+      from,
+      to,
+      arrowType,
+      delay,
+      label: label.trim(),
+      style: null,
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
   }
 
-  const [, from, arrowType, delayStr, to, label] = match;
-  const delay = delayStr ? parseInt(delayStr.slice(1, -1), 10) : null;
-
-  return {
-    id: generateId('message'),
-    type: 'message',
-    from,
-    to,
-    arrowType,
-    delay,
-    label: label.trim(),
-    style: null,
-    sourceLineStart: lineNumber,
-    sourceLineEnd: lineNumber
-  };
+  return null;
 }
 
 /**

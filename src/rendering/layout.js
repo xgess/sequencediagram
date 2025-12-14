@@ -18,6 +18,7 @@ const NOTE_WIDTH = 100;
 const NOTE_MARGIN = 10;
 const DIVIDER_HEIGHT = 24;
 const MARGIN = 50;
+const BOUNDARY_OFFSET = 30; // How far outside diagram bounds for boundary messages
 
 /**
  * Calculate positions for all AST nodes
@@ -109,22 +110,44 @@ export function calculateLayout(ast) {
       });
       currentY += ERROR_HEIGHT + 10;
     } else if (node.type === 'message') {
-      const fromLayout = participantLayout.get(node.from);
-      const toLayout = participantLayout.get(node.to);
+      // Calculate boundary positions
+      const allParticipants = Array.from(participantLayout.values());
+      const leftBoundary = allParticipants.length > 0
+        ? Math.min(...allParticipants.map(p => p.x)) - BOUNDARY_OFFSET
+        : PARTICIPANT_START_X - BOUNDARY_OFFSET;
+      const rightBoundary = allParticipants.length > 0
+        ? Math.max(...allParticipants.map(p => p.x + PARTICIPANT_WIDTH)) + BOUNDARY_OFFSET
+        : PARTICIPANT_START_X + PARTICIPANT_WIDTH + BOUNDARY_OFFSET;
+
+      // Get from/to positions (handle boundary markers)
+      let fromX, toX;
+      if (node.from === '[') {
+        fromX = leftBoundary;
+      } else {
+        const fromLayout = participantLayout.get(node.from);
+        fromX = fromLayout ? fromLayout.centerX : leftBoundary;
+      }
+
+      if (node.to === ']') {
+        toX = rightBoundary;
+      } else {
+        const toLayout = participantLayout.get(node.to);
+        toX = toLayout ? toLayout.centerX : rightBoundary;
+      }
 
       // Delayed messages need extra vertical space for the slope
       const delayHeight = node.delay ? node.delay * 10 : 0;
       const totalHeight = messageSpacing + delayHeight;
 
-      if (fromLayout && toLayout) {
-        layout.set(node.id, {
-          y: currentY,
-          fromX: fromLayout.centerX,
-          toX: toLayout.centerX,
-          height: totalHeight,
-          delay: node.delay || 0
-        });
-      }
+      layout.set(node.id, {
+        y: currentY,
+        fromX,
+        toX,
+        height: totalHeight,
+        delay: node.delay || 0,
+        isBoundary: node.from === '[' || node.to === ']'
+      });
+
       currentY += totalHeight;
     } else if (node.type === 'note') {
       // Calculate note position based on participants and position
@@ -235,22 +258,44 @@ function layoutEntry(entryId, nodeById, participantLayout, layout, currentY, mes
   }
 
   if (entry.type === 'message') {
-    const fromLayout = participantLayout.get(entry.from);
-    const toLayout = participantLayout.get(entry.to);
+    // Calculate boundary positions
+    const allParticipants = Array.from(participantLayout.values());
+    const leftBoundary = allParticipants.length > 0
+      ? Math.min(...allParticipants.map(p => p.x)) - BOUNDARY_OFFSET
+      : PARTICIPANT_START_X - BOUNDARY_OFFSET;
+    const rightBoundary = allParticipants.length > 0
+      ? Math.max(...allParticipants.map(p => p.x + PARTICIPANT_WIDTH)) + BOUNDARY_OFFSET
+      : PARTICIPANT_START_X + PARTICIPANT_WIDTH + BOUNDARY_OFFSET;
+
+    // Get from/to positions (handle boundary markers)
+    let fromX, toX;
+    if (entry.from === '[') {
+      fromX = leftBoundary;
+    } else {
+      const fromLayout = participantLayout.get(entry.from);
+      fromX = fromLayout ? fromLayout.centerX : leftBoundary;
+    }
+
+    if (entry.to === ']') {
+      toX = rightBoundary;
+    } else {
+      const toLayout = participantLayout.get(entry.to);
+      toX = toLayout ? toLayout.centerX : rightBoundary;
+    }
 
     // Delayed messages need extra vertical space for the slope
     const delayHeight = entry.delay ? entry.delay * 10 : 0;
     const totalHeight = messageSpacing + delayHeight;
 
-    if (fromLayout && toLayout) {
-      layout.set(entry.id, {
-        y: currentY,
-        fromX: fromLayout.centerX,
-        toX: toLayout.centerX,
-        height: totalHeight,
-        delay: entry.delay || 0
-      });
-    }
+    layout.set(entry.id, {
+      y: currentY,
+      fromX,
+      toX,
+      height: totalHeight,
+      delay: entry.delay || 0,
+      isBoundary: entry.from === '[' || entry.to === ']'
+    });
+
     return currentY + totalHeight;
   }
 
