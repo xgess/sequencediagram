@@ -274,6 +274,60 @@ function parseDirective(line, lineNumber) {
     };
   }
 
+  // Match activate directive: activate B or activate B #lightblue
+  const activateMatch = line.match(/^activate\s+(\S+)(?:\s+(#[^\s]+))?$/);
+  if (activateMatch) {
+    return {
+      id: generateId('directive'),
+      type: 'directive',
+      directiveType: 'activate',
+      participant: activateMatch[1],
+      color: activateMatch[2] || null,
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
+  }
+
+  // Match deactivate directives: deactivate B, deactivateafter B
+  const deactivateMatch = line.match(/^(deactivate|deactivateafter)\s+(\S+)$/);
+  if (deactivateMatch) {
+    return {
+      id: generateId('directive'),
+      type: 'directive',
+      directiveType: deactivateMatch[1],
+      participant: deactivateMatch[2],
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
+  }
+
+  // Match autoactivation directive: autoactivation on/off
+  const autoactivationMatch = line.match(/^autoactivation\s+(on|off)$/);
+  if (autoactivationMatch) {
+    return {
+      id: generateId('directive'),
+      type: 'directive',
+      directiveType: 'autoactivation',
+      value: autoactivationMatch[1] === 'on',
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
+  }
+
+  // Match activecolor directive: activecolor #color or activecolor Participant #color
+  const activecolorMatch = line.match(/^activecolor(?:\s+([^\s#]+))?\s+(#[^\s]+)$/);
+  if (activecolorMatch) {
+    return {
+      id: generateId('directive'),
+      type: 'directive',
+      directiveType: 'activecolor',
+      participant: activecolorMatch[1] || null,
+      color: activecolorMatch[2],
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
+  }
+
   // Match frame directive: frame Title or frame#operatorColor #fill #border;width;style Title
   const frameMatch = line.match(/^frame(#[^\s#]+)?(?:\s+(#[^\s;]+))?(?:\s+(#[^\s;]+)(?:;(\d+))?(?:;(solid|dashed|dotted))?)?(?:\s+(.+))?$/);
   if (frameMatch) {

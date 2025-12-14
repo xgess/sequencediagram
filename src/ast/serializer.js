@@ -350,6 +350,31 @@ function serializeDirective(node) {
   if (node.directiveType === 'destroy' || node.directiveType === 'destroyafter' || node.directiveType === 'destroysilent') {
     return `${node.directiveType} ${node.participant}`;
   }
+  // Handle activate directive
+  if (node.directiveType === 'activate') {
+    let output = `activate ${node.participant}`;
+    if (node.color) {
+      output += ` ${node.color}`;
+    }
+    return output;
+  }
+  // Handle deactivate directives
+  if (node.directiveType === 'deactivate' || node.directiveType === 'deactivateafter') {
+    return `${node.directiveType} ${node.participant}`;
+  }
+  // Handle autoactivation directive
+  if (node.directiveType === 'autoactivation') {
+    return `autoactivation ${node.value ? 'on' : 'off'}`;
+  }
+  // Handle activecolor directive
+  if (node.directiveType === 'activecolor') {
+    let output = 'activecolor';
+    if (node.participant) {
+      output += ` ${node.participant}`;
+    }
+    output += ` ${node.color}`;
+    return output;
+  }
   return '';
 }
 

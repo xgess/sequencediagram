@@ -163,6 +163,22 @@ export function calculateLayout(ast) {
       continue;
     }
 
+    // Handle activate/deactivate directives - record Y position
+    if (node.type === 'directive' &&
+        (node.directiveType === 'activate' ||
+         node.directiveType === 'deactivate' ||
+         node.directiveType === 'deactivateafter')) {
+      layout.set(node.id, {
+        y: currentY,
+        type: node.directiveType
+      });
+      // deactivateafter adds extra space
+      if (node.directiveType === 'deactivateafter') {
+        currentY += DEFAULT_MESSAGE_SPACING;
+      }
+      continue;
+    }
+
     // Skip other directives (they don't affect layout)
     if (node.type === 'directive') continue;
 

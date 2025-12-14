@@ -44,6 +44,11 @@ export function render(ast) {
   lifelinesGroup.setAttribute('id', 'lifelines');
   svg.appendChild(lifelinesGroup);
 
+  // Activation bars (on top of lifelines)
+  const activationsGroup = document.createElementNS(SVG_NS, 'g');
+  activationsGroup.setAttribute('id', 'activations');
+  svg.appendChild(activationsGroup);
+
   // Notes and dividers group (between lifelines and messages)
   const notesGroup = document.createElementNS(SVG_NS, 'g');
   notesGroup.setAttribute('id', 'notes');
@@ -194,6 +199,16 @@ export function render(ast) {
       }
     });
   }
+
+  // Build and render activation bars
+  const activationBars = buildActivationInfo(ast, layout, lifelineEndY);
+  activationBars.forEach(barInfo => {
+    const pLayout = participantLayout.get(barInfo.participant);
+    if (pLayout) {
+      const barEl = renderActivationBar(barInfo, pLayout.centerX);
+      activationsGroup.appendChild(barEl);
+    }
+  });
 
   // Calculate autonumber for each message based on directives
   const messageNumbers = calculateMessageNumbers(ast);
@@ -460,6 +475,29 @@ function renderLifeline(participant, layoutInfo, endY, style = {}) {
 }
 
 /**
+ * Render an activation bar on a lifeline
+ * @param {Object} barInfo - Activation bar info {participant, startY, endY, color}
+ * @param {number} centerX - X position of the lifeline
+ * @returns {SVGRectElement} Activation bar element
+ */
+function renderActivationBar(barInfo, centerX) {
+  const ACTIVATION_WIDTH = 10;
+
+  const rect = document.createElementNS(SVG_NS, 'rect');
+  rect.setAttribute('class', 'activation-bar');
+  rect.setAttribute('data-participant', barInfo.participant);
+  rect.setAttribute('x', centerX - ACTIVATION_WIDTH / 2);
+  rect.setAttribute('y', barInfo.startY);
+  rect.setAttribute('width', ACTIVATION_WIDTH);
+  rect.setAttribute('height', Math.max(barInfo.endY - barInfo.startY, 5)); // Minimum height 5px
+  rect.setAttribute('fill', barInfo.color);
+  rect.setAttribute('stroke', '#333');
+  rect.setAttribute('stroke-width', '1');
+
+  return rect;
+}
+
+/**
  * Render a destroy X marker at a lifeline
  * @param {Object} participant - Participant AST node
  * @param {number} centerX - X position of the lifeline
@@ -551,6 +589,119 @@ function buildCreateInfo(ast) {
   }
 
   return createMap;
+}
+
+/**
+ * Build activation info - list of activation bars to render
+ * Each bar has: participant, startY, endY, color
+ * @param {Array} ast - AST nodes
+ * @param {Map} layout - Layout info map
+ * @param {number} defaultEndY - Default end Y if no deactivate found
+ * @returns {Array} Array of activation bar info objects
+ */
+function buildActivationInfo(ast, layout, defaultEndY) {
+  const activationBars = [];
+  const activeStacks = new Map(); // participant -> stack of {startY, color}
+
+  // Get default active color from activecolor directives
+  let defaultColor = '#ffffff'; // white default
+  const colorMap = new Map(); // participant -> color
+
+  for (const node of ast) {
+    if (node.type === 'directive' && node.directiveType === 'activecolor') {
+      if (node.participant) {
+        colorMap.set(node.participant, node.color);
+      } else {
+        defaultColor = node.color;
+      }
+    }
+  }
+
+  // Check for autoactivation mode
+  let autoactivation = false;
+  for (const node of ast) {
+    if (node.type === 'directive' && node.directiveType === 'autoactivation') {
+      autoactivation = node.value;
+    }
+  }
+
+  // Process nodes to build activation bars
+  for (const node of ast) {
+    if (node.type === 'directive' && node.directiveType === 'activate') {
+      const participant = node.participant;
+      const layoutInfo = layout.get(node.id);
+      const startY = layoutInfo ? layoutInfo.y : 0;
+      const color = node.color || colorMap.get(participant) || defaultColor;
+
+      if (!activeStacks.has(participant)) {
+        activeStacks.set(participant, []);
+      }
+      activeStacks.get(participant).push({ startY, color, nodeId: node.id });
+    } else if (node.type === 'directive' &&
+               (node.directiveType === 'deactivate' || node.directiveType === 'deactivateafter')) {
+      const participant = node.participant;
+      const layoutInfo = layout.get(node.id);
+      const endY = layoutInfo ? layoutInfo.y : defaultEndY;
+
+      const stack = activeStacks.get(participant);
+      if (stack && stack.length > 0) {
+        const activation = stack.pop();
+        activationBars.push({
+          participant,
+          startY: activation.startY,
+          endY,
+          color: activation.color
+        });
+      }
+    } else if (autoactivation && node.type === 'message') {
+      // Auto-activation: activate target on request (-> arrow), deactivate on response (<- arrow)
+      const layoutInfo = layout.get(node.id);
+      const messageY = layoutInfo ? layoutInfo.y : 0;
+
+      // Check if this is a request (going right) or response (coming back)
+      const isResponse = node.arrowType.startsWith('<');
+
+      if (!isResponse) {
+        // Request - activate target
+        const participant = node.to;
+        if (participant !== '[' && participant !== ']') {
+          const color = colorMap.get(participant) || defaultColor;
+          if (!activeStacks.has(participant)) {
+            activeStacks.set(participant, []);
+          }
+          activeStacks.get(participant).push({ startY: messageY, color, nodeId: node.id });
+        }
+      } else {
+        // Response - deactivate source (the one returning)
+        const participant = node.from;
+        const stack = activeStacks.get(participant);
+        if (stack && stack.length > 0) {
+          const activation = stack.pop();
+          activationBars.push({
+            participant,
+            startY: activation.startY,
+            endY: messageY,
+            color: activation.color
+          });
+        }
+      }
+    }
+  }
+
+  // Close any remaining open activations at defaultEndY
+  for (const [participant, stack] of activeStacks) {
+    while (stack.length > 0) {
+      const activation = stack.pop();
+      activationBars.push({
+        participant,
+        startY: activation.startY,
+        endY: defaultEndY,
+        color: activation.color
+      });
+    }
+  }
+
+  return activationBars;
 }
 
 /**
