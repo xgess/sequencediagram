@@ -13,6 +13,10 @@ const DEFAULT_MESSAGE_SPACING = 50;
 const BLANKLINE_SPACING = 20;
 const ERROR_HEIGHT = 40;
 const FRAGMENT_PADDING = 30;
+const NOTE_HEIGHT = 40;
+const NOTE_WIDTH = 100;
+const NOTE_MARGIN = 10;
+const DIVIDER_HEIGHT = 24;
 const MARGIN = 50;
 
 /**
@@ -117,6 +121,29 @@ export function calculateLayout(ast) {
         });
       }
       currentY += messageSpacing;
+    } else if (node.type === 'note') {
+      // Calculate note position based on participants and position
+      const noteLayout = calculateNoteLayout(node, participantLayout);
+      noteLayout.y = currentY;
+      layout.set(node.id, noteLayout);
+      currentY += noteLayout.height + NOTE_MARGIN;
+    } else if (node.type === 'divider') {
+      // Dividers span the full width
+      const allParticipants = Array.from(participantLayout.values());
+      const minX = allParticipants.length > 0
+        ? Math.min(...allParticipants.map(p => p.x)) - 20
+        : PARTICIPANT_START_X - 20;
+      const maxX = allParticipants.length > 0
+        ? Math.max(...allParticipants.map(p => p.x + PARTICIPANT_WIDTH)) + 20
+        : PARTICIPANT_START_X + PARTICIPANT_WIDTH + 20;
+
+      layout.set(node.id, {
+        x: minX,
+        y: currentY,
+        width: maxX - minX,
+        height: DIVIDER_HEIGHT
+      });
+      currentY += DIVIDER_HEIGHT + NOTE_MARGIN;
     } else if (node.type === 'fragment') {
       const fragmentStart = currentY;
       currentY += FRAGMENT_PADDING; // Top padding
@@ -307,4 +334,55 @@ export function buildParticipantMap(ast) {
     }
   }
   return map;
+}
+
+/**
+ * Calculate note layout based on participants and position
+ * @param {Object} node - Note AST node
+ * @param {Map} participantLayout - Participant positions
+ * @returns {Object} Layout info {x, width, height}
+ */
+function calculateNoteLayout(node, participantLayout) {
+  const participants = node.participants || [];
+  const position = node.position || 'over';
+
+  // Default dimensions
+  let x = PARTICIPANT_START_X;
+  let width = NOTE_WIDTH;
+  const height = NOTE_HEIGHT;
+
+  if (participants.length === 0) {
+    // No participants specified, place at left
+    return { x, width, height };
+  }
+
+  // Get positions of referenced participants
+  const pLayouts = participants.map(p => participantLayout.get(p)).filter(Boolean);
+
+  if (pLayouts.length === 0) {
+    // Participants not found, use default
+    return { x, width, height };
+  }
+
+  if (position === 'over') {
+    // Center over participant(s)
+    if (pLayouts.length === 1) {
+      // Over single participant
+      x = pLayouts[0].centerX - NOTE_WIDTH / 2;
+    } else {
+      // Over multiple participants - span between them
+      const minX = Math.min(...pLayouts.map(p => p.centerX));
+      const maxX = Math.max(...pLayouts.map(p => p.centerX));
+      x = minX - NOTE_WIDTH / 4;
+      width = maxX - minX + NOTE_WIDTH / 2;
+    }
+  } else if (position === 'left of') {
+    // Place to the left of the participant
+    x = pLayouts[0].x - NOTE_WIDTH - NOTE_MARGIN;
+  } else if (position === 'right of') {
+    // Place to the right of the participant
+    x = pLayouts[0].x + PARTICIPANT_WIDTH + NOTE_MARGIN;
+  }
+
+  return { x, width, height };
 }

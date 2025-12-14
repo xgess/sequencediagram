@@ -58,6 +58,20 @@ function parseAt(lines, lineIndex, ast) {
     return { nextLine: lineIndex + 1 };
   }
 
+  // Try parsing as divider (==text==)
+  const divider = parseDivider(trimmed, lineNumber);
+  if (divider) {
+    ast.push(divider);
+    return { nextLine: lineIndex + 1 };
+  }
+
+  // Try parsing as note/box/abox/rbox/ref/state
+  const note = parseNote(trimmed, lineNumber);
+  if (note) {
+    ast.push(note);
+    return { nextLine: lineIndex + 1 };
+  }
+
   // Try parsing as fragment (alt, loop, etc.)
   if (isFragmentStart(trimmed)) {
     const result = parseFragment(lines, lineIndex, ast);
@@ -523,4 +537,122 @@ function parseMessage(line, lineNumber) {
     sourceLineStart: lineNumber,
     sourceLineEnd: lineNumber
   };
+}
+
+/**
+ * Parse a divider line
+ * Syntax: ==text==
+ * @param {string} line - Trimmed source line
+ * @param {number} lineNumber - 1-indexed line number
+ * @returns {Object|null} Divider AST node or null
+ */
+function parseDivider(line, lineNumber) {
+  // Match ==text== with optional styling
+  // Syntax: ==text==[#fill] [#border;width;style]
+  const match = line.match(/^==(.+?)==(.*)$/);
+  if (!match) {
+    return null;
+  }
+
+  const [, text, styleStr] = match;
+  const style = parseNoteStyle(styleStr.trim());
+
+  return {
+    id: generateId('divider'),
+    type: 'divider',
+    text: text.trim(),
+    style,
+    sourceLineStart: lineNumber,
+    sourceLineEnd: lineNumber
+  };
+}
+
+/**
+ * Parse a note/box/abox/rbox/ref/state line
+ * Syntax: noteType position participant(s):text
+ * Examples:
+ *   note over A:text
+ *   note over A,B:text
+ *   note left of A:text
+ *   note right of A:text
+ *   box over A:text
+ *   abox over A:text
+ *   rbox over A:text
+ *   ref over A,B:text
+ *   state over A:text
+ * @param {string} line - Trimmed source line
+ * @param {number} lineNumber - 1-indexed line number
+ * @returns {Object|null} Note AST node or null
+ */
+function parseNote(line, lineNumber) {
+  // Match note types with various positions
+  // Syntax: (note|box|abox|rbox|ref|state) (over|left of|right of) participant(,participant)?:text
+  const match = line.match(/^(note|box|abox|rbox|ref|state)\s+(over|left of|right of)\s+([^:]+):(.*)$/);
+  if (!match) {
+    return null;
+  }
+
+  const [, noteType, position, participantsStr, text] = match;
+
+  // Parse participants (comma-separated, with optional styling)
+  // For now, just split by comma and trim
+  const participantsPart = participantsStr.trim();
+
+  // Check for styling before participants: note over A,B #fill:text
+  // The styling comes after participants but before the colon
+  let participants = [];
+  let style = null;
+
+  // Split by # to separate participants from styling
+  const hashIndex = participantsPart.indexOf('#');
+  if (hashIndex >= 0) {
+    const participantNames = participantsPart.substring(0, hashIndex).trim();
+    const styleStr = participantsPart.substring(hashIndex);
+    participants = participantNames.split(',').map(p => p.trim()).filter(p => p);
+    style = parseNoteStyle(styleStr);
+  } else {
+    participants = participantsPart.split(',').map(p => p.trim()).filter(p => p);
+  }
+
+  return {
+    id: generateId('note'),
+    type: 'note',
+    noteType,
+    position,
+    participants,
+    text: text.trim(),
+    style,
+    sourceLineStart: lineNumber,
+    sourceLineEnd: lineNumber
+  };
+}
+
+/**
+ * Parse note/divider styling string
+ * Syntax: #fill #border;width;style
+ * @param {string} styleStr - Style string
+ * @returns {Object|null} Style object or null
+ */
+function parseNoteStyle(styleStr) {
+  if (!styleStr) return null;
+
+  const style = {};
+
+  // Match fill color
+  const fillMatch = styleStr.match(/(#[^\s#;]+)/);
+  if (fillMatch) {
+    style.fill = fillMatch[1];
+    styleStr = styleStr.slice(fillMatch[0].length).trim();
+  }
+
+  // Match border styling: #color;width;style
+  const borderMatch = styleStr.match(/(#[^\s;]+)?;?(\d+)?;?(solid|dashed)?/);
+  if (borderMatch) {
+    const [, borderColor, borderWidth, borderStyle] = borderMatch;
+    if (borderColor) style.border = borderColor;
+    if (borderWidth) style.borderWidth = parseInt(borderWidth, 10);
+    if (borderStyle) style.borderStyle = borderStyle;
+  }
+
+  return Object.keys(style).length > 0 ? style : null;
 }

@@ -58,6 +58,10 @@ function serializeNode(node, nodeById, indent) {
       return indentStr(indent) + serializeMessage(node);
     case 'fragment':
       return serializeFragment(node, nodeById, indent);
+    case 'note':
+      return indentStr(indent) + serializeNote(node);
+    case 'divider':
+      return indentStr(indent) + serializeDivider(node);
     case 'comment':
       return indentStr(indent) + node.text;
     case 'blankline':
@@ -327,4 +331,93 @@ function serializeFragment(node, nodeById, indent) {
   lines.push(prefix + 'end');
 
   return lines.join('\n');
+}
+
+/**
+ * Serialize a note node
+ * Syntax: noteType position participant(s) [#style]:text
+ * @param {Object} node - Note AST node
+ * @returns {string} Serialized note
+ */
+function serializeNote(node) {
+  let output = node.noteType;
+
+  // Add position
+  output += ' ' + node.position;
+
+  // Add participants
+  if (node.participants && node.participants.length > 0) {
+    output += ' ' + node.participants.join(',');
+  }
+
+  // Add styling if present
+  const styleStr = serializeNoteStyle(node.style);
+  if (styleStr) {
+    output += ' ' + styleStr;
+  }
+
+  // Add text
+  output += ':' + node.text;
+
+  return output;
+}
+
+/**
+ * Serialize a divider node
+ * Syntax: ==text==[#style]
+ * @param {Object} node - Divider AST node
+ * @returns {string} Serialized divider
+ */
+function serializeDivider(node) {
+  let output = '==' + node.text + '==';
+
+  // Add styling if present
+  const styleStr = serializeNoteStyle(node.style);
+  if (styleStr) {
+    output += styleStr;
+  }
+
+  return output;
+}
+
+/**
+ * Serialize note/divider style object to string
+ * @param {Object} style - Style object
+ * @returns {string} Style string or empty string
+ */
+function serializeNoteStyle(style) {
+  if (!style || Object.keys(style).length === 0) {
+    return '';
+  }
+
+  let parts = [];
+
+  // Add fill color
+  if (style.fill) {
+    parts.push(style.fill);
+  }
+
+  // Add border styling
+  const hasBorderColor = style.border !== undefined;
+  const hasBorderWidth = style.borderWidth !== undefined;
+  const hasBorderStyle = style.borderStyle !== undefined;
+
+  if (hasBorderColor || hasBorderWidth || hasBorderStyle) {
+    let borderPart = '';
+    if (hasBorderColor) {
+      borderPart += style.border;
+    }
+    if (hasBorderWidth || hasBorderStyle) {
+      borderPart += ';';
+      if (hasBorderWidth) {
+        borderPart += style.borderWidth;
+      }
+      if (hasBorderStyle) {
+        borderPart += ';' + style.borderStyle;
+      }
+    }
+    parts.push(borderPart);
+  }
+
+  return parts.join(' ');
 }

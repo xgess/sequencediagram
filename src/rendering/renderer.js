@@ -4,6 +4,7 @@
 import { renderParticipant } from './participants.js';
 import { renderMessage } from './messages.js';
 import { renderFragment } from './fragments.js';
+import { renderNote, renderDivider } from './notes.js';
 import { renderError } from './errors.js';
 import { calculateLayout } from './layout.js';
 
@@ -38,6 +39,11 @@ export function render(ast) {
   lifelinesGroup.setAttribute('id', 'lifelines');
   svg.appendChild(lifelinesGroup);
 
+  // Notes and dividers group (between lifelines and messages)
+  const notesGroup = document.createElementNS(SVG_NS, 'g');
+  notesGroup.setAttribute('id', 'notes');
+  svg.appendChild(notesGroup);
+
   const messagesGroup = document.createElementNS(SVG_NS, 'g');
   messagesGroup.setAttribute('id', 'messages');
   svg.appendChild(messagesGroup);
@@ -60,6 +66,8 @@ export function render(ast) {
   const participants = ast.filter(node => node.type === 'participant');
   const messages = ast.filter(node => node.type === 'message');
   const fragments = ast.filter(node => node.type === 'fragment');
+  const notes = ast.filter(node => node.type === 'note');
+  const dividers = ast.filter(node => node.type === 'divider');
   const errors = ast.filter(node => node.type === 'error');
   const titleDirective = ast.find(node => node.type === 'directive' && node.directiveType === 'title');
 
@@ -99,6 +107,24 @@ export function render(ast) {
     if (layoutInfo) {
       const messageEl = renderMessage(message, layoutInfo);
       messagesGroup.appendChild(messageEl);
+    }
+  });
+
+  // Render notes
+  notes.forEach(note => {
+    const layoutInfo = layout.get(note.id);
+    if (layoutInfo) {
+      const noteEl = renderNote(note, layoutInfo);
+      notesGroup.appendChild(noteEl);
+    }
+  });
+
+  // Render dividers
+  dividers.forEach(divider => {
+    const layoutInfo = layout.get(divider.id);
+    if (layoutInfo) {
+      const dividerEl = renderDivider(divider, layoutInfo);
+      notesGroup.appendChild(dividerEl);
     }
   });
 

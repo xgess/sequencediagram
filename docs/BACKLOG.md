@@ -1464,17 +1464,17 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - State stored in AST or app state
 - Hidden entries not rendered when collapsed
 
-## BACKLOG-126: Notes and boxes - all 7 types
-**Phase:** 5.5  
-**Dependencies:** None  
-**Description:** Add support for note, box, abox, rbox, ref, state, divider.  
+## BACKLOG-126: Notes and boxes - all 7 types ✓
+**Phase:** 5.5
+**Dependencies:** None
+**Description:** Add support for note, box, abox, rbox, ref, state, divider.
 **Acceptance Criteria:**
-- Parse: `note over A,B:text`, `note left of A:text`, etc.
-- All positions: over, left of, right of
-- Parse: `box`, `abox`, `rbox`, `ref`, `state` with same positions
-- Parse divider: `==text==`
-- Render each with appropriate shape
-- Serialize correctly
+- Parse: `note over A,B:text`, `note left of A:text`, etc. ✓
+- All positions: over, left of, right of ✓
+- Parse: `box`, `abox`, `rbox`, `ref`, `state` with same positions ✓
+- Parse divider: `==text==` ✓
+- Render each with appropriate shape ✓
+- Serialize correctly ✓
 
 ## BACKLOG-127: Note and box styling
 **Phase:** 5.5  
@@ -1758,7 +1758,7 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 
 ## Current Progress Summary
 
-**Last Updated:** After BACKLOG-114 (Shrink to fit)
+**Last Updated:** After BACKLOG-126 (Notes and boxes)
 
 ### Phases Complete
 - Phase 0: Requirements & Design ✅
@@ -1766,11 +1766,13 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Phase 2: Editor Integration ✅
 - Phase 3: Interactivity ✅
 - Phase 4: File I/O & Export ✅
-- Phase 5: In Progress (4 of ~40 tasks done)
+- Phase 5: In Progress (5 of ~40 tasks done)
 
 ### Implemented Features
 Core functionality is complete and usable:
 - Parse/render/serialize: participants (3 types), messages (4 arrow types), alt/loop fragments
+- Notes: note, box, abox, rbox, ref, state (over/left of/right of positions)
+- Dividers: ==text== with styling support
 - Full CodeMirror editor with syntax highlighting, autocomplete, error markers
 - Complete interactive editing: selection, drag, double-click edit, context menu
 - Undo/redo with 100-level history
@@ -1781,13 +1783,11 @@ Core functionality is complete and usable:
 - Shrink to fit (Fit button scales diagram to viewport)
 
 ### Recommended Next Steps (Priority Order)
-1. **BACKLOG-126: Notes and boxes** - Commonly needed feature
-2. **BACKLOG-124: Remaining fragment types** - opt, par, break, etc.
-3. **BACKLOG-120: Remaining arrow types** - <-, <->, -x
-4. **BACKLOG-115-119: Additional participant types** - rparticipant, icons, images
+1. **BACKLOG-124: Remaining fragment types** - opt, par, break, etc.
+2. **BACKLOG-120: Remaining arrow types** - <-, <->, -x
+3. **BACKLOG-115-119: Additional participant types** - rparticipant, icons, images
 
 ### Known Gaps
-- Dividers (`==text==`) not implemented (BACKLOG-126)
 - Autosave disable setting not implemented (minor)
 
 ---
