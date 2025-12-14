@@ -40,6 +40,7 @@ import { showDiagramManager } from './interaction/diagramManager.js';
 import { startAutosave, recoverAutosave } from './storage/autosave.js';
 import { loadFromURL } from './storage/url.js';
 import { initSplitter } from './interaction/splitter.js';
+import { initZoom, getZoomLevel } from './interaction/zoom.js';
 
 // App state
 let currentAst = [];
@@ -67,8 +68,6 @@ const STORAGE_KEY_TAB_SIZE = 'sequencediagram.tabSize';
 /**
  * Initialize the application
  */
-import { initSplitter } from './interaction/splitter.js';
-
 export function init() {
   // Get DOM elements
   editorContainer = document.getElementById('editor');
@@ -90,6 +89,13 @@ export function init() {
 
   // Initialize toolbar
   initToolbar();
+
+  // Initialize zoom controls
+  const diagramSvg = document.getElementById('diagram');
+  const zoomLevelEl = document.getElementById('zoom-level');
+  if (diagramSvg && zoomLevelEl) {
+    initZoom(diagramSvg, zoomLevelEl);
+  }
 
   // Initialize keyboard shortcuts for diagram
   initDiagramKeyboard();
@@ -1587,13 +1593,17 @@ function initToolbar() {
 
 /**
  * Handle Export PNG button click
+ * Uses zoom level to determine export scale
  */
 async function handleExportPNG() {
   if (!currentSvg) return;
 
   try {
-    await downloadPNG(currentSvg, 'diagram.png', 2);
-    console.log('PNG exported successfully');
+    // Base scale is 2x for high DPI, multiply by zoom level
+    const zoomLevel = getZoomLevel();
+    const exportScale = 2 * zoomLevel;
+    await downloadPNG(currentSvg, 'diagram.png', exportScale);
+    console.log(`PNG exported successfully at ${Math.round(zoomLevel * 100)}% zoom (${exportScale}x scale)`);
   } catch (error) {
     console.error('Failed to export PNG:', error);
   }

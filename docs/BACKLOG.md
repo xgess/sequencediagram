@@ -1299,16 +1299,16 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Stores preference in localStorage
 - Min/max widths enforced
 
-## BACKLOG-110: Zoom controls
-**Phase:** 5.1  
-**Dependencies:** None  
-**Description:** Add zoom in/out buttons above diagram with zoom level display.  
+## BACKLOG-110: Zoom controls ✓
+**Phase:** 5.1
+**Dependencies:** None
+**Description:** Add zoom in/out buttons above diagram with zoom level display.
 **Acceptance Criteria:**
-- Buttons: +, -, Reset
-- Display: "100%"
-- Adjusts SVG scale transform
-- Affects PNG export resolution
-- Keyboard: Ctrl-Plus, Ctrl-Minus
+- Buttons: +, -, Reset ✓
+- Display: "100%" ✓
+- Adjusts SVG scale transform ✓
+- Affects PNG export resolution ✓
+- Keyboard: Ctrl-Plus, Ctrl-Minus ✓
 
 ## BACKLOG-111: Presentation mode
 **Phase:** 5.1  
