@@ -41,6 +41,7 @@ import { startAutosave, recoverAutosave } from './storage/autosave.js';
 import { loadFromURL } from './storage/url.js';
 import { initSplitter } from './interaction/splitter.js';
 import { initZoom, getZoomLevel } from './interaction/zoom.js';
+import { initPresentation, enterPresentationMode, exitPresentationMode, togglePresentationMode, isInPresentationMode } from './interaction/presentation.js';
 
 // App state
 let currentAst = [];
@@ -97,6 +98,12 @@ export function init() {
     initZoom(diagramSvg, zoomLevelEl);
   }
 
+  // Initialize presentation mode
+  initPresentation(() => {
+    // Callback when presentation mode exits
+    updatePresentButton();
+  });
+
   // Initialize keyboard shortcuts for diagram
   initDiagramKeyboard();
 
@@ -107,7 +114,15 @@ export function init() {
     if (text) {
       loadTextIntoEditor(text);
     }
-    // TODO: Implement presentation and shrinkToFit mode toggling
+    // Apply presentation mode if requested
+    if (presentation) {
+      // Small delay to let diagram render first
+      setTimeout(() => {
+        enterPresentationMode();
+        updatePresentButton();
+      }, 100);
+    }
+    // TODO: Implement shrinkToFit mode (BACKLOG-114)
   } else {
     // If no URL data, check for autosave
     const autosavedText = recoverAutosave();
@@ -1588,6 +1603,31 @@ function initToolbar() {
     shareBtn.addEventListener('click', () => {
       showShareDialog(() => editor.getValue());
     });
+  }
+
+  // Present button
+  const presentBtn = document.getElementById('present-btn');
+  if (presentBtn) {
+    presentBtn.addEventListener('click', () => {
+      togglePresentationMode();
+      updatePresentButton();
+    });
+  }
+}
+
+/**
+ * Update Present button state
+ */
+function updatePresentButton() {
+  const presentBtn = document.getElementById('present-btn');
+  if (presentBtn) {
+    if (isInPresentationMode()) {
+      presentBtn.classList.add('active');
+      presentBtn.textContent = 'Exit';
+    } else {
+      presentBtn.classList.remove('active');
+      presentBtn.textContent = 'Present';
+    }
   }
 }
 

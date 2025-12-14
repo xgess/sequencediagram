@@ -1310,15 +1310,15 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Affects PNG export resolution ✓
 - Keyboard: Ctrl-Plus, Ctrl-Minus ✓
 
-## BACKLOG-111: Presentation mode
-**Phase:** 5.1  
-**Dependencies:** None  
-**Description:** Implement presentation mode that hides editor and shows diagram fullscreen.  
+## BACKLOG-111: Presentation mode ✓
+**Phase:** 5.1
+**Dependencies:** None
+**Description:** Implement presentation mode that hides editor and shows diagram fullscreen.
 **Acceptance Criteria:**
-- Menu item or Ctrl-M to toggle
-- Hides editor pane and toolbar
-- Diagram fills viewport
-- Esc exits presentation mode
+- Menu item or Ctrl-M to toggle ✓
+- Hides editor pane and toolbar ✓
+- Diagram fills viewport ✓
+- Esc exits presentation mode ✓
 
 ## BACKLOG-112: Read-only presentation mode
 **Phase:** 5.1  
@@ -1758,7 +1758,7 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 
 ## Current Progress Summary
 
-**Last Updated:** After BACKLOG-110 (Zoom controls)
+**Last Updated:** After BACKLOG-111 (Presentation mode)
 
 ### Phases Complete
 - Phase 0: Requirements & Design ✅
@@ -1766,7 +1766,7 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Phase 2: Editor Integration ✅
 - Phase 3: Interactivity ✅
 - Phase 4: File I/O & Export ✅
-- Phase 5: In Progress (2 of ~40 tasks done)
+- Phase 5: In Progress (3 of ~40 tasks done)
 
 ### Implemented Features
 Core functionality is complete and usable:
@@ -1777,16 +1777,17 @@ Core functionality is complete and usable:
 - File open/save, localStorage, URL sharing
 - PNG/SVG/TXT export
 - Zoom controls and resizable splitter
+- Presentation mode (Ctrl+M to toggle, Esc to exit)
 
 ### Recommended Next Steps (Priority Order)
-1. **BACKLOG-111: Presentation mode** - High value for sharing diagrams
+1. **BACKLOG-114: Shrink to fit** - Scale diagram to viewport, works with presentation mode
 2. **BACKLOG-126: Notes and boxes** - Commonly needed feature
 3. **BACKLOG-124: Remaining fragment types** - opt, par, break, etc.
 4. **BACKLOG-120: Remaining arrow types** - <-, <->, -x
 5. **BACKLOG-115-119: Additional participant types** - rparticipant, icons, images
 
 ### Known Gaps
-- Presentation/shrinkToFit options from URL sharing not yet applied (BACKLOG-111, 114)
+- shrinkToFit option from URL sharing not yet applied (BACKLOG-114)
 - Dividers (`==text==`) not implemented (BACKLOG-126)
 - Autosave disable setting not implemented (minor)
 

@@ -283,3 +283,45 @@ body {
   stroke-width: 1;
   stroke-dasharray: 5, 5;
 }
+
+/* Presentation Mode (BACKLOG-111) */
+.presentation-mode #editor-pane,
+.presentation-mode #splitter {
+  display: none !important;
+}
+
+.presentation-mode #diagram-pane {
+  flex: 1 1 100%;
+  padding: 0;
+  background: white;
+}
+
+.presentation-mode #diagram-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 8px 16px;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 0;
+}
+
+.presentation-mode #diagram-header h3 {
+  display: none;
+}
+
+.presentation-mode #diagram {
+  margin-top: 50px;
+  min-height: calc(100vh - 50px);
+  border: none;
+  border-radius: 0;
+}
+
+/* Presentation mode button indicator */
+#present-btn.active {
+  background: #4a90d9;
+  color: white;
+  border-color: #3a7dbf;
+}
