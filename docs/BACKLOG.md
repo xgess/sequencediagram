@@ -1320,15 +1320,17 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Diagram fills viewport ✓
 - Esc exits presentation mode ✓
 
-## BACKLOG-112: Read-only presentation mode
-**Phase:** 5.1  
-**Dependencies:** BACKLOG-105  
-**Description:** Presentation mode variant with panning enabled and editing disabled.  
+## BACKLOG-112: Read-only presentation mode ✅
+**Phase:** 5.1
+**Dependencies:** BACKLOG-105
+**Status:** Complete
+**Description:** Presentation mode variant with panning enabled and editing disabled.
 **Acceptance Criteria:**
-- Menu item: View > Read-Only Present
-- Disables all mouse editing interactions
-- Enables click-drag to pan diagram
-- Scroll wheel to zoom
+- View button in toolbar to enter read-only mode ✅
+- Disables all mouse editing interactions ✅
+- Enables click-drag to pan diagram ✅
+- Scroll wheel to zoom (uses existing zoom) ✅
+- Keyboard shortcut: Ctrl/Cmd+Shift+M ✅
 
 ## BACKLOG-113: Participant overlay on scroll ✅
 **Phase:** 5.1
@@ -1789,7 +1791,7 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 
 ## Current Progress Summary
 
-**Last Updated:** After BACKLOG-113 (Participant overlay on scroll)
+**Last Updated:** After BACKLOG-112 (Read-only presentation mode)
 
 ### Phases Complete
 - Phase 0: Requirements & Design ✅
@@ -1829,6 +1831,7 @@ Core functionality is complete and usable:
 - Lifecycle commands (create/destroy participants dynamically)
 - Activations (activate/deactivate bars on lifelines with autoactivation)
 - Participant overlay on scroll (sticky header when scrolled)
+- Read-only presentation mode (pan/zoom without editing)
 
 ### Recommended Next Steps (Priority Order)
 1. **BACKLOG-117-119: Icon participant types** - Font Awesome, Material Design Icons, custom images (requires vendoring)

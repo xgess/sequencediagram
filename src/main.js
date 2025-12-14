@@ -41,7 +41,7 @@ import { startAutosave, recoverAutosave } from './storage/autosave.js';
 import { loadFromURL } from './storage/url.js';
 import { initSplitter } from './interaction/splitter.js';
 import { initZoom, getZoomLevel, shrinkToFit as applyShrinkToFit } from './interaction/zoom.js';
-import { initPresentation, enterPresentationMode, exitPresentationMode, togglePresentationMode, isInPresentationMode } from './interaction/presentation.js';
+import { initPresentation, enterPresentationMode, exitPresentationMode, togglePresentationMode, isInPresentationMode, enterReadOnlyMode, exitReadOnlyMode, toggleReadOnlyMode, isInReadOnlyMode } from './interaction/presentation.js';
 import { initParticipantOverlay, updateParticipantData } from './interaction/participantOverlay.js';
 
 // App state
@@ -103,6 +103,7 @@ export function init() {
   initPresentation(() => {
     // Callback when presentation mode exits
     updatePresentButton();
+    updateReadOnlyButton();
   });
 
   // Initialize participant overlay
@@ -1625,6 +1626,17 @@ function initToolbar() {
     presentBtn.addEventListener('click', () => {
       togglePresentationMode();
       updatePresentButton();
+      updateReadOnlyButton();
+    });
+  }
+
+  // Read-only (View) button
+  const readOnlyBtn = document.getElementById('readonly-btn');
+  if (readOnlyBtn) {
+    readOnlyBtn.addEventListener('click', () => {
+      toggleReadOnlyMode();
+      updatePresentButton();
+      updateReadOnlyButton();
     });
   }
 }
@@ -1635,12 +1647,28 @@ function initToolbar() {
 function updatePresentButton() {
   const presentBtn = document.getElementById('present-btn');
   if (presentBtn) {
-    if (isInPresentationMode()) {
+    if (isInPresentationMode() && !isInReadOnlyMode()) {
       presentBtn.classList.add('active');
       presentBtn.textContent = 'Exit';
     } else {
       presentBtn.classList.remove('active');
       presentBtn.textContent = 'Present';
+    }
+  }
+}
+
+/**
+ * Update Read-only button state
+ */
+function updateReadOnlyButton() {
+  const readOnlyBtn = document.getElementById('readonly-btn');
+  if (readOnlyBtn) {
+    if (isInReadOnlyMode()) {
+      readOnlyBtn.classList.add('active');
+      readOnlyBtn.textContent = 'Exit View';
+    } else {
+      readOnlyBtn.classList.remove('active');
+      readOnlyBtn.textContent = 'View';
     }
   }
 }

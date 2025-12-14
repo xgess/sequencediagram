@@ -369,3 +369,30 @@ body {
 .presentation-mode #participant-overlay {
   display: none !important;
 }
+
+/* Read-only Presentation Mode (BACKLOG-112) */
+.read-only-mode #diagram-pane {
+  cursor: grab;
+}
+
+.read-only-mode #diagram-pane:active {
+  cursor: grabbing;
+}
+
+/* Disable all interactive elements in read-only mode */
+.read-only-mode .participant,
+.read-only-mode .message,
+.read-only-mode .fragment,
+.read-only-mode .note,
+.read-only-mode .lifeline {
+  pointer-events: none;
+}
+
+/* Keep toolbar interactive */
+.read-only-mode #diagram-toolbar {
+  pointer-events: auto;
+}
+
+.read-only-mode #diagram-toolbar button {
+  pointer-events: auto;
+}
