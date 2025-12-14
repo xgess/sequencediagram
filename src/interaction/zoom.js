@@ -21,6 +21,11 @@ export function initZoom(diagram, zoomLevel) {
   document.getElementById('zoom-out').addEventListener('click', () => zoomOut());
   document.getElementById('zoom-reset').addEventListener('click', () => resetZoom());
 
+  const fitBtn = document.getElementById('zoom-fit');
+  if (fitBtn) {
+    fitBtn.addEventListener('click', () => shrinkToFit());
+  }
+
   // Keyboard shortcuts
   document.addEventListener('keydown', handleZoomKeydown);
 
@@ -117,4 +122,63 @@ export function getZoomLevel() {
 export function setZoomLevel(level) {
   currentZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, level));
   updateZoom();
+}
+
+/**
+ * Shrink to fit - scale diagram to fit available viewport (BACKLOG-114)
+ * Calculates the optimal zoom level to fit the entire diagram in the viewport
+ */
+export function shrinkToFit() {
+  if (!diagramEl) return;
+
+  // Get the SVG's actual content dimensions from its viewBox or bbox
+  const viewBox = diagramEl.getAttribute('viewBox');
+  if (!viewBox) {
+    console.warn('No viewBox on SVG, cannot calculate shrink-to-fit');
+    return;
+  }
+
+  const [, , svgWidth, svgHeight] = viewBox.split(' ').map(Number);
+  if (!svgWidth || !svgHeight) {
+    console.warn('Invalid viewBox dimensions');
+    return;
+  }
+
+  // Get the container dimensions (diagram pane)
+  const container = diagramEl.parentElement;
+  if (!container) return;
+
+  // Account for padding and header
+  const containerRect = container.getBoundingClientRect();
+  const headerEl = container.querySelector('#diagram-header');
+  const headerHeight = headerEl ? headerEl.getBoundingClientRect().height : 0;
+
+  // Available space (with some margin)
+  const availableWidth = containerRect.width - 32; // 16px padding each side
+  const availableHeight = containerRect.height - headerHeight - 32;
+
+  // Calculate scale factors for both dimensions
+  const scaleX = availableWidth / svgWidth;
+  const scaleY = availableHeight / svgHeight;
+
+  // Use the smaller scale to ensure the whole diagram fits
+  const fitScale = Math.min(scaleX, scaleY);
+
+  // Clamp to min/max zoom levels
+  const clampedScale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, fitScale));
+
+  // Apply the zoom
+  currentZoom = clampedScale;
+  updateZoom();
+
+  console.log(`Shrink to fit: ${Math.round(clampedScale * 100)}% (SVG: ${svgWidth}x${svgHeight}, container: ${Math.round(availableWidth)}x${Math.round(availableHeight)})`);
+}
+
+/**
+ * Check if current zoom is "fit" mode (approximately matches shrink-to-fit)
+ * @returns {boolean}
+ */
+export function isShrunkToFit() {
+  // This is a simple check - could be more sophisticated
+  return false; // Not tracking fit state for now
 }

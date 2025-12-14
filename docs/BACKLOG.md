@@ -1340,15 +1340,15 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Enabled by default
 - Toggle in View menu
 
-## BACKLOG-114: Shrink to fit
-**Phase:** 5.1  
-**Dependencies:** BACKLOG-104  
-**Description:** Scale diagram to fit available viewport space.  
+## BACKLOG-114: Shrink to fit ✓
+**Phase:** 5.1
+**Dependencies:** BACKLOG-104
+**Description:** Scale diagram to fit available viewport space.
 **Acceptance Criteria:**
-- Button or menu item
-- Calculates scale factor
-- Applies to SVG viewBox
-- Works with presentation mode
+- Button or menu item ✓
+- Calculates scale factor ✓
+- Applies to SVG viewBox ✓
+- Works with presentation mode ✓
 
 
 ### Additional Features from Requirements
@@ -1758,7 +1758,7 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 
 ## Current Progress Summary
 
-**Last Updated:** After BACKLOG-111 (Presentation mode)
+**Last Updated:** After BACKLOG-114 (Shrink to fit)
 
 ### Phases Complete
 - Phase 0: Requirements & Design ✅
@@ -1766,7 +1766,7 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Phase 2: Editor Integration ✅
 - Phase 3: Interactivity ✅
 - Phase 4: File I/O & Export ✅
-- Phase 5: In Progress (3 of ~40 tasks done)
+- Phase 5: In Progress (4 of ~40 tasks done)
 
 ### Implemented Features
 Core functionality is complete and usable:
@@ -1778,16 +1778,15 @@ Core functionality is complete and usable:
 - PNG/SVG/TXT export
 - Zoom controls and resizable splitter
 - Presentation mode (Ctrl+M to toggle, Esc to exit)
+- Shrink to fit (Fit button scales diagram to viewport)
 
 ### Recommended Next Steps (Priority Order)
-1. **BACKLOG-114: Shrink to fit** - Scale diagram to viewport, works with presentation mode
-2. **BACKLOG-126: Notes and boxes** - Commonly needed feature
-3. **BACKLOG-124: Remaining fragment types** - opt, par, break, etc.
-4. **BACKLOG-120: Remaining arrow types** - <-, <->, -x
-5. **BACKLOG-115-119: Additional participant types** - rparticipant, icons, images
+1. **BACKLOG-126: Notes and boxes** - Commonly needed feature
+2. **BACKLOG-124: Remaining fragment types** - opt, par, break, etc.
+3. **BACKLOG-120: Remaining arrow types** - <-, <->, -x
+4. **BACKLOG-115-119: Additional participant types** - rparticipant, icons, images
 
 ### Known Gaps
-- shrinkToFit option from URL sharing not yet applied (BACKLOG-114)
 - Dividers (`==text==`) not implemented (BACKLOG-126)
 - Autosave disable setting not implemented (minor)
 

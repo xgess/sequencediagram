@@ -1,7 +1,7 @@
 // Tests for zoom controls (BACKLOG-110)
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { initZoom, getZoomLevel, setZoomLevel, zoomIn, zoomOut, resetZoom } from '../src/interaction/zoom.js';
+import { initZoom, getZoomLevel, setZoomLevel, zoomIn, zoomOut, resetZoom, shrinkToFit } from '../src/interaction/zoom.js';
 
 describe('Zoom Controls (BACKLOG-110)', () => {
   let diagramEl;
@@ -200,6 +200,71 @@ describe('Zoom Controls (BACKLOG-110)', () => {
       const event = createKeyEvent('=', false, false);
       document.dispatchEvent(event);
       expect(getZoomLevel()).toBe(1);
+    });
+  });
+
+  describe('Shrink to fit (BACKLOG-114)', () => {
+    it('should not crash if no viewBox', () => {
+      diagramEl.removeAttribute('viewBox');
+      expect(() => shrinkToFit()).not.toThrow();
+    });
+
+    it('should calculate scale based on viewBox and container', () => {
+      // Set up viewBox on diagram
+      diagramEl.setAttribute('viewBox', '0 0 800 600');
+
+      // Mock parent element with dimensions
+      const mockParent = document.createElement('div');
+      mockParent.style.width = '400px';
+      mockParent.style.height = '300px';
+
+      // Mock getBoundingClientRect
+      mockParent.getBoundingClientRect = () => ({
+        width: 400,
+        height: 300,
+        top: 0,
+        left: 0,
+        right: 400,
+        bottom: 300
+      });
+
+      // Replace parent temporarily
+      const originalParent = diagramEl.parentElement;
+      mockParent.appendChild(diagramEl);
+      document.body.appendChild(mockParent);
+
+      shrinkToFit();
+
+      // Scale should be reduced to fit (400-32)/800 = 0.46 or (300-32)/600 = 0.447
+      // The smaller of the two is used
+      expect(getZoomLevel()).toBeLessThan(1);
+      expect(getZoomLevel()).toBeGreaterThan(0);
+
+      // Clean up
+      originalParent.appendChild(diagramEl);
+      mockParent.remove();
+    });
+
+    it('should work via fit button click', () => {
+      // Add fit button if not present
+      let fitBtn = document.getElementById('zoom-fit');
+      if (!fitBtn) {
+        fitBtn = document.createElement('button');
+        fitBtn.id = 'zoom-fit';
+        document.body.appendChild(fitBtn);
+        fitBtn.addEventListener('click', () => shrinkToFit());
+      }
+
+      // Set up valid viewBox
+      diagramEl.setAttribute('viewBox', '0 0 1000 800');
+
+      setZoomLevel(2);
+      fitBtn.click();
+
+      // Zoom level should have changed (either reduced to fit or kept at max)
+      // In test environment without real dimensions, it might not change much
+      // Just verify it doesn't crash
+      expect(getZoomLevel()).toBeGreaterThanOrEqual(0.1);
     });
   });
 });

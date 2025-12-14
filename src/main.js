@@ -40,7 +40,7 @@ import { showDiagramManager } from './interaction/diagramManager.js';
 import { startAutosave, recoverAutosave } from './storage/autosave.js';
 import { loadFromURL } from './storage/url.js';
 import { initSplitter } from './interaction/splitter.js';
-import { initZoom, getZoomLevel } from './interaction/zoom.js';
+import { initZoom, getZoomLevel, shrinkToFit as applyShrinkToFit } from './interaction/zoom.js';
 import { initPresentation, enterPresentationMode, exitPresentationMode, togglePresentationMode, isInPresentationMode } from './interaction/presentation.js';
 
 // App state
@@ -114,15 +114,19 @@ export function init() {
     if (text) {
       loadTextIntoEditor(text);
     }
-    // Apply presentation mode if requested
-    if (presentation) {
-      // Small delay to let diagram render first
+    // Apply presentation mode and/or shrink to fit if requested
+    // Small delay to let diagram render first
+    if (presentation || shrinkToFit) {
       setTimeout(() => {
-        enterPresentationMode();
-        updatePresentButton();
+        if (shrinkToFit) {
+          applyShrinkToFit();
+        }
+        if (presentation) {
+          enterPresentationMode();
+          updatePresentButton();
+        }
       }, 100);
     }
-    // TODO: Implement shrinkToFit mode (BACKLOG-114)
   } else {
     // If no URL data, check for autosave
     const autosavedText = recoverAutosave();
