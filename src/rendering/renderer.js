@@ -29,7 +29,12 @@ export function render(ast) {
   svg.appendChild(defs);
 
   // Create container groups (order matters for z-index)
-  // Fragments go first (behind everything else but after lifelines)
+  // Frame goes first (behind everything)
+  const frameGroup = document.createElementNS(SVG_NS, 'g');
+  frameGroup.setAttribute('id', 'frame');
+  svg.appendChild(frameGroup);
+
+  // Fragments go next (behind everything else but after frame)
   const fragmentsGroup = document.createElementNS(SVG_NS, 'g');
   fragmentsGroup.setAttribute('id', 'fragments');
   svg.appendChild(fragmentsGroup);
@@ -70,6 +75,7 @@ export function render(ast) {
   const dividers = ast.filter(node => node.type === 'divider');
   const errors = ast.filter(node => node.type === 'error');
   const titleDirective = ast.find(node => node.type === 'directive' && node.directiveType === 'title');
+  const frameDirective = ast.find(node => node.type === 'directive' && node.directiveType === 'frame');
 
   // Build lifeline styles map from lifelinestyle directives
   const lifelineStyles = buildLifelineStyles(ast);
@@ -164,6 +170,12 @@ export function render(ast) {
     titleGroup.appendChild(titleEl);
   }
 
+  // Render frame if present
+  if (frameDirective) {
+    const frameEl = renderFrame(frameDirective, width, height);
+    frameGroup.appendChild(frameEl);
+  }
+
   svg.setAttribute('width', width);
   svg.setAttribute('height', height);
   svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
@@ -189,6 +201,66 @@ function renderTitle(directive, diagramWidth) {
   text.setAttribute('font-weight', 'bold');
   text.textContent = directive.value;
   return text;
+}
+
+/**
+ * Render a frame around the entire diagram
+ * @param {Object} directive - Frame directive node
+ * @param {number} width - Diagram width
+ * @param {number} height - Diagram height
+ * @returns {SVGGElement} Frame group element
+ */
+function renderFrame(directive, width, height) {
+  const group = document.createElementNS(SVG_NS, 'g');
+  group.setAttribute('class', 'diagram-frame');
+  group.setAttribute('data-node-id', directive.id);
+
+  const style = directive.style || {};
+  const FRAME_PADDING = 10;
+  const LABEL_HEIGHT = 20;
+  const LABEL_PADDING = 8;
+
+  // Create background rect
+  const rect = document.createElementNS(SVG_NS, 'rect');
+  rect.setAttribute('x', FRAME_PADDING);
+  rect.setAttribute('y', FRAME_PADDING);
+  rect.setAttribute('width', width - FRAME_PADDING * 2);
+  rect.setAttribute('height', height - FRAME_PADDING * 2);
+  rect.setAttribute('fill', style.fill || 'none');
+  rect.setAttribute('stroke', style.border || '#333');
+  rect.setAttribute('stroke-width', style.borderWidth || 2);
+
+  if (style.borderStyle === 'dashed') {
+    rect.setAttribute('stroke-dasharray', '5,5');
+  } else if (style.borderStyle === 'dotted') {
+    rect.setAttribute('stroke-dasharray', '2,2');
+  }
+
+  group.appendChild(rect);
+
+  // Create label box if there's a title
+  if (directive.value) {
+    const labelBg = document.createElementNS(SVG_NS, 'rect');
+    labelBg.setAttribute('x', FRAME_PADDING);
+    labelBg.setAttribute('y', FRAME_PADDING);
+    labelBg.setAttribute('width', directive.value.length * 8 + LABEL_PADDING * 2);
+    labelBg.setAttribute('height', LABEL_HEIGHT);
+    labelBg.setAttribute('fill', style.operatorColor || '#eee');
+    labelBg.setAttribute('stroke', style.border || '#333');
+    labelBg.setAttribute('stroke-width', style.borderWidth || 2);
+    group.appendChild(labelBg);
+
+    const text = document.createElementNS(SVG_NS, 'text');
+    text.setAttribute('x', FRAME_PADDING + LABEL_PADDING);
+    text.setAttribute('y', FRAME_PADDING + LABEL_HEIGHT - 5);
+    text.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, sans-serif');
+    text.setAttribute('font-size', '12');
+    text.setAttribute('font-weight', 'bold');
+    text.textContent = directive.value;
+    group.appendChild(text);
+  }
+
+  return group;
 }
 
 /**

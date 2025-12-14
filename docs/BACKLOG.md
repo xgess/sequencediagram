@@ -1584,15 +1584,17 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Serialize directives ✅
 - 15 unit tests verify linear/parallel functionality ✅
 
-## BACKLOG-135: Frame directive
-**Phase:** 5.7  
-**Dependencies:** None  
-**Description:** Add frame around entire diagram.  
+## BACKLOG-135: Frame directive ✅
+**Phase:** 5.7
+**Dependencies:** None
+**Status:** Complete
+**Description:** Add frame around entire diagram.
 **Acceptance Criteria:**
-- Parse: `frame Title`
-- Parse styling: `frame#fill #border;width;style Title`
-- Render frame as border rect around diagram with label
-- Serialize correctly
+- Parse: `frame Title` ✅
+- Parse styling: `frame#operatorColor #fill #border;width;style Title` ✅
+- Render frame as border rect around diagram with label ✅
+- Serialize correctly ✅
+- 19 unit tests verify frame functionality ✅
 
 ## BACKLOG-136: Participant groups
 **Phase:** 5.7  
@@ -1778,7 +1780,7 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 
 ## Current Progress Summary
 
-**Last Updated:** After BACKLOG-134 (Linear and parallel directives)
+**Last Updated:** After BACKLOG-135 (Frame directive)
 
 ### Phases Complete
 - Phase 0: Requirements & Design ✅
@@ -1786,7 +1788,7 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Phase 2: Editor Integration ✅
 - Phase 3: Interactivity ✅
 - Phase 4: File I/O & Export ✅
-- Phase 5: In Progress (16 of ~40 tasks done)
+- Phase 5: In Progress (17 of ~40 tasks done)
 
 ### Implemented Features
 Core functionality is complete and usable:
@@ -1811,6 +1813,7 @@ Core functionality is complete and usable:
 - Spacing controls (space, participantspacing)
 - Lifeline styling (color, width, solid/dashed/dotted)
 - Linear and parallel message positioning
+- Frame directive (border around diagram with label)
 
 ### Recommended Next Steps (Priority Order)
 1. **BACKLOG-117-119: Icon participant types** - Font Awesome, Material Design Icons, custom images (requires vendoring)

@@ -229,6 +229,27 @@ function parseDirective(line, lineNumber) {
     };
   }
 
+  // Match frame directive: frame Title or frame#operatorColor #fill #border;width;style Title
+  const frameMatch = line.match(/^frame(#[^\s#]+)?(?:\s+(#[^\s;]+))?(?:\s+(#[^\s;]+)(?:;(\d+))?(?:;(solid|dashed|dotted))?)?(?:\s+(.+))?$/);
+  if (frameMatch) {
+    const style = {};
+    if (frameMatch[1]) style.operatorColor = frameMatch[1];
+    if (frameMatch[2]) style.fill = frameMatch[2];
+    if (frameMatch[3]) style.border = frameMatch[3];
+    if (frameMatch[4]) style.borderWidth = parseInt(frameMatch[4], 10);
+    if (frameMatch[5]) style.borderStyle = frameMatch[5];
+
+    return {
+      id: generateId('directive'),
+      type: 'directive',
+      directiveType: 'frame',
+      value: frameMatch[6] || '',
+      style: Object.keys(style).length > 0 ? style : null,
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
+  }
+
   return null;
 }
 

@@ -288,6 +288,31 @@ function serializeDirective(node) {
   if (node.directiveType === 'parallel') {
     return node.value ? 'parallel' : 'parallel off';
   }
+  if (node.directiveType === 'frame') {
+    let output = 'frame';
+    const style = node.style || {};
+    if (style.operatorColor) {
+      output += style.operatorColor;
+    }
+    if (style.fill) {
+      output += ' ' + style.fill;
+    }
+    if (style.border) {
+      let borderPart = style.border;
+      if (style.borderWidth !== undefined) {
+        borderPart += ';' + style.borderWidth;
+      }
+      if (style.borderStyle) {
+        if (style.borderWidth === undefined) borderPart += ';';
+        borderPart += ';' + style.borderStyle;
+      }
+      output += ' ' + borderPart;
+    }
+    if (node.value) {
+      output += ' ' + node.value;
+    }
+    return output;
+  }
   return '';
 }
 
