@@ -235,6 +235,18 @@ function parseDirective(line, lineNumber) {
     };
   }
 
+  // Match bottomparticipants directive
+  if (line === 'bottomparticipants') {
+    return {
+      id: generateId('directive'),
+      type: 'directive',
+      directiveType: 'bottomparticipants',
+      value: true,
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
+  }
+
   // Match frame directive: frame Title or frame#operatorColor #fill #border;width;style Title
   const frameMatch = line.match(/^frame(#[^\s#]+)?(?:\s+(#[^\s;]+))?(?:\s+(#[^\s;]+)(?:;(\d+))?(?:;(solid|dashed|dotted))?)?(?:\s+(.+))?$/);
   if (frameMatch) {

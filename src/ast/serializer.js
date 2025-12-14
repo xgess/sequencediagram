@@ -313,6 +313,9 @@ function serializeDirective(node) {
   if (node.directiveType === 'parallel') {
     return node.value ? 'parallel' : 'parallel off';
   }
+  if (node.directiveType === 'bottomparticipants') {
+    return 'bottomparticipants';
+  }
   if (node.directiveType === 'frame') {
     let output = 'frame';
     const style = node.style || {};

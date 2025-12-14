@@ -77,6 +77,7 @@ export function render(ast) {
   const errors = ast.filter(node => node.type === 'error');
   const titleDirective = ast.find(node => node.type === 'directive' && node.directiveType === 'title');
   const frameDirective = ast.find(node => node.type === 'directive' && node.directiveType === 'frame');
+  const bottomParticipantsDirective = ast.find(node => node.type === 'directive' && node.directiveType === 'bottomparticipants');
 
   // Build lifeline styles map from lifelinestyle directives
   const lifelineStyles = buildLifelineStyles(ast);
@@ -101,17 +102,20 @@ export function render(ast) {
     }
   });
 
+  // Calculate lifeline end position based on bottomparticipants directive
+  const lifelineEndY = bottomParticipantsDirective ? height - 70 : height - 20;
+
   // Render lifelines (behind messages but above fragments)
   participants.forEach(participant => {
     const layoutInfo = layout.get(participant.id);
     if (layoutInfo) {
       const style = lifelineStyles.get(participant.alias) || lifelineStyles.get(null) || {};
-      const lifeline = renderLifeline(participant, layoutInfo, height, style);
+      const lifeline = renderLifeline(participant, layoutInfo, lifelineEndY, style);
       lifelinesGroup.appendChild(lifeline);
     }
   });
 
-  // Render participants
+  // Render participants (top)
   participants.forEach(participant => {
     const layoutInfo = layout.get(participant.id);
     if (layoutInfo) {
@@ -119,6 +123,23 @@ export function render(ast) {
       participantsGroup.appendChild(participantEl);
     }
   });
+
+  // Render bottom participants if directive present
+  if (bottomParticipantsDirective) {
+    participants.forEach(participant => {
+      const layoutInfo = layout.get(participant.id);
+      if (layoutInfo) {
+        // Create bottom layout by adjusting Y position
+        const bottomLayoutInfo = {
+          ...layoutInfo,
+          y: height - layoutInfo.height - 10
+        };
+        const participantEl = renderParticipant(participant, bottomLayoutInfo);
+        participantEl.classList.add('bottom-participant');
+        participantsGroup.appendChild(participantEl);
+      }
+    });
+  }
 
   // Calculate autonumber for each message based on directives
   const messageNumbers = calculateMessageNumbers(ast);
@@ -342,18 +363,18 @@ function renderParticipantGroup(group, participantLayout, height) {
  * Render a lifeline for a participant
  * @param {Object} participant - Participant AST node
  * @param {Object} layoutInfo - Layout info {x, y, width, height, centerX}
- * @param {number} totalHeight - Total diagram height
+ * @param {number} endY - End Y position of the lifeline
  * @param {Object} style - Lifeline style {color, width, lineStyle}
  * @returns {SVGLineElement} Lifeline element
  */
-function renderLifeline(participant, layoutInfo, totalHeight, style = {}) {
+function renderLifeline(participant, layoutInfo, endY, style = {}) {
   const line = document.createElementNS(SVG_NS, 'line');
   line.setAttribute('class', 'lifeline');
   line.setAttribute('data-participant', participant.alias);
   line.setAttribute('x1', layoutInfo.centerX);
   line.setAttribute('y1', layoutInfo.y + layoutInfo.height);
   line.setAttribute('x2', layoutInfo.centerX);
-  line.setAttribute('y2', totalHeight - 20);
+  line.setAttribute('y2', endY);
 
   // Apply styling (with defaults)
   line.setAttribute('stroke', style.color || '#ccc');
