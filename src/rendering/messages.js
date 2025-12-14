@@ -7,9 +7,10 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
  * Render a message node to SVG
  * @param {Object} node - Message AST node
  * @param {Object} layoutInfo - Position info {y, fromX, toX, delay}
+ * @param {number|null} messageNumber - Autonumber value or null
  * @returns {SVGGElement} Rendered message group
  */
-export function renderMessage(node, layoutInfo) {
+export function renderMessage(node, layoutInfo, messageNumber = null) {
   const { y, fromX, toX, delay } = layoutInfo;
   const arrowType = node.arrowType;
 
@@ -72,7 +73,7 @@ export function renderMessage(node, layoutInfo) {
   group.appendChild(line);
 
   // Create label text
-  if (node.label) {
+  if (node.label || messageNumber !== null) {
     const text = document.createElementNS(SVG_NS, 'text');
     const midX = (fromX + toX) / 2;
     // Position label at midpoint of the line (accounts for slope)
@@ -82,7 +83,14 @@ export function renderMessage(node, layoutInfo) {
     text.setAttribute('text-anchor', 'middle');
     text.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, sans-serif');
     text.setAttribute('font-size', '11');
-    text.textContent = node.label;
+
+    // Build label with optional number prefix
+    let labelText = '';
+    if (messageNumber !== null) {
+      labelText = `${messageNumber}. `;
+    }
+    labelText += node.label || '';
+    text.textContent = labelText;
     group.appendChild(text);
   }
 

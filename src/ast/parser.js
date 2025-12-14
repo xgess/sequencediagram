@@ -106,7 +106,7 @@ function parseAt(lines, lineIndex, ast) {
 
 /**
  * Parse a directive line
- * Syntax: title Text, entryspacing N
+ * Syntax: title Text, entryspacing N, autonumber N, autonumber off
  * @param {string} line - Trimmed source line
  * @param {number} lineNumber - 1-indexed line number
  * @returns {Object|null} Directive AST node or null
@@ -133,6 +133,20 @@ function parseDirective(line, lineNumber) {
       type: 'directive',
       directiveType: 'entryspacing',
       value: parseFloat(entryspacingMatch[1]),
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
+  }
+
+  // Match autonumber directive: autonumber N or autonumber off
+  const autonumberMatch = line.match(/^autonumber\s+(off|\d+)$/);
+  if (autonumberMatch) {
+    const value = autonumberMatch[1] === 'off' ? null : parseInt(autonumberMatch[1], 10);
+    return {
+      id: generateId('directive'),
+      type: 'directive',
+      directiveType: 'autonumber',
+      value,
       sourceLineStart: lineNumber,
       sourceLineEnd: lineNumber
     };

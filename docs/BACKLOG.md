@@ -1553,16 +1553,19 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Apply styling to lifeline rendering
 - Serialize correctly
 
-## BACKLOG-133: Autonumbering
-**Phase:** 5.7  
-**Dependencies:** None  
-**Description:** Add autonumber directive for message numbering.  
+## BACKLOG-133: Autonumbering ✅
+**Phase:** 5.7
+**Dependencies:** None
+**Status:** Complete
+**Description:** Add autonumber directive for message numbering.
 **Acceptance Criteria:**
-- Parse: `autonumber 1`, `autonumber off`
-- Render numbers next to message labels
-- Increment for each message
-- Toggle off when directive encountered
-- Serialize directive
+- Parse: `autonumber 1`, `autonumber off` ✅
+- Render numbers next to message labels ✅
+- Increment for each message ✅
+- Toggle off when directive encountered ✅
+- Serialize directive ✅
+- Works with messages inside fragments ✅
+- 12 unit tests verify autonumbering ✅
 
 ## BACKLOG-134: Linear and parallel directives
 **Phase:** 5.7  

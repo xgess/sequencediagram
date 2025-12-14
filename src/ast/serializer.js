@@ -251,6 +251,9 @@ function serializeDirective(node) {
   if (node.directiveType === 'entryspacing') {
     return `entryspacing ${node.value}`;
   }
+  if (node.directiveType === 'autonumber') {
+    return node.value === null ? 'autonumber off' : `autonumber ${node.value}`;
+  }
   return '';
 }
 

@@ -101,11 +101,15 @@ export function render(ast) {
     }
   });
 
+  // Calculate autonumber for each message based on directives
+  const messageNumbers = calculateMessageNumbers(ast);
+
   // Render messages
   messages.forEach(message => {
     const layoutInfo = layout.get(message.id);
     if (layoutInfo) {
-      const messageEl = renderMessage(message, layoutInfo);
+      const messageNumber = messageNumbers.get(message.id);
+      const messageEl = renderMessage(message, layoutInfo, messageNumber);
       messagesGroup.appendChild(messageEl);
     }
   });
@@ -202,6 +206,93 @@ function renderLifeline(participant, layoutInfo, totalHeight) {
   line.setAttribute('stroke-width', '1');
   line.setAttribute('stroke-dasharray', '5,5');
   return line;
+}
+
+/**
+ * Calculate autonumber for each message based on directives
+ * @param {Array} ast - AST nodes
+ * @returns {Map} message ID -> number (or null if not numbered)
+ */
+function calculateMessageNumbers(ast) {
+  const messageNumbers = new Map();
+  let currentNumber = null; // null means autonumber is off
+
+  // Process nodes in order to track autonumber state
+  for (const node of ast) {
+    if (node.type === 'directive' && node.directiveType === 'autonumber') {
+      currentNumber = node.value; // null for off, number for starting value
+    } else if (node.type === 'message' && currentNumber !== null) {
+      messageNumbers.set(node.id, currentNumber);
+      currentNumber++;
+    } else if (node.type === 'fragment') {
+      // Process messages inside fragments
+      processFragmentNumbers(node, ast, messageNumbers, { current: currentNumber });
+      // Update currentNumber based on what was used
+      const lastEntry = getLastFragmentMessage(node, ast);
+      if (lastEntry && messageNumbers.has(lastEntry)) {
+        currentNumber = messageNumbers.get(lastEntry) + 1;
+      }
+    }
+  }
+
+  return messageNumbers;
+}
+
+/**
+ * Process autonumbers for messages inside a fragment
+ */
+function processFragmentNumbers(fragment, ast, messageNumbers, state) {
+  const nodeById = new Map();
+  for (const n of ast) nodeById.set(n.id, n);
+
+  const processEntries = (entries) => {
+    for (const entryId of entries) {
+      const entry = nodeById.get(entryId);
+      if (!entry) continue;
+
+      if (entry.type === 'message' && state.current !== null) {
+        messageNumbers.set(entry.id, state.current);
+        state.current++;
+      } else if (entry.type === 'fragment') {
+        processFragmentNumbers(entry, ast, messageNumbers, state);
+      }
+    }
+  };
+
+  processEntries(fragment.entries);
+  for (const elseClause of fragment.elseClauses) {
+    processEntries(elseClause.entries);
+  }
+}
+
+/**
+ * Get the last message ID in a fragment
+ */
+function getLastFragmentMessage(fragment, ast) {
+  const nodeById = new Map();
+  for (const n of ast) nodeById.set(n.id, n);
+
+  let lastMessage = null;
+
+  const processEntries = (entries) => {
+    for (const entryId of entries) {
+      const entry = nodeById.get(entryId);
+      if (!entry) continue;
+      if (entry.type === 'message') {
+        lastMessage = entry.id;
+      } else if (entry.type === 'fragment') {
+        const nested = getLastFragmentMessage(entry, ast);
+        if (nested) lastMessage = nested;
+      }
+    }
+  };
+
+  processEntries(fragment.entries);
+  for (const elseClause of fragment.elseClauses) {
+    processEntries(elseClause.entries);
+  }
+
+  return lastMessage;
 }
 
 /**
