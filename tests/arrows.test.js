@@ -213,6 +213,118 @@ describe('Arrow Types (BACKLOG-120)', () => {
   });
 });
 
+describe('Message Styling (BACKLOG-123)', () => {
+
+  describe('Parsing styled messages', () => {
+    it('should parse message with color', () => {
+      const ast = parse('participant A\nparticipant B\nA-[#red]>B:styled');
+      const msg = ast.find(n => n.type === 'message');
+      expect(msg.style).toBeDefined();
+      expect(msg.style.color).toBe('#red');
+    });
+
+    it('should parse message with width', () => {
+      const ast = parse('participant A\nparticipant B\nA-[;3]>B:thick');
+      const msg = ast.find(n => n.type === 'message');
+      expect(msg.style).toBeDefined();
+      expect(msg.style.width).toBe(3);
+    });
+
+    it('should parse message with color and width', () => {
+      const ast = parse('participant A\nparticipant B\nA-[#blue;4]>B:styled');
+      const msg = ast.find(n => n.type === 'message');
+      expect(msg.style.color).toBe('#blue');
+      expect(msg.style.width).toBe(4);
+    });
+
+    it('should parse message with named style', () => {
+      const ast = parse('participant A\nparticipant B\nA-[##myStyle]>B:styled');
+      const msg = ast.find(n => n.type === 'message');
+      expect(msg.style.styleName).toBe('myStyle');
+    });
+
+    it('should parse async styled message', () => {
+      const ast = parse('participant A\nparticipant B\nA-[#green]>>B:async');
+      const msg = ast.find(n => n.type === 'message');
+      expect(msg.arrowType).toBe('->>');
+      expect(msg.style.color).toBe('#green');
+    });
+
+    it('should parse dashed styled message', () => {
+      const ast = parse('participant A\nparticipant B\nA--[#yellow;2]>B:return');
+      const msg = ast.find(n => n.type === 'message');
+      expect(msg.arrowType).toBe('-->');
+      expect(msg.style.color).toBe('#yellow');
+      expect(msg.style.width).toBe(2);
+    });
+  });
+
+  describe('Serialization', () => {
+    it('should serialize styled message with color', () => {
+      const ast = parse('participant A\nparticipant B\nA-[#red]>B:test');
+      const output = serialize(ast);
+      expect(output).toContain('A-[#red]>B:test');
+    });
+
+    it('should serialize styled message with width', () => {
+      const ast = parse('participant A\nparticipant B\nA-[;3]>B:test');
+      const output = serialize(ast);
+      expect(output).toContain('A-[;3]>B:test');
+    });
+
+    it('should serialize styled message with color and width', () => {
+      const ast = parse('participant A\nparticipant B\nA-[#blue;4]>B:test');
+      const output = serialize(ast);
+      expect(output).toContain('A-[#blue;4]>B:test');
+    });
+
+    it('should serialize named style reference', () => {
+      const ast = parse('participant A\nparticipant B\nA-[##myStyle]>B:test');
+      const output = serialize(ast);
+      expect(output).toContain('A-[##myStyle]>B:test');
+    });
+  });
+
+  describe('Rendering', () => {
+    it('should render message with custom color', () => {
+      const ast = parse('participant A\nparticipant B\nA-[#red]>B:test');
+      const svg = render(ast);
+      const line = svg.querySelector('.message line');
+      expect(line.getAttribute('stroke')).toBe('#red');
+    });
+
+    it('should render message with custom width', () => {
+      const ast = parse('participant A\nparticipant B\nA-[;4]>B:test');
+      const svg = render(ast);
+      const line = svg.querySelector('.message line');
+      expect(line.getAttribute('stroke-width')).toBe('4');
+    });
+
+    it('should render message with color and width', () => {
+      const ast = parse('participant A\nparticipant B\nA-[#green;3]>B:test');
+      const svg = render(ast);
+      const line = svg.querySelector('.message line');
+      expect(line.getAttribute('stroke')).toBe('#green');
+      expect(line.getAttribute('stroke-width')).toBe('3');
+    });
+  });
+
+  describe('Round-trip', () => {
+    it('should round-trip styled message', () => {
+      const input = 'participant A\nparticipant B\nA-[#red;3]>B:styled';
+      const ast1 = parse(input);
+      const output = serialize(ast1);
+      const ast2 = parse(output);
+
+      const msg1 = ast1.find(n => n.type === 'message');
+      const msg2 = ast2.find(n => n.type === 'message');
+
+      expect(msg2.style.color).toBe(msg1.style.color);
+      expect(msg2.style.width).toBe(msg1.style.width);
+    });
+  });
+});
+
 describe('Boundary Messages (BACKLOG-122)', () => {
 
   describe('Parsing boundary messages', () => {

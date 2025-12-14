@@ -261,7 +261,45 @@ function serializeDirective(node) {
  */
 function serializeMessage(node) {
   const delay = node.delay ? `(${node.delay})` : '';
+
+  // If message has styling, use bracket syntax
+  if (node.style && (node.style.color || node.style.width || node.style.styleName)) {
+    const styleStr = serializeMessageStyle(node.style);
+    // Insert style brackets between dashes and arrow head
+    // e.g., -> becomes -[#red;3]>
+    const arrow = node.arrowType;
+    let dashes, head;
+    if (arrow.startsWith('--')) {
+      dashes = '--';
+      head = arrow.slice(2);
+    } else {
+      dashes = '-';
+      head = arrow.slice(1);
+    }
+    return `${node.from}${dashes}[${styleStr}]${head}${delay}${node.to}:${node.label}`;
+  }
+
   return `${node.from}${node.arrowType}${delay}${node.to}:${node.label}`;
+}
+
+/**
+ * Serialize message style to bracket format
+ * @param {Object} style - Style object
+ * @returns {string} Style string
+ */
+function serializeMessageStyle(style) {
+  if (style.styleName) {
+    return `##${style.styleName}`;
+  }
+
+  let result = '';
+  if (style.color) {
+    result += style.color;
+  }
+  if (style.width !== undefined) {
+    result += `;${style.width}`;
+  }
+  return result;
 }
 
 /**

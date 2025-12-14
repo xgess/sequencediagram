@@ -42,8 +42,11 @@ export function renderMessage(node, layoutInfo) {
   line.setAttribute('y1', startY);
   line.setAttribute('x2', lineToX);
   line.setAttribute('y2', endY);
-  line.setAttribute('stroke', 'black');
-  line.setAttribute('stroke-width', '1');
+
+  // Apply styling (color and width)
+  const style = node.style || {};
+  line.setAttribute('stroke', style.color || 'black');
+  line.setAttribute('stroke-width', style.width !== undefined ? style.width : 1);
 
   // Apply arrow marker based on arrow type
   if (isLost) {

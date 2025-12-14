@@ -1441,15 +1441,17 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Serialize correctly ✅
 - 11 unit tests verify boundary messages ✅
 
-## BACKLOG-123: Message styling with brackets
-**Phase:** 5.3  
-**Dependencies:** BACKLOG-114  
-**Description:** Add v9.16.0+ bracket syntax for message styling.  
+## BACKLOG-123: Message styling with brackets ✅
+**Phase:** 5.3
+**Dependencies:** BACKLOG-114
+**Status:** Complete
+**Description:** Add v9.16.0+ bracket syntax for message styling.
 **Acceptance Criteria:**
-- Parse A-[#red;3]>B syntax
-- Parse A-[##myStyle]>B (named style reference)
-- Apply styling to message line
-- Serialize with brackets
+- Parse A-[#red;3]>B syntax ✅
+- Parse A-[##myStyle]>B (named style reference) ✅
+- Apply styling to message line ✅
+- Serialize with brackets ✅
+- 14 unit tests verify message styling ✅
 
 ## BACKLOG-124: Remaining fragment types (13 types) ✓
 **Phase:** 5.4

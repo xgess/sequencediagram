@@ -514,14 +514,37 @@ function parseParticipantStyle(styleStr) {
  * Arrow types: -> ->> --> -->> <- <->> <-- <-->> <-> <->> -x --x
  * Delay syntax: From->(N)To:Label where N is delay units
  * Boundary syntax: [->A, A->], [<-A, A<-] for edge messages
+ * Styling syntax: A-[#color;width]>B or A-[##styleName]>B
  * @param {string} line - Trimmed source line
  * @param {number} lineNumber - 1-indexed line number
  * @returns {Object|null} Message AST node or null
  */
 function parseMessage(line, lineNumber) {
-  // Try boundary message first: [->A or A->]
-  // Incoming from left: [->A:label or [<-A:label
-  // Outgoing to right: A->]:label or A<-]:label
+  // Try styled message first: A-[#color;width]>B or A-[##style]>B
+  // The bracket style goes between the dash(es) and the arrow head
+  const styledMatch = line.match(/^(\[|[^\s\-<\[]+)(-{1,2})\[([^\]]+)\](>>?|x)(\(\d+\))?(\]|[^\s:\]]+):(.*)$/);
+  if (styledMatch) {
+    const [, from, dashes, styleStr, arrowHead, delayStr, to, label] = styledMatch;
+    const delay = delayStr ? parseInt(delayStr.slice(1, -1), 10) : null;
+    const arrowType = dashes + '>' + (arrowHead === '>>' ? '>' : arrowHead === 'x' ? '' : '');
+    // Reconstruct proper arrow: - + > or >> or x
+    const actualArrow = dashes + (arrowHead === 'x' ? 'x' : arrowHead);
+
+    return {
+      id: generateId('message'),
+      type: 'message',
+      from,
+      to,
+      arrowType: actualArrow,
+      delay,
+      label: label.trim(),
+      style: parseMessageStyle(styleStr),
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
+  }
+
+  // Try boundary/regular message: [->A or A->]
   const boundaryMatch = line.match(/^(\[|[^\s\-<\[]+)(<-->>|<->>|<-->|<->|<--|<-|-->>|-->|->>|->|--x|-x)(\(\d+\))?(\]|[^\s:\]]+):(.*)$/);
   if (boundaryMatch) {
     const [, from, arrowType, delayStr, to, label] = boundaryMatch;
@@ -542,6 +565,35 @@ function parseMessage(line, lineNumber) {
   }
 
   return null;
+}
+
+/**
+ * Parse message styling string
+ * Syntax: #color;width or ##styleName
+ * @param {string} styleStr - Style string inside brackets
+ * @returns {Object} Style object
+ */
+function parseMessageStyle(styleStr) {
+  const style = {};
+
+  // Check for named style reference: ##styleName
+  if (styleStr.startsWith('##')) {
+    style.styleName = styleStr.slice(2);
+    return style;
+  }
+
+  // Parse inline style: #color;width
+  const match = styleStr.match(/^(#[^\s;]+)?;?(\d+)?$/);
+  if (match) {
+    if (match[1]) {
+      style.color = match[1];
+    }
+    if (match[2]) {
+      style.width = parseInt(match[2], 10);
+    }
+  }
+
+  return Object.keys(style).length > 0 ? style : null;
 }
 
 /**
