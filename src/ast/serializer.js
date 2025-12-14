@@ -28,11 +28,34 @@ export function serialize(ast) {
     }
   }
 
+  // Track which participants are inside participant groups (so we skip them at top level)
+  const groupedParticipants = new Set();
+  const collectGroupedParticipants = (groups) => {
+    for (const node of groups) {
+      if (node.type === 'participantgroup') {
+        for (const alias of node.participants) {
+          groupedParticipants.add(alias);
+        }
+        // Collect from nested groups
+        for (const nestedId of node.nestedGroups) {
+          const nested = nodeById.get(nestedId);
+          if (nested) {
+            collectGroupedParticipants([nested]);
+          }
+        }
+      }
+    }
+  };
+  collectGroupedParticipants(ast);
+
   const lines = [];
 
   for (const node of ast) {
     // Skip entries that are inside fragments (they'll be serialized by the fragment)
     if (fragmentEntries.has(node.id)) continue;
+
+    // Skip participants that are inside groups (they'll be serialized by the group)
+    if (node.type === 'participant' && groupedParticipants.has(node.alias)) continue;
 
     const serialized = serializeNode(node, nodeById, 0);
     if (serialized !== null) {
@@ -58,6 +81,8 @@ function serializeNode(node, nodeById, indent) {
       return indentStr(indent) + serializeMessage(node);
     case 'fragment':
       return serializeFragment(node, nodeById, indent);
+    case 'participantgroup':
+      return serializeParticipantGroup(node, nodeById, indent);
     case 'note':
       return indentStr(indent) + serializeNote(node);
     case 'divider':
@@ -425,6 +450,58 @@ function serializeFragment(node, nodeById, indent) {
           lines.push(serialized);
         }
       }
+    }
+  }
+
+  // Closing line
+  lines.push(prefix + 'end');
+
+  return lines.join('\n');
+}
+
+/**
+ * Serialize a participant group
+ * Syntax: participantgroup [#color] [Label]
+ * @param {Object} node - ParticipantGroup AST node
+ * @param {Map} nodeById - Node lookup map
+ * @param {number} indent - Current indentation level
+ * @returns {string} Serialized participant group
+ */
+function serializeParticipantGroup(node, nodeById, indent) {
+  const lines = [];
+  const prefix = indentStr(indent);
+
+  // Opening line
+  let opening = 'participantgroup';
+  if (node.color) {
+    opening += ' ' + node.color;
+  }
+  if (node.label) {
+    opening += ' ' + node.label;
+  }
+  lines.push(prefix + opening);
+
+  // Serialize participants in the group
+  // We need to find the participant nodes by their aliases
+  for (const alias of node.participants) {
+    // Find the participant node in the ast by alias
+    for (const [id, astNode] of nodeById.entries()) {
+      if (astNode.type === 'participant' && astNode.alias === alias) {
+        const serialized = serializeNode(astNode, nodeById, indent + 1);
+        if (serialized !== null) {
+          lines.push(serialized);
+        }
+        break;
+      }
+    }
+  }
+
+  // Serialize nested groups
+  for (const nestedGroupId of node.nestedGroups) {
+    const nestedGroup = nodeById.get(nestedGroupId);
+    if (nestedGroup) {
+      const serialized = serializeParticipantGroup(nestedGroup, nodeById, indent + 1);
+      lines.push(serialized);
     }
   }
 

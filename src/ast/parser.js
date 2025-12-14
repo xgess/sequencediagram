@@ -78,6 +78,12 @@ function parseAt(lines, lineIndex, ast) {
     return { nextLine: result.endLine + 1 };
   }
 
+  // Try parsing as participant group
+  if (isParticipantGroupStart(trimmed)) {
+    const result = parseParticipantGroup(lines, lineIndex, ast);
+    return { nextLine: result.endLine + 1 };
+  }
+
   // Try parsing as participant
   const participant = parseParticipant(trimmed, lineNumber);
   if (participant) {
@@ -280,6 +286,110 @@ function parseComment(line, lineNumber) {
  */
 function isFragmentStart(trimmed) {
   return /^(alt|loop|opt|par|break|critical|ref|seq|strict|neg|ignore|consider|assert|region|group)\b/.test(trimmed);
+}
+
+/**
+ * Check if a line starts a participant group
+ * @param {string} trimmed - Trimmed line
+ * @returns {boolean}
+ */
+function isParticipantGroupStart(trimmed) {
+  return /^participantgroup\b/.test(trimmed);
+}
+
+/**
+ * Parse a participant group
+ * Syntax: participantgroup #color Label
+ * @param {string[]} lines - All lines
+ * @param {number} startLine - Starting line index (0-indexed)
+ * @param {Array} ast - AST array to append child nodes to
+ * @returns {{endLine: number}} Ending line index
+ */
+function parseParticipantGroup(lines, startLine, ast) {
+  const firstLine = lines[startLine].trim();
+  // Match: participantgroup [#color] [Label]
+  const match = firstLine.match(/^participantgroup\s*(#[^\s]+)?\s*(.*)$/);
+
+  const color = match ? match[1] || null : null;
+  const label = match ? match[2] || '' : '';
+
+  const groupId = generateId('participantgroup');
+  const participants = []; // List of participant aliases in this group
+  const nestedGroups = []; // List of nested group IDs
+
+  let i = startLine + 1;
+  const groupStartLine = startLine + 1; // 1-indexed
+
+  while (i < lines.length) {
+    const line = lines[i].trim();
+
+    if (line === 'end') {
+      // Group complete
+      const groupNode = {
+        id: groupId,
+        type: 'participantgroup',
+        color,
+        label,
+        participants,
+        nestedGroups,
+        sourceLineStart: groupStartLine,
+        sourceLineEnd: i + 1 // 1-indexed
+      };
+      ast.push(groupNode);
+      return { endLine: i };
+    }
+
+    // Skip blank lines
+    if (!line) {
+      i++;
+      continue;
+    }
+
+    // Skip comments
+    if (line.startsWith('//') || line.startsWith('#')) {
+      const comment = parseComment(line, i + 1);
+      if (comment) {
+        ast.push(comment);
+      }
+      i++;
+      continue;
+    }
+
+    // Check for nested participant group
+    if (isParticipantGroupStart(line)) {
+      const result = parseParticipantGroup(lines, i, ast);
+      const nestedGroup = ast[ast.length - 1];
+      nestedGroups.push(nestedGroup.id);
+      i = result.endLine + 1;
+      continue;
+    }
+
+    // Try parsing as participant
+    const participant = parseParticipant(line, i + 1);
+    if (participant) {
+      ast.push(participant);
+      participants.push(participant.alias);
+      i++;
+      continue;
+    }
+
+    // Unknown line inside participant group - skip it
+    i++;
+  }
+
+  // If we reach here, the group was never closed - create it anyway
+  const groupNode = {
+    id: groupId,
+    type: 'participantgroup',
+    color,
+    label,
+    participants,
+    nestedGroups,
+    sourceLineStart: groupStartLine,
+    sourceLineEnd: lines.length
+  };
+  ast.push(groupNode);
+  return { endLine: lines.length - 1 };
 }
 
 /**

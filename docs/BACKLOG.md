@@ -1596,15 +1596,17 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Serialize correctly ✅
 - 19 unit tests verify frame functionality ✅
 
-## BACKLOG-136: Participant groups
-**Phase:** 5.7  
-**Dependencies:** None  
-**Description:** Add participantgroup for grouping participants.  
+## BACKLOG-136: Participant groups ✅
+**Phase:** 5.7
+**Dependencies:** None
+**Status:** Complete
+**Description:** Add participantgroup for grouping participants.
 **Acceptance Criteria:**
-- Parse: `participantgroup #color Label ... end`
-- Nesting supported
-- Render background box around grouped participants
-- Serialize with proper nesting and indentation
+- Parse: `participantgroup #color Label ... end` ✅
+- Nesting supported ✅
+- Render background box around grouped participants ✅
+- Serialize with proper nesting and indentation ✅
+- 15 unit tests verify participant group functionality ✅
 
 ## BACKLOG-137: Bottom participants
 **Phase:** 5.7  
@@ -1780,7 +1782,7 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 
 ## Current Progress Summary
 
-**Last Updated:** After BACKLOG-135 (Frame directive)
+**Last Updated:** After BACKLOG-136 (Participant groups)
 
 ### Phases Complete
 - Phase 0: Requirements & Design ✅
@@ -1788,7 +1790,7 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Phase 2: Editor Integration ✅
 - Phase 3: Interactivity ✅
 - Phase 4: File I/O & Export ✅
-- Phase 5: In Progress (17 of ~40 tasks done)
+- Phase 5: In Progress (18 of ~40 tasks done)
 
 ### Implemented Features
 Core functionality is complete and usable:
@@ -1814,6 +1816,7 @@ Core functionality is complete and usable:
 - Lifeline styling (color, width, solid/dashed/dotted)
 - Linear and parallel message positioning
 - Frame directive (border around diagram with label)
+- Participant groups (visual grouping with background box)
 
 ### Recommended Next Steps (Priority Order)
 1. **BACKLOG-117-119: Icon participant types** - Font Awesome, Material Design Icons, custom images (requires vendoring)

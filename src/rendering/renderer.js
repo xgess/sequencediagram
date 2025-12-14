@@ -71,6 +71,7 @@ export function render(ast) {
   const participants = ast.filter(node => node.type === 'participant');
   const messages = ast.filter(node => node.type === 'message');
   const fragments = ast.filter(node => node.type === 'fragment');
+  const participantGroups = ast.filter(node => node.type === 'participantgroup');
   const notes = ast.filter(node => node.type === 'note');
   const dividers = ast.filter(node => node.type === 'divider');
   const errors = ast.filter(node => node.type === 'error');
@@ -83,7 +84,15 @@ export function render(ast) {
   // Calculate final height for lifelines
   const height = Math.max(totalHeight, 160);
 
-  // Render fragments first (as background boxes)
+  // Render participant groups first (behind fragments and lifelines)
+  participantGroups.forEach(group => {
+    const groupEl = renderParticipantGroup(group, participantLayout, height);
+    if (groupEl) {
+      frameGroup.appendChild(groupEl);
+    }
+  });
+
+  // Render fragments (as background boxes)
   fragments.forEach(fragment => {
     const layoutInfo = layout.get(fragment.id);
     if (layoutInfo) {
@@ -261,6 +270,72 @@ function renderFrame(directive, width, height) {
   }
 
   return group;
+}
+
+/**
+ * Render a participant group as a background box
+ * @param {Object} group - ParticipantGroup AST node
+ * @param {Map} participantLayout - Participant layout map
+ * @param {number} height - Total diagram height
+ * @returns {SVGGElement|null} Rendered group or null if no participants
+ */
+function renderParticipantGroup(group, participantLayout, height) {
+  if (group.participants.length === 0) {
+    return null;
+  }
+
+  const svgGroup = document.createElementNS(SVG_NS, 'g');
+  svgGroup.setAttribute('class', 'participant-group');
+  svgGroup.setAttribute('data-node-id', group.id);
+
+  // Calculate bounds from participant positions
+  let minX = Infinity, maxX = -Infinity;
+  let minY = Infinity, maxY = -Infinity;
+
+  for (const alias of group.participants) {
+    const layout = participantLayout.get(alias);
+    if (layout) {
+      minX = Math.min(minX, layout.x);
+      maxX = Math.max(maxX, layout.x + layout.width);
+      minY = Math.min(minY, layout.y);
+      maxY = Math.max(maxY, layout.y + layout.height);
+    }
+  }
+
+  if (minX === Infinity) {
+    return null;
+  }
+
+  const PADDING = 10;
+  const LABEL_HEIGHT = 16;
+
+  // Background rect
+  const rect = document.createElementNS(SVG_NS, 'rect');
+  rect.setAttribute('x', minX - PADDING);
+  rect.setAttribute('y', minY - PADDING - (group.label ? LABEL_HEIGHT : 0));
+  rect.setAttribute('width', maxX - minX + PADDING * 2);
+  rect.setAttribute('height', height - minY + PADDING + (group.label ? LABEL_HEIGHT : 0));
+  rect.setAttribute('fill', group.color || '#f5f5f5');
+  rect.setAttribute('fill-opacity', '0.5');
+  rect.setAttribute('stroke', group.color || '#ddd');
+  rect.setAttribute('stroke-width', '1');
+  rect.setAttribute('rx', '5');
+  rect.setAttribute('ry', '5');
+  svgGroup.appendChild(rect);
+
+  // Label text
+  if (group.label) {
+    const text = document.createElementNS(SVG_NS, 'text');
+    text.setAttribute('x', minX - PADDING + 5);
+    text.setAttribute('y', minY - PADDING - 3);
+    text.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, sans-serif');
+    text.setAttribute('font-size', '11');
+    text.setAttribute('fill', '#666');
+    text.textContent = group.label;
+    svgGroup.appendChild(text);
+  }
+
+  return svgGroup;
 }
 
 /**
