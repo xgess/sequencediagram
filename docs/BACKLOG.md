@@ -1776,7 +1776,10 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 
 ### Implemented Features
 Core functionality is complete and usable:
-- Parse/render/serialize: participants (3 types), messages (4 arrow types), alt/loop fragments
+- Parse/render/serialize: participants (7 types), messages (11 arrow types), all 15 fragment types
+- Participant types: participant, rparticipant, actor, database, boundary, control, entity
+- Arrow types: ->, ->>, -->, -->> (forward); <-, <--, <->>, <-->> (reversed); <->, <->> (bidirectional); -x, --x (lost)
+- Fragment types: alt, loop, opt, par, break, critical, ref, seq, strict, neg, ignore, consider, assert, region, group
 - Notes: note, box, abox, rbox, ref, state (over/left of/right of positions)
 - Dividers: ==text== with styling support
 - Full CodeMirror editor with syntax highlighting, autocomplete, error markers
@@ -1789,12 +1792,13 @@ Core functionality is complete and usable:
 - Shrink to fit (Fit button scales diagram to viewport)
 
 ### Recommended Next Steps (Priority Order)
-1. **BACKLOG-124: Remaining fragment types** - opt, par, break, etc.
-2. **BACKLOG-120: Remaining arrow types** - <-, <->, -x
-3. **BACKLOG-115-119: Additional participant types** - rparticipant, icons, images
+1. **BACKLOG-117-119: Icon participant types** - Font Awesome, Material Design Icons, custom images (requires vendoring)
+2. **BACKLOG-121: Message delays** - non-instantaneous messages with A->(5)B syntax
+3. **BACKLOG-122: Boundary messages** - [->A incoming, A->] outgoing syntax
 
 ### Known Gaps
 - Autosave disable setting not implemented (minor)
+- Icon participant types require vendoring external fonts
 
 ---
 
