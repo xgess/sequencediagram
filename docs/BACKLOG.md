@@ -1208,79 +1208,79 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 
 ### localStorage
 
-## BACKLOG-102: Save diagram to localStorage
-**Phase:** 4.3  
-**Dependencies:** None  
-**Description:** Implement named diagram storage in browser localStorage per DESIGN.md.  
+## BACKLOG-102: Save diagram to localStorage ✓
+**Phase:** 4.3
+**Dependencies:** None
+**Description:** Implement named diagram storage in browser localStorage per DESIGN.md.
 **Acceptance Criteria:**
-- saveDiagram(name, text) stores in localStorage.diagrams[id]
-- Includes name, text, modified timestamp
-- Auto-generates ID if needed
+- saveDiagram(name, text) stores in localStorage.diagrams[id] ✓
+- Includes name, text, modified timestamp ✓
+- Auto-generates ID if needed ✓
 
-## BACKLOG-103: List saved diagrams
-**Phase:** 4.3  
-**Dependencies:** BACKLOG-096  
-**Description:** Create visual diagram manager modal showing saved diagrams.  
+## BACKLOG-103: List saved diagrams ✓
+**Phase:** 4.3
+**Dependencies:** BACKLOG-096
+**Description:** Create visual diagram manager modal showing saved diagrams.
 **Acceptance Criteria:**
-- Menu item: File > Manage Diagrams
-- Modal shows list with name, modified date, size
-- Click diagram loads it
-- Delete button removes from localStorage
-- Close button
+- Menu item: File > Manage Diagrams ✓
+- Modal shows list with name, modified date, size ✓
+- Click diagram loads it ✓
+- Delete button removes from localStorage ✓
+- Close button ✓
 
-## BACKLOG-104: Autosave to localStorage
-**Phase:** 4.3  
-**Dependencies:** BACKLOG-096  
-**Description:** Automatically save current diagram every 60 seconds.  
+## BACKLOG-104: Autosave to localStorage ✓
+**Phase:** 4.3
+**Dependencies:** BACKLOG-096
+**Description:** Automatically save current diagram every 60 seconds.
 **Acceptance Criteria:**
-- Timer triggers every 60s if text changed
-- Saves to localStorage.autosave
-- On load, prompts to recover if autosave newer than opened file
-- Can disable in settings
+- Timer triggers every 60s if text changed ✓
+- Saves to localStorage.autosave ✓
+- On load, prompts to recover if autosave newer than opened file ✓
+- Can disable in settings (not implemented - autosave always on)
 
 
 ### URL Sharing
 
-## BACKLOG-105: Vendor lz-string library
-**Phase:** 4.4  
-**Dependencies:** None  
-**Description:** Download and vendor lz-string 1.5.0 into lib/ directory.  
+## BACKLOG-105: Vendor lz-string library ✓
+**Phase:** 4.4
+**Dependencies:** None
+**Description:** Download and vendor lz-string 1.5.0 into lib/ directory.
 **Acceptance Criteria:**
-- lz-string.js in lib/
-- Can import and use compressToEncodedURIComponent
-- No network requests
+- lz-string.js in lib/ ✓
+- Can import and use compressToEncodedURIComponent ✓
+- No network requests ✓
 
-## BACKLOG-106: Generate share URL
-**Phase:** 4.4  
-**Dependencies:** BACKLOG-099  
-**Description:** Implement share URL generation with lz-string compression per DESIGN.md.  
+## BACKLOG-106: Generate share URL ✓
+**Phase:** 4.4
+**Dependencies:** BACKLOG-099
+**Description:** Implement share URL generation with lz-string compression per DESIGN.md.
 **Acceptance Criteria:**
-- createShareURL(text, options) function
-- Uses window.location.origin (dynamic)
-- Fragment-based: #initialData={compressed}
-- Options: presentation, shrinkToFit
-- Returns full URL
+- createShareURL(text, options) function ✓
+- Uses window.location.origin (dynamic) ✓
+- Fragment-based: #initialData={compressed} ✓
+- Options: presentation, shrinkToFit ✓
+- Returns full URL ✓
 
-## BACKLOG-107: Share button with URL display
-**Phase:** 4.4  
-**Dependencies:** BACKLOG-100  
-**Description:** Add "Share" button that generates URL and displays in modal.  
+## BACKLOG-107: Share button with URL display ✓
+**Phase:** 4.4
+**Dependencies:** BACKLOG-100
+**Description:** Add "Share" button that generates URL and displays in modal.
 **Acceptance Criteria:**
-- Button in toolbar or menu
-- Modal shows URL in text input (auto-selected)
-- Copy button copies to clipboard
-- Checkboxes for presentation mode, shrink-to-fit
+- Button in toolbar or menu ✓
+- Modal shows URL in text input (auto-selected) ✓
+- Copy button copies to clipboard ✓
+- Checkboxes for presentation mode, shrink-to-fit ✓
 
-## BACKLOG-108: Load from URL on page load
-**Phase:** 4.4  
-**Dependencies:** BACKLOG-099  
-**Description:** Check URL hash on page load and decompress if present.  
+## BACKLOG-108: Load from URL on page load ✓
+**Phase:** 4.4
+**Dependencies:** BACKLOG-099
+**Description:** Check URL hash on page load and decompress if present.
 **Acceptance Criteria:**
-- loadFromURL() called in main.js initialization
-- Decompresses initialData param
-- Loads into editor
-- Applies presentation/shrinkToFit options if present
-- If decompression fails, shows error
+- loadFromURL() called in main.js initialization ✓
+- Decompresses initialData param ✓
+- Loads into editor ✓
+- Applies presentation/shrinkToFit options if present (partial - loads text, modes not yet implemented)
+- If decompression fails, shows error ✓
 
 
 ---
@@ -1289,15 +1289,15 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 
 ### View Modes and UI Polish
 
-## BACKLOG-109: Resizable editor/diagram splitter
-**Phase:** 5.1  
-**Dependencies:** Phase 4 complete  
-**Description:** Make border between editor and diagram draggable to resize panes.  
+## BACKLOG-109: Resizable editor/diagram splitter ✓
+**Phase:** 5.1
+**Dependencies:** Phase 4 complete
+**Description:** Make border between editor and diagram draggable to resize panes.
 **Acceptance Criteria:**
-- Cursor changes to resize on border hover
-- Dragging adjusts flex widths
-- Stores preference in localStorage
-- Min/max widths enforced
+- Cursor changes to resize on border hover ✓
+- Dragging adjusts flex widths ✓
+- Stores preference in localStorage ✓
+- Min/max widths enforced ✓
 
 ## BACKLOG-110: Zoom controls ✓
 **Phase:** 5.1
@@ -1753,6 +1753,42 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Direct nginx serving documented
 - Kubernetes example (optional)
 - Cloudflare Pages deployment documented
+
+---
+
+## Current Progress Summary
+
+**Last Updated:** After BACKLOG-110 (Zoom controls)
+
+### Phases Complete
+- Phase 0: Requirements & Design ✅
+- Phase 1: Core Engine ✅
+- Phase 2: Editor Integration ✅
+- Phase 3: Interactivity ✅
+- Phase 4: File I/O & Export ✅
+- Phase 5: In Progress (2 of ~40 tasks done)
+
+### Implemented Features
+Core functionality is complete and usable:
+- Parse/render/serialize: participants (3 types), messages (4 arrow types), alt/loop fragments
+- Full CodeMirror editor with syntax highlighting, autocomplete, error markers
+- Complete interactive editing: selection, drag, double-click edit, context menu
+- Undo/redo with 100-level history
+- File open/save, localStorage, URL sharing
+- PNG/SVG/TXT export
+- Zoom controls and resizable splitter
+
+### Recommended Next Steps (Priority Order)
+1. **BACKLOG-111: Presentation mode** - High value for sharing diagrams
+2. **BACKLOG-126: Notes and boxes** - Commonly needed feature
+3. **BACKLOG-124: Remaining fragment types** - opt, par, break, etc.
+4. **BACKLOG-120: Remaining arrow types** - <-, <->, -x
+5. **BACKLOG-115-119: Additional participant types** - rparticipant, icons, images
+
+### Known Gaps
+- Presentation/shrinkToFit options from URL sharing not yet applied (BACKLOG-111, 114)
+- Dividers (`==text==`) not implemented (BACKLOG-126)
+- Autosave disable setting not implemented (minor)
 
 ---
 
