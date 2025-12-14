@@ -325,3 +325,47 @@ body {
   color: white;
   border-color: #3a7dbf;
 }
+
+/* Participant Overlay (BACKLOG-113) */
+#participant-overlay {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #ccc;
+  z-index: 100;
+  padding: 8px 0;
+  margin: -16px -16px 8px -16px;
+  overflow: hidden;
+}
+
+.participant-overlay-boxes {
+  display: flex;
+  position: relative;
+  min-height: 36px;
+  transition: transform 0.05s ease-out;
+}
+
+.participant-overlay-box {
+  position: absolute;
+  height: 32px;
+  background: white;
+  border: 1px solid #333;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  padding: 0 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Hide overlay in presentation mode (use diagram's own scrolling) */
+.presentation-mode #participant-overlay {
+  display: none !important;
+}

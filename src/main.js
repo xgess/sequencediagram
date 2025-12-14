@@ -42,6 +42,7 @@ import { loadFromURL } from './storage/url.js';
 import { initSplitter } from './interaction/splitter.js';
 import { initZoom, getZoomLevel, shrinkToFit as applyShrinkToFit } from './interaction/zoom.js';
 import { initPresentation, enterPresentationMode, exitPresentationMode, togglePresentationMode, isInPresentationMode } from './interaction/presentation.js';
+import { initParticipantOverlay, updateParticipantData } from './interaction/participantOverlay.js';
 
 // App state
 let currentAst = [];
@@ -103,6 +104,9 @@ export function init() {
     // Callback when presentation mode exits
     updatePresentButton();
   });
+
+  // Initialize participant overlay
+  initParticipantOverlay(diagramContainer);
 
   // Initialize keyboard shortcuts for diagram
   initDiagramKeyboard();
@@ -302,6 +306,9 @@ export function updateFromText(text, createCommand = false) {
   initCursors(svg);
   initDrag(svg, handleDragComplete, handleEndpointChange, handleParticipantReorder, handleFragmentBoundaryChange, handleElseDividerChange);
   initLifelineDrag(svg, handleLifelineDrag);
+
+  // Update participant overlay data
+  updateParticipantData(svg);
 
   // Check for errors in AST and display them
   displayErrors(currentAst);
@@ -504,6 +511,9 @@ function renderCurrentAst() {
   initCursors(svg);
   initDrag(svg, handleDragComplete, handleEndpointChange, handleParticipantReorder, handleFragmentBoundaryChange, handleElseDividerChange);
   initLifelineDrag(svg, handleLifelineDrag);
+
+  // Update participant overlay data
+  updateParticipantData(svg);
 
   // Check for errors in AST and display them
   displayErrors(currentAst);

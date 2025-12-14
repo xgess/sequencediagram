@@ -1330,15 +1330,16 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Enables click-drag to pan diagram
 - Scroll wheel to zoom
 
-## BACKLOG-113: Participant overlay on scroll
-**Phase:** 5.1  
-**Dependencies:** None  
-**Description:** Show participant names at viewport top when scrolled down per REQUIREMENTS.md.  
+## BACKLOG-113: Participant overlay on scroll ✅
+**Phase:** 5.1
+**Dependencies:** None
+**Status:** Complete
+**Description:** Show participant names at viewport top when scrolled down per REQUIREMENTS.md.
 **Acceptance Criteria:**
-- Fixed position overlay at top
-- Shows participant boxes when main participant area scrolled out of view
-- Enabled by default
-- Toggle in View menu
+- Fixed position overlay at top ✅
+- Shows participant boxes when main participant area scrolled out of view ✅
+- Enabled by default ✅
+- Toggle via setOverlayEnabled/toggleOverlay functions ✅
 
 ## BACKLOG-114: Shrink to fit ✓
 **Phase:** 5.1
@@ -1788,7 +1789,7 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 
 ## Current Progress Summary
 
-**Last Updated:** After BACKLOG-130 (Activations)
+**Last Updated:** After BACKLOG-113 (Participant overlay on scroll)
 
 ### Phases Complete
 - Phase 0: Requirements & Design ✅
@@ -1827,6 +1828,7 @@ Core functionality is complete and usable:
 - Font family directive (custom fonts for all text)
 - Lifecycle commands (create/destroy participants dynamically)
 - Activations (activate/deactivate bars on lifelines with autoactivation)
+- Participant overlay on scroll (sticky header when scrolled)
 
 ### Recommended Next Steps (Priority Order)
 1. **BACKLOG-117-119: Icon participant types** - Font Awesome, Material Design Icons, custom images (requires vendoring)
