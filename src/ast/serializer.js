@@ -260,6 +260,28 @@ function serializeDirective(node) {
   if (node.directiveType === 'participantspacing') {
     return `participantspacing ${node.value}`;
   }
+  if (node.directiveType === 'lifelinestyle') {
+    let output = 'lifelinestyle';
+    if (node.participant) {
+      output += ' ' + node.participant;
+    }
+    const style = node.style || {};
+    let styleStr = '';
+    if (style.color) {
+      styleStr += style.color;
+    }
+    if (style.width !== null && style.width !== undefined) {
+      styleStr += ';' + style.width;
+    }
+    if (style.lineStyle) {
+      if (!styleStr.includes(';')) styleStr += ';';
+      styleStr += ';' + style.lineStyle;
+    }
+    if (styleStr) {
+      output += ' ' + styleStr;
+    }
+    return output;
+  }
   return '';
 }
 

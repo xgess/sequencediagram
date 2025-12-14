@@ -1545,15 +1545,17 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Serialize directives ✅
 - 20 unit tests verify spacing controls ✅
 
-## BACKLOG-132: Lifeline styling
-**Phase:** 5.7  
-**Dependencies:** None  
-**Description:** Add lifelinestyle directive.  
+## BACKLOG-132: Lifeline styling ✅
+**Phase:** 5.7
+**Dependencies:** None
+**Status:** Complete
+**Description:** Add lifelinestyle directive.
 **Acceptance Criteria:**
-- Parse: `lifelinestyle #red;4;solid`
-- Parse: `lifelinestyle B #black;2;dashed` (per-participant)
-- Apply styling to lifeline rendering
-- Serialize correctly
+- Parse: `lifelinestyle #red;4;solid` ✅
+- Parse: `lifelinestyle B #black;2;dashed` (per-participant) ✅
+- Apply styling to lifeline rendering ✅
+- Serialize correctly ✅
+- 20 unit tests verify lifeline styling ✅
 
 ## BACKLOG-133: Autonumbering ✅
 **Phase:** 5.7
@@ -1774,7 +1776,7 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 
 ## Current Progress Summary
 
-**Last Updated:** After BACKLOG-131 (Spacing controls)
+**Last Updated:** After BACKLOG-132 (Lifeline styling)
 
 ### Phases Complete
 - Phase 0: Requirements & Design ✅
@@ -1782,7 +1784,7 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Phase 2: Editor Integration ✅
 - Phase 3: Interactivity ✅
 - Phase 4: File I/O & Export ✅
-- Phase 5: In Progress (14 of ~40 tasks done)
+- Phase 5: In Progress (15 of ~40 tasks done)
 
 ### Implemented Features
 Core functionality is complete and usable:
@@ -1805,6 +1807,7 @@ Core functionality is complete and usable:
 - Message styling with brackets
 - Autonumbering
 - Spacing controls (space, participantspacing)
+- Lifeline styling (color, width, solid/dashed/dotted)
 
 ### Recommended Next Steps (Priority Order)
 1. **BACKLOG-117-119: Icon participant types** - Font Awesome, Material Design Icons, custom images (requires vendoring)

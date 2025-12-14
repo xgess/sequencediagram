@@ -152,6 +152,57 @@ function parseDirective(line, lineNumber) {
     };
   }
 
+  // Match space directive: space, space N, space -N
+  const spaceMatch = line.match(/^space(\s+(-?\d+))?$/);
+  if (spaceMatch) {
+    const value = spaceMatch[2] !== undefined ? parseInt(spaceMatch[2], 10) : 1;
+    return {
+      id: generateId('directive'),
+      type: 'directive',
+      directiveType: 'space',
+      value,
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
+  }
+
+  // Match participantspacing directive
+  const participantSpacingMatch = line.match(/^participantspacing\s+(\d+|equal)$/);
+  if (participantSpacingMatch) {
+    const value = participantSpacingMatch[1] === 'equal' ? 'equal' : parseInt(participantSpacingMatch[1], 10);
+    return {
+      id: generateId('directive'),
+      type: 'directive',
+      directiveType: 'participantspacing',
+      value,
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
+  }
+
+  // Match lifelinestyle directive
+  // Syntax: lifelinestyle #color;width;style (global) OR lifelinestyle Participant #color;width;style (per-participant)
+  const lifelinestyleMatch = line.match(/^lifelinestyle(?:\s+([^\s#][^\s]*))?(?:\s+)?(#[^\s;]+)?(?:;(\d+))?(?:;(solid|dashed|dotted))?$/);
+  if (lifelinestyleMatch) {
+    const participant = lifelinestyleMatch[1] || null;
+    const color = lifelinestyleMatch[2] || null;
+    const width = lifelinestyleMatch[3] ? parseInt(lifelinestyleMatch[3], 10) : null;
+    const lineStyle = lifelinestyleMatch[4] || null;
+    return {
+      id: generateId('directive'),
+      type: 'directive',
+      directiveType: 'lifelinestyle',
+      participant,
+      style: {
+        color,
+        width,
+        lineStyle
+      },
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
+  }
+
   return null;
 }
 

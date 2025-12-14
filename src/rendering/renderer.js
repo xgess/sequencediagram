@@ -71,6 +71,9 @@ export function render(ast) {
   const errors = ast.filter(node => node.type === 'error');
   const titleDirective = ast.find(node => node.type === 'directive' && node.directiveType === 'title');
 
+  // Build lifeline styles map from lifelinestyle directives
+  const lifelineStyles = buildLifelineStyles(ast);
+
   // Calculate final height for lifelines
   const height = Math.max(totalHeight, 160);
 
@@ -87,7 +90,8 @@ export function render(ast) {
   participants.forEach(participant => {
     const layoutInfo = layout.get(participant.id);
     if (layoutInfo) {
-      const lifeline = renderLifeline(participant, layoutInfo, height);
+      const style = lifelineStyles.get(participant.alias) || lifelineStyles.get(null) || {};
+      const lifeline = renderLifeline(participant, layoutInfo, height, style);
       lifelinesGroup.appendChild(lifeline);
     }
   });
@@ -192,9 +196,10 @@ function renderTitle(directive, diagramWidth) {
  * @param {Object} participant - Participant AST node
  * @param {Object} layoutInfo - Layout info {x, y, width, height, centerX}
  * @param {number} totalHeight - Total diagram height
+ * @param {Object} style - Lifeline style {color, width, lineStyle}
  * @returns {SVGLineElement} Lifeline element
  */
-function renderLifeline(participant, layoutInfo, totalHeight) {
+function renderLifeline(participant, layoutInfo, totalHeight, style = {}) {
   const line = document.createElementNS(SVG_NS, 'line');
   line.setAttribute('class', 'lifeline');
   line.setAttribute('data-participant', participant.alias);
@@ -202,10 +207,41 @@ function renderLifeline(participant, layoutInfo, totalHeight) {
   line.setAttribute('y1', layoutInfo.y + layoutInfo.height);
   line.setAttribute('x2', layoutInfo.centerX);
   line.setAttribute('y2', totalHeight - 20);
-  line.setAttribute('stroke', '#ccc');
-  line.setAttribute('stroke-width', '1');
-  line.setAttribute('stroke-dasharray', '5,5');
+
+  // Apply styling (with defaults)
+  line.setAttribute('stroke', style.color || '#ccc');
+  line.setAttribute('stroke-width', style.width || 1);
+
+  // Apply line style (solid, dashed, dotted)
+  const lineStyle = style.lineStyle || 'dashed';
+  if (lineStyle === 'solid') {
+    // No dasharray for solid
+  } else if (lineStyle === 'dotted') {
+    line.setAttribute('stroke-dasharray', '2,2');
+  } else {
+    // Default dashed
+    line.setAttribute('stroke-dasharray', '5,5');
+  }
+
   return line;
+}
+
+/**
+ * Build lifeline styles map from lifelinestyle directives
+ * @param {Array} ast - AST nodes
+ * @returns {Map} participant alias (or null for global) -> style object
+ */
+function buildLifelineStyles(ast) {
+  const styles = new Map();
+
+  for (const node of ast) {
+    if (node.type === 'directive' && node.directiveType === 'lifelinestyle') {
+      const key = node.participant || null;
+      styles.set(key, node.style || {});
+    }
+  }
+
+  return styles;
 }
 
 /**
