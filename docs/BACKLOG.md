@@ -1442,16 +1442,16 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Apply styling to message line
 - Serialize with brackets
 
-## BACKLOG-124: Remaining fragment types (13 types)
-**Phase:** 5.4  
-**Dependencies:** Phase 1 complete  
-**Description:** Add all remaining fragment types: opt, par, break, critical, ref, seq, strict, neg, ignore, consider, assert, region, group.  
+## BACKLOG-124: Remaining fragment types (13 types) ✓
+**Phase:** 5.4
+**Dependencies:** Phase 1 complete
+**Description:** Add all remaining fragment types: opt, par, break, critical, ref, seq, strict, neg, ignore, consider, assert, region, group.
 **Acceptance Criteria:**
-- Each type parses with fragmentType set
-- Render with correct label
-- Support else clauses for all (per requirements)
-- Serialize correctly
-- Note: Implementation details minimal, learned from alt/loop
+- Each type parses with fragmentType set ✓
+- Render with correct label ✓
+- Support else clauses for all (per requirements) ✓
+- Serialize correctly ✓
+- Note: Implementation details minimal, learned from alt/loop ✓
 
 ## BACKLOG-125: Expandable fragments
 **Phase:** 5.4  
@@ -1758,7 +1758,7 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 
 ## Current Progress Summary
 
-**Last Updated:** After BACKLOG-126 (Notes and boxes)
+**Last Updated:** After BACKLOG-124 (All fragment types)
 
 ### Phases Complete
 - Phase 0: Requirements & Design ✅
@@ -1766,7 +1766,7 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Phase 2: Editor Integration ✅
 - Phase 3: Interactivity ✅
 - Phase 4: File I/O & Export ✅
-- Phase 5: In Progress (5 of ~40 tasks done)
+- Phase 5: In Progress (6 of ~40 tasks done)
 
 ### Implemented Features
 Core functionality is complete and usable:
