@@ -334,7 +334,7 @@ function parseFragment(lines, startLine, ast) {
  */
 function parseParticipant(line, lineNumber) {
   // Try quoted display name with alias first: participant "Display Name" as Alias [styling]
-  const quotedMatch = line.match(/^(participant|actor|database)\s+"((?:[^"\\]|\\.)*)"\s+as\s+([^\s#]+)(.*)$/);
+  const quotedMatch = line.match(/^(participant|rparticipant|actor|database|boundary|control|entity)\s+"((?:[^"\\]|\\.)*)"\s+as\s+([^\s#]+)(.*)$/);
   if (quotedMatch) {
     const [, participantType, displayNameRaw, alias, styleStr] = quotedMatch;
     const displayName = unescapeString(displayNameRaw);
@@ -354,7 +354,7 @@ function parseParticipant(line, lineNumber) {
 
   // Simple syntax: participantType Name [styling]
   // Name can't contain # or whitespace to distinguish from styling
-  const match = line.match(/^(participant|actor|database)\s+([^\s#]+)(.*)$/);
+  const match = line.match(/^(participant|rparticipant|actor|database|boundary|control|entity)\s+([^\s#]+)(.*)$/);
   if (!match) {
     return null;
   }

@@ -1353,24 +1353,27 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 
 ### Additional Features from Requirements
 
-## BACKLOG-115: Remaining participant types - rparticipant
-**Phase:** 5.2  
-**Dependencies:** Phase 1 complete  
-**Description:** Add support for rparticipant (rounded corners).  
+## BACKLOG-115: Remaining participant types - rparticipant ✅
+**Phase:** 5.2
+**Dependencies:** Phase 1 complete
+**Status:** Complete
+**Description:** Add support for rparticipant (rounded corners).
 **Acceptance Criteria:**
-- Parse `rparticipant Name`
-- Render with rounded rect
-- Serialize correctly
+- Parse `rparticipant Name` ✅
+- Render with rounded rect (rx=10, ry=10) ✅
+- Serialize correctly ✅
 
-## BACKLOG-116: Remaining participant types - boundary, control, entity
-**Phase:** 5.2  
-**Dependencies:** BACKLOG-109  
-**Description:** Add UML participant types.  
+## BACKLOG-116: Remaining participant types - boundary, control, entity ✅
+**Phase:** 5.2
+**Dependencies:** BACKLOG-109
+**Status:** Complete
+**Description:** Add UML participant types.
 **Acceptance Criteria:**
-- Parse and render boundary (boundary icon)
-- Parse and render control (control icon)
-- Parse and render entity (entity icon)
-- Icons match UML standard shapes
+- Parse and render boundary (boundary icon) ✅
+- Parse and render control (control icon) ✅
+- Parse and render entity (entity icon) ✅
+- Icons match UML standard shapes ✅
+- 37 unit tests verify all participant types ✅
 
 ## BACKLOG-117: Font Awesome 6 participant type
 **Phase:** 5.2  

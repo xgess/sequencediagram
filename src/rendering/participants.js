@@ -21,6 +21,18 @@ export function renderParticipant(node, layoutInfo) {
     case 'database':
       renderDatabase(group, node, layoutInfo);
       break;
+    case 'rparticipant':
+      renderRoundedBox(group, node, layoutInfo);
+      break;
+    case 'boundary':
+      renderBoundary(group, node, layoutInfo);
+      break;
+    case 'control':
+      renderControl(group, node, layoutInfo);
+      break;
+    case 'entity':
+      renderEntity(group, node, layoutInfo);
+      break;
     default:
       renderBox(group, node, layoutInfo);
   }
@@ -56,6 +68,184 @@ function renderBox(group, node, layoutInfo) {
 
   // Add text label
   addTextLabel(group, node.displayName, x + width / 2, y, height);
+}
+
+/**
+ * Render a rounded participant box (rparticipant)
+ */
+function renderRoundedBox(group, node, layoutInfo) {
+  const { x, y, width, height } = layoutInfo;
+  const style = node.style || {};
+
+  // Create rectangle with rounded corners
+  const rect = document.createElementNS(SVG_NS, 'rect');
+  rect.setAttribute('x', x);
+  rect.setAttribute('y', y);
+  rect.setAttribute('width', width);
+  rect.setAttribute('height', height);
+  rect.setAttribute('rx', 10);
+  rect.setAttribute('ry', 10);
+
+  // Apply styling with defaults
+  rect.setAttribute('fill', style.fill || 'white');
+  rect.setAttribute('stroke', style.border || 'black');
+  rect.setAttribute('stroke-width', style.borderWidth !== undefined ? style.borderWidth : 1);
+
+  // Apply dashed border style if specified
+  if (style.borderStyle === 'dashed') {
+    rect.setAttribute('stroke-dasharray', '5,5');
+  }
+
+  group.appendChild(rect);
+
+  // Add text label
+  addTextLabel(group, node.displayName, x + width / 2, y, height);
+}
+
+/**
+ * Render a boundary UML icon
+ * Boundary: circle with vertical line on left
+ */
+function renderBoundary(group, node, layoutInfo) {
+  const { x, y, width, height } = layoutInfo;
+  const style = node.style || {};
+  const fill = style.fill || 'white';
+  const stroke = style.border || 'black';
+  const strokeWidth = style.borderWidth !== undefined ? style.borderWidth : 1;
+
+  const centerX = x + width / 2;
+  const iconY = y + 10;
+  const radius = 15;
+
+  // Vertical line on left (boundary interface)
+  const line = document.createElementNS(SVG_NS, 'line');
+  line.setAttribute('x1', centerX - radius - 10);
+  line.setAttribute('y1', iconY);
+  line.setAttribute('x2', centerX - radius - 10);
+  line.setAttribute('y2', iconY + radius * 2);
+  line.setAttribute('stroke', stroke);
+  line.setAttribute('stroke-width', strokeWidth);
+  group.appendChild(line);
+
+  // Horizontal line connecting to circle
+  const hLine = document.createElementNS(SVG_NS, 'line');
+  hLine.setAttribute('x1', centerX - radius - 10);
+  hLine.setAttribute('y1', iconY + radius);
+  hLine.setAttribute('x2', centerX - radius);
+  hLine.setAttribute('y2', iconY + radius);
+  hLine.setAttribute('stroke', stroke);
+  hLine.setAttribute('stroke-width', strokeWidth);
+  group.appendChild(hLine);
+
+  // Circle
+  const circle = document.createElementNS(SVG_NS, 'circle');
+  circle.setAttribute('cx', centerX);
+  circle.setAttribute('cy', iconY + radius);
+  circle.setAttribute('r', radius);
+  circle.setAttribute('fill', fill);
+  circle.setAttribute('stroke', stroke);
+  circle.setAttribute('stroke-width', strokeWidth);
+  group.appendChild(circle);
+
+  // Add text label below icon
+  const text = document.createElementNS(SVG_NS, 'text');
+  text.setAttribute('x', centerX);
+  text.setAttribute('y', y + height - 4);
+  text.setAttribute('text-anchor', 'middle');
+  text.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, sans-serif');
+  text.setAttribute('font-size', '12');
+  text.textContent = node.displayName;
+  group.appendChild(text);
+}
+
+/**
+ * Render a control UML icon
+ * Control: circle with arrow on top
+ */
+function renderControl(group, node, layoutInfo) {
+  const { x, y, width, height } = layoutInfo;
+  const style = node.style || {};
+  const fill = style.fill || 'white';
+  const stroke = style.border || 'black';
+  const strokeWidth = style.borderWidth !== undefined ? style.borderWidth : 1;
+
+  const centerX = x + width / 2;
+  const iconY = y + 15;
+  const radius = 15;
+
+  // Circle
+  const circle = document.createElementNS(SVG_NS, 'circle');
+  circle.setAttribute('cx', centerX);
+  circle.setAttribute('cy', iconY + radius);
+  circle.setAttribute('r', radius);
+  circle.setAttribute('fill', fill);
+  circle.setAttribute('stroke', stroke);
+  circle.setAttribute('stroke-width', strokeWidth);
+  group.appendChild(circle);
+
+  // Arrow on top (control indicator)
+  const arrow = document.createElementNS(SVG_NS, 'path');
+  arrow.setAttribute('d', `M ${centerX - 8} ${iconY - 2} L ${centerX} ${iconY - 8} L ${centerX + 8} ${iconY - 2}`);
+  arrow.setAttribute('fill', 'none');
+  arrow.setAttribute('stroke', stroke);
+  arrow.setAttribute('stroke-width', strokeWidth);
+  group.appendChild(arrow);
+
+  // Add text label below icon
+  const text = document.createElementNS(SVG_NS, 'text');
+  text.setAttribute('x', centerX);
+  text.setAttribute('y', y + height - 4);
+  text.setAttribute('text-anchor', 'middle');
+  text.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, sans-serif');
+  text.setAttribute('font-size', '12');
+  text.textContent = node.displayName;
+  group.appendChild(text);
+}
+
+/**
+ * Render an entity UML icon
+ * Entity: circle with horizontal line underneath
+ */
+function renderEntity(group, node, layoutInfo) {
+  const { x, y, width, height } = layoutInfo;
+  const style = node.style || {};
+  const fill = style.fill || 'white';
+  const stroke = style.border || 'black';
+  const strokeWidth = style.borderWidth !== undefined ? style.borderWidth : 1;
+
+  const centerX = x + width / 2;
+  const iconY = y + 10;
+  const radius = 15;
+
+  // Circle
+  const circle = document.createElementNS(SVG_NS, 'circle');
+  circle.setAttribute('cx', centerX);
+  circle.setAttribute('cy', iconY + radius);
+  circle.setAttribute('r', radius);
+  circle.setAttribute('fill', fill);
+  circle.setAttribute('stroke', stroke);
+  circle.setAttribute('stroke-width', strokeWidth);
+  group.appendChild(circle);
+
+  // Horizontal line underneath (entity indicator)
+  const line = document.createElementNS(SVG_NS, 'line');
+  line.setAttribute('x1', centerX - radius);
+  line.setAttribute('y1', iconY + radius * 2 + 3);
+  line.setAttribute('x2', centerX + radius);
+  line.setAttribute('y2', iconY + radius * 2 + 3);
+  line.setAttribute('stroke', stroke);
+  line.setAttribute('stroke-width', strokeWidth);
+  group.appendChild(line);
+
+  // Add text label below icon
+  const text = document.createElementNS(SVG_NS, 'text');
+  text.setAttribute('x', centerX);
+  text.setAttribute('y', y + height - 4);
+  text.setAttribute('text-anchor', 'middle');
+  text.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, sans-serif');
+  text.setAttribute('font-size', '12');
+  text.textContent = node.displayName;
+  group.appendChild(text);
 }
 
 /**
