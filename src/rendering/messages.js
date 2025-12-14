@@ -11,26 +11,53 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
  */
 export function renderMessage(node, layoutInfo) {
   const { y, fromX, toX } = layoutInfo;
+  const arrowType = node.arrowType;
 
   const group = document.createElementNS(SVG_NS, 'g');
   group.setAttribute('data-node-id', node.id);
   group.setAttribute('class', 'message');
 
+  // Determine if this is a reversed arrow (starts with <)
+  const isReversed = arrowType.startsWith('<') && !arrowType.startsWith('<->');
+  const isBidirectional = arrowType.startsWith('<->') || arrowType.startsWith('<->>');
+  const isLost = arrowType.endsWith('x');
+
+  // For reversed arrows, swap the coordinates visually
+  // (the message is from A to B syntactically, but arrow points from B to A)
+  let lineFromX = fromX;
+  let lineToX = toX;
+  if (isReversed) {
+    lineFromX = toX;
+    lineToX = fromX;
+  }
+
   // Create the arrow line
   const line = document.createElementNS(SVG_NS, 'line');
-  line.setAttribute('x1', fromX);
+  line.setAttribute('x1', lineFromX);
   line.setAttribute('y1', y);
-  line.setAttribute('x2', toX);
+  line.setAttribute('x2', lineToX);
   line.setAttribute('y2', y);
   line.setAttribute('stroke', 'black');
   line.setAttribute('stroke-width', '1');
 
   // Apply arrow marker based on arrow type
-  const markerId = getMarkerId(node.arrowType);
-  line.setAttribute('marker-end', `url(#${markerId})`);
+  if (isLost) {
+    // Lost messages end with X
+    line.setAttribute('marker-end', 'url(#arrowhead-x)');
+  } else if (isBidirectional) {
+    // Bidirectional arrows have markers on both ends
+    const endMarkerId = getEndMarkerId(arrowType);
+    const startMarkerId = getStartMarkerId(arrowType);
+    line.setAttribute('marker-end', `url(#${endMarkerId})`);
+    line.setAttribute('marker-start', `url(#${startMarkerId})`);
+  } else {
+    // Normal or reversed arrows
+    const markerId = getEndMarkerId(arrowType);
+    line.setAttribute('marker-end', `url(#${markerId})`);
+  }
 
-  // Apply dashed style for return arrows (-- prefix)
-  if (node.arrowType.startsWith('--')) {
+  // Apply dashed style for return arrows (contains --)
+  if (arrowType.includes('--')) {
     line.setAttribute('stroke-dasharray', '5,5');
   }
 
@@ -53,15 +80,29 @@ export function renderMessage(node, layoutInfo) {
 }
 
 /**
- * Get the marker ID based on arrow type
- * @param {string} arrowType - Arrow type (-> ->> --> -->>)
+ * Get the end marker ID based on arrow type
+ * @param {string} arrowType - Arrow type
  * @returns {string} Marker ID
  */
-function getMarkerId(arrowType) {
+function getEndMarkerId(arrowType) {
   // >> arrows use open arrowhead
   if (arrowType.endsWith('>>')) {
     return 'arrowhead-open';
   }
   // > arrows use solid arrowhead
   return 'arrowhead-solid';
+}
+
+/**
+ * Get the start marker ID for bidirectional arrows
+ * @param {string} arrowType - Arrow type
+ * @returns {string} Marker ID
+ */
+function getStartMarkerId(arrowType) {
+  // <->> uses open arrowhead on both ends
+  if (arrowType === '<->>') {
+    return 'arrowhead-open-start';
+  }
+  // <-> uses solid arrowhead on both ends
+  return 'arrowhead-solid-start';
 }

@@ -511,15 +511,19 @@ function parseParticipantStyle(styleStr) {
 /**
  * Parse a message between participants
  * Syntax: From->To:Label or From->>To:Label etc.
+ * Arrow types: -> ->> --> -->> <- <->> <-- <-->> <-> <->> -x --x
  * @param {string} line - Trimmed source line
  * @param {number} lineNumber - 1-indexed line number
  * @returns {Object|null} Message AST node or null
  */
 function parseMessage(line, lineNumber) {
   // Match: From ARROW To : Label
-  // Arrow types: -> ->> --> -->>
-  // Use [^\s\-] for 'from' to avoid consuming dashes that are part of the arrow
-  const match = line.match(/^([^\s\-]+)(-->>|-->|->>|->)([^\s:]+):(.*)$/);
+  // Arrow types ordered by length for correct matching:
+  // Bidirectional: <->> <->
+  // Reversed: <-->> <->> <-- <-
+  // Forward: -->> --> ->> ->
+  // Lost: --x -x
+  const match = line.match(/^([^\s\-<]+)(<-->>|<->>|<-->|<->|<--|<-|-->>|-->|->>|->|--x|-x)([^\s:]+):(.*)$/);
   if (!match) {
     return null;
   }

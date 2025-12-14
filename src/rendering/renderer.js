@@ -243,5 +243,53 @@ function createDefs() {
   openArrow.appendChild(openPath);
   defs.appendChild(openArrow);
 
+  // Solid arrowhead start (for bidirectional <->)
+  const solidArrowStart = document.createElementNS(SVG_NS, 'marker');
+  solidArrowStart.setAttribute('id', 'arrowhead-solid-start');
+  solidArrowStart.setAttribute('markerWidth', '10');
+  solidArrowStart.setAttribute('markerHeight', '7');
+  solidArrowStart.setAttribute('refX', '1');
+  solidArrowStart.setAttribute('refY', '3.5');
+  solidArrowStart.setAttribute('orient', 'auto');
+
+  const solidStartPath = document.createElementNS(SVG_NS, 'polygon');
+  solidStartPath.setAttribute('points', '10 0, 0 3.5, 10 7');
+  solidStartPath.setAttribute('fill', 'black');
+  solidArrowStart.appendChild(solidStartPath);
+  defs.appendChild(solidArrowStart);
+
+  // Open arrowhead start (for bidirectional <->>)
+  const openArrowStart = document.createElementNS(SVG_NS, 'marker');
+  openArrowStart.setAttribute('id', 'arrowhead-open-start');
+  openArrowStart.setAttribute('markerWidth', '10');
+  openArrowStart.setAttribute('markerHeight', '7');
+  openArrowStart.setAttribute('refX', '1');
+  openArrowStart.setAttribute('refY', '3.5');
+  openArrowStart.setAttribute('orient', 'auto');
+
+  const openStartPath = document.createElementNS(SVG_NS, 'polyline');
+  openStartPath.setAttribute('points', '10 0, 0 3.5, 10 7');
+  openStartPath.setAttribute('fill', 'none');
+  openStartPath.setAttribute('stroke', 'black');
+  openStartPath.setAttribute('stroke-width', '1');
+  openArrowStart.appendChild(openStartPath);
+  defs.appendChild(openArrowStart);
+
+  // X terminator for lost messages (-x)
+  const xMarker = document.createElementNS(SVG_NS, 'marker');
+  xMarker.setAttribute('id', 'arrowhead-x');
+  xMarker.setAttribute('markerWidth', '10');
+  xMarker.setAttribute('markerHeight', '10');
+  xMarker.setAttribute('refX', '5');
+  xMarker.setAttribute('refY', '5');
+  xMarker.setAttribute('orient', 'auto');
+
+  const xPath = document.createElementNS(SVG_NS, 'path');
+  xPath.setAttribute('d', 'M 0 0 L 10 10 M 10 0 L 0 10');
+  xPath.setAttribute('stroke', 'black');
+  xPath.setAttribute('stroke-width', '2');
+  xMarker.appendChild(xPath);
+  defs.appendChild(xMarker);
+
   return defs;
 }

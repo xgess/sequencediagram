@@ -1402,15 +1402,18 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Render image in participant box
 - Sanitize with DOMPurify
 
-## BACKLOG-120: Remaining arrow types - reversed, bidirectional, lost
-**Phase:** 5.3  
-**Dependencies:** Phase 1 complete  
-**Description:** Add <-, <->, -x arrow types.  
+## BACKLOG-120: Remaining arrow types - reversed, bidirectional, lost ✅
+**Phase:** 5.3
+**Dependencies:** Phase 1 complete
+**Status:** Complete
+**Description:** Add <-, <->, -x arrow types.
 **Acceptance Criteria:**
-- Parse all three types
-- Render with correct directions and terminators
-- X terminator for -x (lost message)
-- Serialize correctly
+- Parse all three types ✅
+- Render with correct directions and terminators ✅
+- X terminator for -x (lost message) ✅
+- Serialize correctly ✅
+- Also added: <--, <->>, <-->> and --x variants ✅
+- 40 unit tests verify all arrow types ✅
 
 ## BACKLOG-121: Message delays (non-instantaneous)
 **Phase:** 5.3  
