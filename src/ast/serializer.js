@@ -254,6 +254,12 @@ function serializeDirective(node) {
   if (node.directiveType === 'autonumber') {
     return node.value === null ? 'autonumber off' : `autonumber ${node.value}`;
   }
+  if (node.directiveType === 'space') {
+    return node.value === 1 ? 'space' : `space ${node.value}`;
+  }
+  if (node.directiveType === 'participantspacing') {
+    return `participantspacing ${node.value}`;
+  }
   return '';
 }
 

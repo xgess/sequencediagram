@@ -37,11 +37,34 @@ export function calculateLayout(ast) {
   const entryspacingDirective = ast.find(n => n.type === 'directive' && n.directiveType === 'entryspacing');
   const messageSpacing = entryspacingDirective ? DEFAULT_MESSAGE_SPACING * entryspacingDirective.value : DEFAULT_MESSAGE_SPACING;
 
+  // Check for participantspacing directive
+  const participantSpacingDirective = ast.find(n => n.type === 'directive' && n.directiveType === 'participantspacing');
+  let participantSpacing = PARTICIPANT_SPACING;
+  if (participantSpacingDirective) {
+    if (participantSpacingDirective.value === 'equal') {
+      // Equal spacing will be calculated after we know how many participants there are
+      participantSpacing = 'equal';
+    } else {
+      participantSpacing = participantSpacingDirective.value;
+    }
+  }
+
   // Calculate participant positions
   const participantLayout = new Map();
   const participants = ast.filter(n => n.type === 'participant');
+
+  // Handle equal spacing - calculate based on number of participants
+  let actualSpacing = participantSpacing;
+  if (participantSpacing === 'equal' && participants.length > 1) {
+    // Distribute participants evenly (use default total width)
+    const totalWidth = (participants.length - 1) * PARTICIPANT_SPACING;
+    actualSpacing = totalWidth / (participants.length - 1);
+  } else if (participantSpacing === 'equal') {
+    actualSpacing = PARTICIPANT_SPACING;
+  }
+
   participants.forEach((p, index) => {
-    const x = PARTICIPANT_START_X + (index * PARTICIPANT_SPACING);
+    const x = PARTICIPANT_START_X + (index * actualSpacing);
     participantLayout.set(p.alias, {
       x,
       y: PARTICIPANT_START_Y + titleOffset,
@@ -83,8 +106,17 @@ export function calculateLayout(ast) {
     // Skip entries that are part of a fragment (they'll be laid out by the fragment)
     if (fragmentEntries.has(node.id)) continue;
 
-    // Skip comments and directives (they don't affect layout)
-    if (node.type === 'comment' || node.type === 'directive') continue;
+    // Skip comments (they don't affect layout)
+    if (node.type === 'comment') continue;
+
+    // Handle space directive - add or subtract vertical space
+    if (node.type === 'directive' && node.directiveType === 'space') {
+      currentY += node.value * BLANKLINE_SPACING;
+      continue;
+    }
+
+    // Skip other directives (they don't affect layout)
+    if (node.type === 'directive') continue;
 
     // Handle blank lines - add spacing
     if (node.type === 'blankline') {

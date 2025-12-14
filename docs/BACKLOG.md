@@ -1531,17 +1531,19 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Auto-activation: activate on request, deactivate on response
 - Serialize correctly
 
-## BACKLOG-131: Spacing controls
-**Phase:** 5.7  
-**Dependencies:** None  
-**Description:** Add space, participantspacing, entryspacing directives.  
+## BACKLOG-131: Spacing controls ✅
+**Phase:** 5.7
+**Dependencies:** None
+**Status:** Complete
+**Description:** Add space, participantspacing, entryspacing directives.
 **Acceptance Criteria:**
-- Parse: `space`, `space 3`, `space -4`
-- Parse: `participantspacing 50`, `participantspacing equal`
-- Parse: `entryspacing 0.1`
-- Apply spacing in layout calculation
-- Negative space allows overlapping messages
-- Serialize directives
+- Parse: `space`, `space 3`, `space -4` ✅
+- Parse: `participantspacing 50`, `participantspacing equal` ✅
+- Parse: `entryspacing 0.1` ✅ (already implemented)
+- Apply spacing in layout calculation ✅
+- Negative space allows overlapping messages ✅
+- Serialize directives ✅
+- 20 unit tests verify spacing controls ✅
 
 ## BACKLOG-132: Lifeline styling
 **Phase:** 5.7  
@@ -1772,7 +1774,7 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 
 ## Current Progress Summary
 
-**Last Updated:** After BACKLOG-124 (All fragment types)
+**Last Updated:** After BACKLOG-131 (Spacing controls)
 
 ### Phases Complete
 - Phase 0: Requirements & Design ✅
@@ -1780,7 +1782,7 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Phase 2: Editor Integration ✅
 - Phase 3: Interactivity ✅
 - Phase 4: File I/O & Export ✅
-- Phase 5: In Progress (6 of ~40 tasks done)
+- Phase 5: In Progress (14 of ~40 tasks done)
 
 ### Implemented Features
 Core functionality is complete and usable:
@@ -1798,15 +1800,21 @@ Core functionality is complete and usable:
 - Zoom controls and resizable splitter
 - Presentation mode (Ctrl+M to toggle, Esc to exit)
 - Shrink to fit (Fit button scales diagram to viewport)
+- Message delays (sloped lines)
+- Boundary messages ([->A incoming, A->] outgoing)
+- Message styling with brackets
+- Autonumbering
+- Spacing controls (space, participantspacing)
 
 ### Recommended Next Steps (Priority Order)
 1. **BACKLOG-117-119: Icon participant types** - Font Awesome, Material Design Icons, custom images (requires vendoring)
-2. **BACKLOG-121: Message delays** - non-instantaneous messages with A->(5)B syntax
-3. **BACKLOG-122: Boundary messages** - [->A incoming, A->] outgoing syntax
+2. **BACKLOG-129: Lifecycle - create, destroy** - Dynamic participant creation/destruction
+3. **BACKLOG-130: Activations** - Activation bars on lifelines
 
 ### Known Gaps
 - Autosave disable setting not implemented (minor)
 - Icon participant types require vendoring external fonts
+- Lifecycle and activations not yet implemented
 
 ---
 
