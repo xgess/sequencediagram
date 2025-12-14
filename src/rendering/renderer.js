@@ -80,6 +80,12 @@ export function render(ast) {
   const bottomParticipantsDirective = ast.find(node => node.type === 'directive' && node.directiveType === 'bottomparticipants');
   const fontfamilyDirective = ast.find(node => node.type === 'directive' && node.directiveType === 'fontfamily');
 
+  // Build destroy info map from destroy directives
+  const destroyInfo = buildDestroyInfo(ast);
+
+  // Build create info map from create messages
+  const createInfo = buildCreateInfo(ast);
+
   // Build lifeline styles map from lifelinestyle directives
   const lifelineStyles = buildLifelineStyles(ast);
 
@@ -111,16 +117,63 @@ export function render(ast) {
     const layoutInfo = layout.get(participant.id);
     if (layoutInfo) {
       const style = lifelineStyles.get(participant.alias) || lifelineStyles.get(null) || {};
-      const lifeline = renderLifeline(participant, layoutInfo, lifelineEndY, style);
+
+      // Check if this participant is created by a message
+      const createMessageId = createInfo.get(participant.alias);
+      let lifelineStartY = layoutInfo.y + layoutInfo.height;
+      if (createMessageId) {
+        const createMessageLayout = layout.get(createMessageId);
+        if (createMessageLayout) {
+          // Lifeline starts at the create message Y position (below participant box)
+          lifelineStartY = createMessageLayout.y + layoutInfo.height;
+        }
+      }
+
+      // Check if this participant is destroyed
+      const destroyData = destroyInfo.get(participant.alias);
+      let actualEndY = lifelineEndY;
+      if (destroyData) {
+        // Find the Y position of the destroy directive by looking at layout
+        const destroyLayoutInfo = layout.get(destroyData.nodeId);
+        if (destroyLayoutInfo) {
+          actualEndY = destroyLayoutInfo.y;
+        }
+      }
+
+      const lifeline = renderLifeline(participant, { ...layoutInfo, startY: lifelineStartY }, actualEndY, style);
       lifelinesGroup.appendChild(lifeline);
+
+      // Render destroy X marker if destroy or destroyafter (not destroysilent)
+      if (destroyData && destroyData.type !== 'destroysilent') {
+        const destroyMarker = renderDestroyMarker(participant, layoutInfo.centerX, actualEndY);
+        lifelinesGroup.appendChild(destroyMarker);
+      }
     }
   });
 
-  // Render participants (top)
+  // Render participants (top or at create position)
   participants.forEach(participant => {
     const layoutInfo = layout.get(participant.id);
     if (layoutInfo) {
-      const participantEl = renderParticipant(participant, layoutInfo);
+      // Check if this participant is created by a message
+      const createMessageId = createInfo.get(participant.alias);
+      let renderLayoutInfo = layoutInfo;
+
+      if (createMessageId) {
+        const createMessageLayout = layout.get(createMessageId);
+        if (createMessageLayout) {
+          // Position participant at the create message Y, centered around it
+          renderLayoutInfo = {
+            ...layoutInfo,
+            y: createMessageLayout.y - layoutInfo.height / 2
+          };
+        }
+      }
+
+      const participantEl = renderParticipant(participant, renderLayoutInfo);
+      if (createMessageId) {
+        participantEl.classList.add('created-participant');
+      }
       participantsGroup.appendChild(participantEl);
     }
   });
@@ -372,7 +425,7 @@ function renderParticipantGroup(group, participantLayout, height) {
 /**
  * Render a lifeline for a participant
  * @param {Object} participant - Participant AST node
- * @param {Object} layoutInfo - Layout info {x, y, width, height, centerX}
+ * @param {Object} layoutInfo - Layout info {x, y, width, height, centerX, startY?}
  * @param {number} endY - End Y position of the lifeline
  * @param {Object} style - Lifeline style {color, width, lineStyle}
  * @returns {SVGLineElement} Lifeline element
@@ -382,7 +435,9 @@ function renderLifeline(participant, layoutInfo, endY, style = {}) {
   line.setAttribute('class', 'lifeline');
   line.setAttribute('data-participant', participant.alias);
   line.setAttribute('x1', layoutInfo.centerX);
-  line.setAttribute('y1', layoutInfo.y + layoutInfo.height);
+  // Use startY if provided (for created participants), otherwise use y + height
+  const startY = layoutInfo.startY !== undefined ? layoutInfo.startY : layoutInfo.y + layoutInfo.height;
+  line.setAttribute('y1', startY);
   line.setAttribute('x2', layoutInfo.centerX);
   line.setAttribute('y2', endY);
 
@@ -405,6 +460,42 @@ function renderLifeline(participant, layoutInfo, endY, style = {}) {
 }
 
 /**
+ * Render a destroy X marker at a lifeline
+ * @param {Object} participant - Participant AST node
+ * @param {number} centerX - X position of the lifeline
+ * @param {number} y - Y position of the destroy marker
+ * @returns {SVGGElement} Destroy marker group
+ */
+function renderDestroyMarker(participant, centerX, y) {
+  const group = document.createElementNS(SVG_NS, 'g');
+  group.setAttribute('class', 'destroy-marker');
+  group.setAttribute('data-participant', participant.alias);
+
+  const size = 10; // Half-size of the X
+
+  // Draw X as two lines
+  const line1 = document.createElementNS(SVG_NS, 'line');
+  line1.setAttribute('x1', centerX - size);
+  line1.setAttribute('y1', y - size);
+  line1.setAttribute('x2', centerX + size);
+  line1.setAttribute('y2', y + size);
+  line1.setAttribute('stroke', 'black');
+  line1.setAttribute('stroke-width', '2');
+  group.appendChild(line1);
+
+  const line2 = document.createElementNS(SVG_NS, 'line');
+  line2.setAttribute('x1', centerX + size);
+  line2.setAttribute('y1', y - size);
+  line2.setAttribute('x2', centerX - size);
+  line2.setAttribute('y2', y + size);
+  line2.setAttribute('stroke', 'black');
+  line2.setAttribute('stroke-width', '2');
+  group.appendChild(line2);
+
+  return group;
+}
+
+/**
  * Build lifeline styles map from lifelinestyle directives
  * @param {Array} ast - AST nodes
  * @returns {Map} participant alias (or null for global) -> style object
@@ -420,6 +511,46 @@ function buildLifelineStyles(ast) {
   }
 
   return styles;
+}
+
+/**
+ * Build destroy info map from destroy directives
+ * @param {Array} ast - AST nodes
+ * @returns {Map} participant alias -> { type: 'destroy'|'destroyafter'|'destroysilent', y: number }
+ */
+function buildDestroyInfo(ast) {
+  const destroyMap = new Map();
+
+  for (const node of ast) {
+    if (node.type === 'directive' &&
+        (node.directiveType === 'destroy' ||
+         node.directiveType === 'destroyafter' ||
+         node.directiveType === 'destroysilent')) {
+      destroyMap.set(node.participant, {
+        type: node.directiveType,
+        nodeId: node.id
+      });
+    }
+  }
+
+  return destroyMap;
+}
+
+/**
+ * Build create info map from create messages
+ * @param {Array} ast - AST nodes
+ * @returns {Map} participant alias -> message ID that creates it
+ */
+function buildCreateInfo(ast) {
+  const createMap = new Map();
+
+  for (const node of ast) {
+    if (node.type === 'message' && node.isCreate) {
+      createMap.set(node.to, node.id);
+    }
+  }
+
+  return createMap;
 }
 
 /**

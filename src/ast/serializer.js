@@ -346,6 +346,10 @@ function serializeDirective(node) {
     }
     return output;
   }
+  // Handle destroy directives: destroy, destroyafter, destroysilent
+  if (node.directiveType === 'destroy' || node.directiveType === 'destroyafter' || node.directiveType === 'destroysilent') {
+    return `${node.directiveType} ${node.participant}`;
+  }
   return '';
 }
 
@@ -356,6 +360,7 @@ function serializeDirective(node) {
  */
 function serializeMessage(node) {
   const delay = node.delay ? `(${node.delay})` : '';
+  const createMarker = node.isCreate ? '*' : '';
 
   // If message has styling, use bracket syntax
   if (node.style && (node.style.color || node.style.width || node.style.styleName)) {
@@ -371,10 +376,10 @@ function serializeMessage(node) {
       dashes = '-';
       head = arrow.slice(1);
     }
-    return `${node.from}${dashes}[${styleStr}]${head}${delay}${node.to}:${node.label}`;
+    return `${node.from}${dashes}[${styleStr}]${head}${delay}${createMarker}${node.to}:${node.label}`;
   }
 
-  return `${node.from}${node.arrowType}${delay}${node.to}:${node.label}`;
+  return `${node.from}${node.arrowType}${delay}${createMarker}${node.to}:${node.label}`;
 }
 
 /**

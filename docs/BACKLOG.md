@@ -1507,16 +1507,17 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Delete key removes
 - Commands for undo/redo
 
-## BACKLOG-129: Lifecycle - create, destroy
-**Phase:** 5.6  
-**Dependencies:** None  
-**Description:** Add create and destroy lifecycle commands.  
+## BACKLOG-129: Lifecycle - create, destroy ✅
+**Phase:** 5.6
+**Dependencies:** None
+**Status:** Complete
+**Description:** Add create and destroy lifecycle commands.
 **Acceptance Criteria:**
-- Parse: `A->*B:<<create>>`, `destroy C`, `destroyafter C`, `destroysilent C`
-- Render create arrow to participant (appears at message Y)
-- Render destroy X at participant lifeline
-- destroyafter adds space, destroysilent omits X
-- Serialize correctly
+- Parse: `A->*B:<<create>>`, `destroy C`, `destroyafter C`, `destroysilent C` ✅
+- Render create arrow to participant (appears at message Y) ✅
+- Render destroy X at participant lifeline ✅
+- destroyafter adds space, destroysilent omits X ✅
+- Serialize correctly ✅
 
 ## BACKLOG-130: Activations
 **Phase:** 5.6  
@@ -1786,7 +1787,7 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 
 ## Current Progress Summary
 
-**Last Updated:** After BACKLOG-138 (Font family directive)
+**Last Updated:** After BACKLOG-129 (Lifecycle - create, destroy)
 
 ### Phases Complete
 - Phase 0: Requirements & Design ✅
@@ -1823,16 +1824,16 @@ Core functionality is complete and usable:
 - Participant groups (visual grouping with background box)
 - Bottom participants (duplicate participant boxes at bottom)
 - Font family directive (custom fonts for all text)
+- Lifecycle commands (create/destroy participants dynamically)
 
 ### Recommended Next Steps (Priority Order)
 1. **BACKLOG-117-119: Icon participant types** - Font Awesome, Material Design Icons, custom images (requires vendoring)
-2. **BACKLOG-129: Lifecycle - create, destroy** - Dynamic participant creation/destruction
-3. **BACKLOG-130: Activations** - Activation bars on lifelines
+2. **BACKLOG-130: Activations** - Activation bars on lifelines
 
 ### Known Gaps
 - Autosave disable setting not implemented (minor)
 - Icon participant types require vendoring external fonts
-- Lifecycle and activations not yet implemented
+- Activations not yet implemented
 
 ---
 

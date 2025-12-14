@@ -146,6 +146,23 @@ export function calculateLayout(ast) {
       continue;
     }
 
+    // Handle destroy directives - record position for lifeline termination
+    if (node.type === 'directive' &&
+        (node.directiveType === 'destroy' ||
+         node.directiveType === 'destroyafter' ||
+         node.directiveType === 'destroysilent')) {
+      // Store the Y position where the destroy occurs
+      layout.set(node.id, {
+        y: currentY,
+        type: 'destroy'
+      });
+      // destroyafter adds extra space after the destroy marker
+      if (node.directiveType === 'destroyafter') {
+        currentY += DEFAULT_MESSAGE_SPACING;
+      }
+      continue;
+    }
+
     // Skip other directives (they don't affect layout)
     if (node.type === 'directive') continue;
 

@@ -261,6 +261,19 @@ function parseDirective(line, lineNumber) {
     };
   }
 
+  // Match destroy directives: destroy C, destroyafter C, destroysilent C
+  const destroyMatch = line.match(/^(destroy|destroyafter|destroysilent)\s+(\S+)$/);
+  if (destroyMatch) {
+    return {
+      id: generateId('directive'),
+      type: 'directive',
+      directiveType: destroyMatch[1],
+      participant: destroyMatch[2],
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
+  }
+
   // Match frame directive: frame Title or frame#operatorColor #fill #border;width;style Title
   const frameMatch = line.match(/^frame(#[^\s#]+)?(?:\s+(#[^\s;]+))?(?:\s+(#[^\s;]+)(?:;(\d+))?(?:;(solid|dashed|dotted))?)?(?:\s+(.+))?$/);
   if (frameMatch) {
@@ -770,13 +783,15 @@ function parseParticipantStyle(styleStr) {
 function parseMessage(line, lineNumber) {
   // Try styled message first: A-[#color;width]>B or A-[##style]>B
   // The bracket style goes between the dash(es) and the arrow head
-  const styledMatch = line.match(/^(\[|[^\s\-<\[]+)(-{1,2})\[([^\]]+)\](>>?|x)(\(\d+\))?(\]|[^\s:\]]+):(.*)$/);
+  // Also handles create syntax with * prefix: A-[#red]>*B:<<create>>
+  const styledMatch = line.match(/^(\[|[^\s\-<\[]+)(-{1,2})\[([^\]]+)\](>>?|x)(\(\d+\))?(\*)?(\]|[^\s:\]]+):(.*)$/);
   if (styledMatch) {
-    const [, from, dashes, styleStr, arrowHead, delayStr, to, label] = styledMatch;
+    const [, from, dashes, styleStr, arrowHead, delayStr, createMarker, to, label] = styledMatch;
     const delay = delayStr ? parseInt(delayStr.slice(1, -1), 10) : null;
     const arrowType = dashes + '>' + (arrowHead === '>>' ? '>' : arrowHead === 'x' ? '' : '');
     // Reconstruct proper arrow: - + > or >> or x
     const actualArrow = dashes + (arrowHead === 'x' ? 'x' : arrowHead);
+    const isCreate = createMarker === '*' || label.trim().includes('<<create>>');
 
     return {
       id: generateId('message'),
@@ -787,16 +802,19 @@ function parseMessage(line, lineNumber) {
       delay,
       label: label.trim(),
       style: parseMessageStyle(styleStr),
+      isCreate: isCreate || null,
       sourceLineStart: lineNumber,
       sourceLineEnd: lineNumber
     };
   }
 
   // Try boundary/regular message: [->A or A->]
-  const boundaryMatch = line.match(/^(\[|[^\s\-<\[]+)(<-->>|<->>|<-->|<->|<--|<-|-->>|-->|->>|->|--x|-x)(\(\d+\))?(\]|[^\s:\]]+):(.*)$/);
+  // Also handles create syntax: A->*B:<<create>> (with * prefix on target)
+  const boundaryMatch = line.match(/^(\[|[^\s\-<\[]+)(<-->>|<->>|<-->|<->|<--|<-|-->>|-->|->>|->|--x|-x)(\(\d+\))?(\*)?(\]|[^\s:\]]+):(.*)$/);
   if (boundaryMatch) {
-    const [, from, arrowType, delayStr, to, label] = boundaryMatch;
+    const [, from, arrowType, delayStr, createMarker, to, label] = boundaryMatch;
     const delay = delayStr ? parseInt(delayStr.slice(1, -1), 10) : null;
+    const isCreate = createMarker === '*' || label.trim().includes('<<create>>');
 
     return {
       id: generateId('message'),
@@ -807,6 +825,7 @@ function parseMessage(line, lineNumber) {
       delay,
       label: label.trim(),
       style: null,
+      isCreate: isCreate || null,
       sourceLineStart: lineNumber,
       sourceLineEnd: lineNumber
     };
