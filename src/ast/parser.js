@@ -203,6 +203,32 @@ function parseDirective(line, lineNumber) {
     };
   }
 
+  // Match linear directive: linear or linear off
+  const linearMatch = line.match(/^linear(\s+off)?$/);
+  if (linearMatch) {
+    return {
+      id: generateId('directive'),
+      type: 'directive',
+      directiveType: 'linear',
+      value: linearMatch[1] ? false : true,
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
+  }
+
+  // Match parallel directive: parallel or parallel off
+  const parallelMatch = line.match(/^parallel(\s+off)?$/);
+  if (parallelMatch) {
+    return {
+      id: generateId('directive'),
+      type: 'directive',
+      directiveType: 'parallel',
+      value: parallelMatch[1] ? false : true,
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
+  }
+
   return null;
 }
 

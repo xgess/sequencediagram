@@ -282,6 +282,12 @@ function serializeDirective(node) {
     }
     return output;
   }
+  if (node.directiveType === 'linear') {
+    return node.value ? 'linear' : 'linear off';
+  }
+  if (node.directiveType === 'parallel') {
+    return node.value ? 'parallel' : 'parallel off';
+  }
   return '';
 }
 

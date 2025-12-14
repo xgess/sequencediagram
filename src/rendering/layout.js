@@ -99,6 +99,12 @@ export function calculateLayout(ast) {
   // Calculate positions for messages and fragments
   let currentY = MESSAGE_START_Y + titleOffset;
 
+  // Track linear/parallel mode state
+  let linearMode = false;
+  let parallelMode = false;
+  let parallelStartY = null; // Y position where parallel section starts
+  let parallelMaxHeight = 0; // Track max height in parallel section
+
   for (const node of ast) {
     // Skip participants (already handled)
     if (node.type === 'participant') continue;
@@ -112,6 +118,31 @@ export function calculateLayout(ast) {
     // Handle space directive - add or subtract vertical space
     if (node.type === 'directive' && node.directiveType === 'space') {
       currentY += node.value * BLANKLINE_SPACING;
+      continue;
+    }
+
+    // Handle linear directive
+    if (node.type === 'directive' && node.directiveType === 'linear') {
+      linearMode = node.value;
+      continue;
+    }
+
+    // Handle parallel directive
+    if (node.type === 'directive' && node.directiveType === 'parallel') {
+      if (node.value) {
+        // Starting parallel mode
+        parallelMode = true;
+        parallelStartY = currentY;
+        parallelMaxHeight = 0;
+      } else {
+        // Ending parallel mode - move currentY past the tallest element
+        parallelMode = false;
+        if (parallelMaxHeight > 0) {
+          currentY = parallelStartY + parallelMaxHeight;
+        }
+        parallelStartY = null;
+        parallelMaxHeight = 0;
+      }
       continue;
     }
 
@@ -171,8 +202,11 @@ export function calculateLayout(ast) {
       const delayHeight = node.delay ? node.delay * 10 : 0;
       const totalHeight = messageSpacing + delayHeight;
 
+      // In parallel mode, all messages are at the same Y position
+      const messageY = parallelMode ? parallelStartY : currentY;
+
       layout.set(node.id, {
-        y: currentY,
+        y: messageY,
         fromX,
         toX,
         height: totalHeight,
@@ -180,7 +214,12 @@ export function calculateLayout(ast) {
         isBoundary: node.from === '[' || node.to === ']'
       });
 
-      currentY += totalHeight;
+      if (parallelMode) {
+        // Track the max height in the parallel section
+        parallelMaxHeight = Math.max(parallelMaxHeight, totalHeight);
+      } else {
+        currentY += totalHeight;
+      }
     } else if (node.type === 'note') {
       // Calculate note position based on participants and position
       const noteLayout = calculateNoteLayout(node, participantLayout);
