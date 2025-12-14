@@ -512,23 +512,26 @@ function parseParticipantStyle(styleStr) {
  * Parse a message between participants
  * Syntax: From->To:Label or From->>To:Label etc.
  * Arrow types: -> ->> --> -->> <- <->> <-- <-->> <-> <->> -x --x
+ * Delay syntax: From->(N)To:Label where N is delay units
  * @param {string} line - Trimmed source line
  * @param {number} lineNumber - 1-indexed line number
  * @returns {Object|null} Message AST node or null
  */
 function parseMessage(line, lineNumber) {
-  // Match: From ARROW To : Label
+  // Match: From ARROW [delay] To : Label
   // Arrow types ordered by length for correct matching:
   // Bidirectional: <->> <->
   // Reversed: <-->> <->> <-- <-
   // Forward: -->> --> ->> ->
   // Lost: --x -x
-  const match = line.match(/^([^\s\-<]+)(<-->>|<->>|<-->|<->|<--|<-|-->>|-->|->>|->|--x|-x)([^\s:]+):(.*)$/);
+  // Optional delay: (N) after arrow, before target
+  const match = line.match(/^([^\s\-<]+)(<-->>|<->>|<-->|<->|<--|<-|-->>|-->|->>|->|--x|-x)(\(\d+\))?([^\s:]+):(.*)$/);
   if (!match) {
     return null;
   }
 
-  const [, from, arrowType, to, label] = match;
+  const [, from, arrowType, delayStr, to, label] = match;
+  const delay = delayStr ? parseInt(delayStr.slice(1, -1), 10) : null;
 
   return {
     id: generateId('message'),
@@ -536,6 +539,7 @@ function parseMessage(line, lineNumber) {
     from,
     to,
     arrowType,
+    delay,
     label: label.trim(),
     style: null,
     sourceLineStart: lineNumber,

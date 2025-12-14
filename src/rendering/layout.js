@@ -112,15 +112,20 @@ export function calculateLayout(ast) {
       const fromLayout = participantLayout.get(node.from);
       const toLayout = participantLayout.get(node.to);
 
+      // Delayed messages need extra vertical space for the slope
+      const delayHeight = node.delay ? node.delay * 10 : 0;
+      const totalHeight = messageSpacing + delayHeight;
+
       if (fromLayout && toLayout) {
         layout.set(node.id, {
           y: currentY,
           fromX: fromLayout.centerX,
           toX: toLayout.centerX,
-          height: messageSpacing
+          height: totalHeight,
+          delay: node.delay || 0
         });
       }
-      currentY += messageSpacing;
+      currentY += totalHeight;
     } else if (node.type === 'note') {
       // Calculate note position based on participants and position
       const noteLayout = calculateNoteLayout(node, participantLayout);
@@ -233,15 +238,20 @@ function layoutEntry(entryId, nodeById, participantLayout, layout, currentY, mes
     const fromLayout = participantLayout.get(entry.from);
     const toLayout = participantLayout.get(entry.to);
 
+    // Delayed messages need extra vertical space for the slope
+    const delayHeight = entry.delay ? entry.delay * 10 : 0;
+    const totalHeight = messageSpacing + delayHeight;
+
     if (fromLayout && toLayout) {
       layout.set(entry.id, {
         y: currentY,
         fromX: fromLayout.centerX,
         toX: toLayout.centerX,
-        height: messageSpacing
+        height: totalHeight,
+        delay: entry.delay || 0
       });
     }
-    return currentY + messageSpacing;
+    return currentY + totalHeight;
   }
 
   if (entry.type === 'fragment') {

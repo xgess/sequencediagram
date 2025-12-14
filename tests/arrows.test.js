@@ -1,4 +1,4 @@
-// Tests for arrow types (BACKLOG-120)
+// Tests for arrow types (BACKLOG-120) and message delays (BACKLOG-121)
 
 import { describe, it, expect } from 'vitest';
 import { parse } from '../src/ast/parser.js';
@@ -210,5 +210,111 @@ describe('Arrow Types (BACKLOG-120)', () => {
         expect(msg2.label).toBe(msg1.label);
       });
     }
+  });
+});
+
+describe('Message Delays (BACKLOG-121)', () => {
+
+  describe('Parsing delays', () => {
+    it('should parse message with delay', () => {
+      const ast = parse('participant A\nparticipant B\nA->(5)B:delayed');
+      const msg = ast.find(n => n.type === 'message');
+      expect(msg.delay).toBe(5);
+      expect(msg.from).toBe('A');
+      expect(msg.to).toBe('B');
+      expect(msg.label).toBe('delayed');
+    });
+
+    it('should parse message without delay as null', () => {
+      const ast = parse('participant A\nparticipant B\nA->B:normal');
+      const msg = ast.find(n => n.type === 'message');
+      expect(msg.delay).toBeNull();
+    });
+
+    it('should parse delay with different arrow types', () => {
+      const ast = parse('participant A\nparticipant B\nA->>(3)B:async delayed');
+      const msg = ast.find(n => n.type === 'message');
+      expect(msg.arrowType).toBe('->>');
+      expect(msg.delay).toBe(3);
+    });
+
+    it('should parse delay with return arrow', () => {
+      const ast = parse('participant A\nparticipant B\nA-->(2)B:return delayed');
+      const msg = ast.find(n => n.type === 'message');
+      expect(msg.arrowType).toBe('-->');
+      expect(msg.delay).toBe(2);
+    });
+
+    it('should parse large delay values', () => {
+      const ast = parse('participant A\nparticipant B\nA->(10)B:big delay');
+      const msg = ast.find(n => n.type === 'message');
+      expect(msg.delay).toBe(10);
+    });
+  });
+
+  describe('Serialization', () => {
+    it('should serialize message with delay', () => {
+      const ast = parse('participant A\nparticipant B\nA->(5)B:delayed');
+      const output = serialize(ast);
+      expect(output).toContain('A->(5)B:delayed');
+    });
+
+    it('should serialize message without delay (no parentheses)', () => {
+      const ast = parse('participant A\nparticipant B\nA->B:normal');
+      const output = serialize(ast);
+      expect(output).toContain('A->B:normal');
+      expect(output).not.toContain('()');
+    });
+  });
+
+  describe('Rendering', () => {
+    it('should render delayed message with sloped line', () => {
+      const ast = parse('participant A\nparticipant B\nA->(3)B:delayed');
+      const svg = render(ast);
+      const line = svg.querySelector('.message line');
+
+      // y1 and y2 should be different for sloped line
+      const y1 = parseFloat(line.getAttribute('y1'));
+      const y2 = parseFloat(line.getAttribute('y2'));
+      expect(y2).toBeGreaterThan(y1);
+    });
+
+    it('should render non-delayed message with horizontal line', () => {
+      const ast = parse('participant A\nparticipant B\nA->B:normal');
+      const svg = render(ast);
+      const line = svg.querySelector('.message line');
+
+      const y1 = parseFloat(line.getAttribute('y1'));
+      const y2 = parseFloat(line.getAttribute('y2'));
+      expect(y2).toBe(y1);
+    });
+  });
+
+  describe('Round-trip', () => {
+    it('should round-trip message with delay', () => {
+      const input = 'participant A\nparticipant B\nA->(5)B:delayed';
+      const ast1 = parse(input);
+      const output = serialize(ast1);
+      const ast2 = parse(output);
+
+      const msg1 = ast1.find(n => n.type === 'message');
+      const msg2 = ast2.find(n => n.type === 'message');
+
+      expect(msg2.delay).toBe(msg1.delay);
+      expect(msg2.arrowType).toBe(msg1.arrowType);
+      expect(msg2.label).toBe(msg1.label);
+    });
+
+    it('should round-trip message without delay', () => {
+      const input = 'participant A\nparticipant B\nA->B:normal';
+      const ast1 = parse(input);
+      const output = serialize(ast1);
+      const ast2 = parse(output);
+
+      const msg1 = ast1.find(n => n.type === 'message');
+      const msg2 = ast2.find(n => n.type === 'message');
+
+      expect(msg2.delay).toBe(msg1.delay);
+    });
   });
 });

@@ -6,11 +6,11 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 /**
  * Render a message node to SVG
  * @param {Object} node - Message AST node
- * @param {Object} layoutInfo - Position info {y, fromX, toX}
+ * @param {Object} layoutInfo - Position info {y, fromX, toX, delay}
  * @returns {SVGGElement} Rendered message group
  */
 export function renderMessage(node, layoutInfo) {
-  const { y, fromX, toX } = layoutInfo;
+  const { y, fromX, toX, delay } = layoutInfo;
   const arrowType = node.arrowType;
 
   const group = document.createElementNS(SVG_NS, 'g');
@@ -31,12 +31,17 @@ export function renderMessage(node, layoutInfo) {
     lineToX = fromX;
   }
 
+  // Calculate Y positions - delayed messages have sloped lines
+  const delayOffset = delay ? delay * 10 : 0;
+  const startY = y;
+  const endY = y + delayOffset;
+
   // Create the arrow line
   const line = document.createElementNS(SVG_NS, 'line');
   line.setAttribute('x1', lineFromX);
-  line.setAttribute('y1', y);
+  line.setAttribute('y1', startY);
   line.setAttribute('x2', lineToX);
-  line.setAttribute('y2', y);
+  line.setAttribute('y2', endY);
   line.setAttribute('stroke', 'black');
   line.setAttribute('stroke-width', '1');
 
@@ -67,8 +72,10 @@ export function renderMessage(node, layoutInfo) {
   if (node.label) {
     const text = document.createElementNS(SVG_NS, 'text');
     const midX = (fromX + toX) / 2;
+    // Position label at midpoint of the line (accounts for slope)
+    const midY = (startY + endY) / 2 - 8;
     text.setAttribute('x', midX);
-    text.setAttribute('y', y - 8);
+    text.setAttribute('y', midY);
     text.setAttribute('text-anchor', 'middle');
     text.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, sans-serif');
     text.setAttribute('font-size', '11');

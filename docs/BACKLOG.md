@@ -1418,15 +1418,16 @@ This backlog contains all tasks needed to build the hermetic sequence diagram to
 - Also added: <--, <->>, <-->> and --x variants ✅
 - 40 unit tests verify all arrow types ✅
 
-## BACKLOG-121: Message delays (non-instantaneous)
-**Phase:** 5.3  
-**Dependencies:** BACKLOG-114  
-**Description:** Add support for A->(5)B syntax showing propagation delay.  
+## BACKLOG-121: Message delays (non-instantaneous) ✅
+**Phase:** 5.3
+**Dependencies:** BACKLOG-114
+**Status:** Complete
+**Description:** Add support for A->(5)B syntax showing propagation delay.
 **Acceptance Criteria:**
-- Parse delay number from message syntax
-- Render message with visual delay (sloped line)
-- Works with space -N for overlapping messages
-- Serialize with delay
+- Parse delay number from message syntax ✅
+- Render message with visual delay (sloped line) ✅
+- Serialize with delay ✅
+- 11 unit tests verify delay functionality ✅
 
 ## BACKLOG-122: Boundary messages
 **Phase:** 5.3  

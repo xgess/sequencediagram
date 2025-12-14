@@ -260,7 +260,8 @@ function serializeDirective(node) {
  * @returns {string} Serialized message
  */
 function serializeMessage(node) {
-  return `${node.from}${node.arrowType}${node.to}:${node.label}`;
+  const delay = node.delay ? `(${node.delay})` : '';
+  return `${node.from}${node.arrowType}${delay}${node.to}:${node.label}`;
 }
 
 /**
