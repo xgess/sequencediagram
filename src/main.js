@@ -1601,13 +1601,16 @@ function findNodeWithLocation(nodeId) {
       return { node, index: i, parentId: null, parentProperty: null, clauseIndex: null };
     }
 
-    // Check fragment entries
+    // Check fragment entries (entries are ID strings, not objects)
     if (node.type === 'fragment') {
       if (node.entries) {
         for (let j = 0; j < node.entries.length; j++) {
-          if (node.entries[j].id === nodeId) {
+          // entries are ID strings - compare directly
+          if (node.entries[j] === nodeId) {
+            // Find the actual node in the flat AST
+            const entryNode = currentAst.find(n => n.id === nodeId);
             return {
-              node: node.entries[j],
+              node: entryNode,
               index: j,
               parentId: node.id,
               parentProperty: 'entries',
@@ -1622,9 +1625,12 @@ function findNodeWithLocation(nodeId) {
           const clause = node.elseClauses[ci];
           if (clause.entries) {
             for (let j = 0; j < clause.entries.length; j++) {
-              if (clause.entries[j].id === nodeId) {
+              // entries are ID strings - compare directly
+              if (clause.entries[j] === nodeId) {
+                // Find the actual node in the flat AST
+                const entryNode = currentAst.find(n => n.id === nodeId);
                 return {
-                  node: clause.entries[j],
+                  node: entryNode,
                   index: j,
                   parentId: node.id,
                   parentProperty: 'elseClauses',
