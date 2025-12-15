@@ -4,6 +4,7 @@
 
 /**
  * Parse text with markup into an array of segments
+ * Supports nested markup (e.g., ""++big mono++"" works correctly)
  * Supports:
  * - **bold**, //italic//, __underline__
  * - --small--, ++big++, ""mono"", ~~strike~~
@@ -15,7 +16,7 @@
  * - <background:#color>text</background>
  * - \n (linebreak)
  * @param {string} text - Text with markup
- * @returns {Array<{type: string, content?: string, value?: string|number}>} Array of segments
+ * @returns {Array<{type: string, content?: string, children?: Array, value?: string|number}>} Array of segments
  */
 export function parseMarkup(text) {
   if (!text) {
@@ -37,7 +38,9 @@ export function parseMarkup(text) {
     const boldMatch = remaining.match(/^\*\*(.*?)\*\*/);
     if (boldMatch) {
       if (boldMatch[1]) {
-        segments.push({ type: 'bold', content: boldMatch[1] });
+        const innerContent = boldMatch[1];
+        const children = hasMarkup(innerContent) ? parseMarkup(innerContent) : null;
+        segments.push({ type: 'bold', content: innerContent, children });
       }
       remaining = remaining.substring(boldMatch[0].length);
       continue;
@@ -47,7 +50,9 @@ export function parseMarkup(text) {
     const italicMatch = remaining.match(/^\/\/(.*?)\/\//);
     if (italicMatch) {
       if (italicMatch[1]) {
-        segments.push({ type: 'italic', content: italicMatch[1] });
+        const innerContent = italicMatch[1];
+        const children = hasMarkup(innerContent) ? parseMarkup(innerContent) : null;
+        segments.push({ type: 'italic', content: innerContent, children });
       }
       remaining = remaining.substring(italicMatch[0].length);
       continue;
@@ -57,7 +62,9 @@ export function parseMarkup(text) {
     const underlineMatch = remaining.match(/^__(.*?)__/);
     if (underlineMatch) {
       if (underlineMatch[1]) {
-        segments.push({ type: 'underline', content: underlineMatch[1] });
+        const innerContent = underlineMatch[1];
+        const children = hasMarkup(innerContent) ? parseMarkup(innerContent) : null;
+        segments.push({ type: 'underline', content: innerContent, children });
       }
       remaining = remaining.substring(underlineMatch[0].length);
       continue;
@@ -67,7 +74,9 @@ export function parseMarkup(text) {
     const smallMatch = remaining.match(/^--(.*?)--/);
     if (smallMatch) {
       if (smallMatch[1]) {
-        segments.push({ type: 'small', content: smallMatch[1] });
+        const innerContent = smallMatch[1];
+        const children = hasMarkup(innerContent) ? parseMarkup(innerContent) : null;
+        segments.push({ type: 'small', content: innerContent, children });
       }
       remaining = remaining.substring(smallMatch[0].length);
       continue;
@@ -77,7 +86,9 @@ export function parseMarkup(text) {
     const bigMatch = remaining.match(/^\+\+(.*?)\+\+/);
     if (bigMatch) {
       if (bigMatch[1]) {
-        segments.push({ type: 'big', content: bigMatch[1] });
+        const innerContent = bigMatch[1];
+        const children = hasMarkup(innerContent) ? parseMarkup(innerContent) : null;
+        segments.push({ type: 'big', content: innerContent, children });
       }
       remaining = remaining.substring(bigMatch[0].length);
       continue;
@@ -87,7 +98,9 @@ export function parseMarkup(text) {
     const monoMatch = remaining.match(/^""(.*?)""/);
     if (monoMatch) {
       if (monoMatch[1]) {
-        segments.push({ type: 'mono', content: monoMatch[1] });
+        const innerContent = monoMatch[1];
+        const children = hasMarkup(innerContent) ? parseMarkup(innerContent) : null;
+        segments.push({ type: 'mono', content: innerContent, children });
       }
       remaining = remaining.substring(monoMatch[0].length);
       continue;
@@ -97,7 +110,9 @@ export function parseMarkup(text) {
     const strikeMatch = remaining.match(/^~~(.*?)~~/);
     if (strikeMatch) {
       if (strikeMatch[1]) {
-        segments.push({ type: 'strike', content: strikeMatch[1] });
+        const innerContent = strikeMatch[1];
+        const children = hasMarkup(innerContent) ? parseMarkup(innerContent) : null;
+        segments.push({ type: 'strike', content: innerContent, children });
       }
       remaining = remaining.substring(strikeMatch[0].length);
       continue;
@@ -106,7 +121,9 @@ export function parseMarkup(text) {
     // Check for <color:#hex>text</color> or <color:name>text</color>
     const colorMatch = remaining.match(/^<color:(#[a-fA-F0-9a-zA-Z]+|[a-zA-Z]+)>(.*?)<\/color>/);
     if (colorMatch) {
-      segments.push({ type: 'color', value: colorMatch[1], content: colorMatch[2] });
+      const innerContent = colorMatch[2];
+      const children = hasMarkup(innerContent) ? parseMarkup(innerContent) : null;
+      segments.push({ type: 'color', value: colorMatch[1], content: innerContent, children });
       remaining = remaining.substring(colorMatch[0].length);
       continue;
     }
@@ -114,7 +131,9 @@ export function parseMarkup(text) {
     // Check for <size:N>text</size>
     const sizeMatch = remaining.match(/^<size:(\d+)>(.*?)<\/size>/);
     if (sizeMatch) {
-      segments.push({ type: 'size', value: parseInt(sizeMatch[1], 10), content: sizeMatch[2] });
+      const innerContent = sizeMatch[2];
+      const children = hasMarkup(innerContent) ? parseMarkup(innerContent) : null;
+      segments.push({ type: 'size', value: parseInt(sizeMatch[1], 10), content: innerContent, children });
       remaining = remaining.substring(sizeMatch[0].length);
       continue;
     }
@@ -122,7 +141,9 @@ export function parseMarkup(text) {
     // Check for <sub>text</sub>
     const subMatch = remaining.match(/^<sub>(.*?)<\/sub>/);
     if (subMatch) {
-      segments.push({ type: 'sub', content: subMatch[1] });
+      const innerContent = subMatch[1];
+      const children = hasMarkup(innerContent) ? parseMarkup(innerContent) : null;
+      segments.push({ type: 'sub', content: innerContent, children });
       remaining = remaining.substring(subMatch[0].length);
       continue;
     }
@@ -130,7 +151,9 @@ export function parseMarkup(text) {
     // Check for <sup>text</sup>
     const supMatch = remaining.match(/^<sup>(.*?)<\/sup>/);
     if (supMatch) {
-      segments.push({ type: 'sup', content: supMatch[1] });
+      const innerContent = supMatch[1];
+      const children = hasMarkup(innerContent) ? parseMarkup(innerContent) : null;
+      segments.push({ type: 'sup', content: innerContent, children });
       remaining = remaining.substring(supMatch[0].length);
       continue;
     }
@@ -138,7 +161,9 @@ export function parseMarkup(text) {
     // Check for <link:URL>text</link>
     const linkMatch = remaining.match(/^<link:([^>]+)>(.*?)<\/link>/);
     if (linkMatch) {
-      segments.push({ type: 'link', value: linkMatch[1], content: linkMatch[2] });
+      const innerContent = linkMatch[2];
+      const children = hasMarkup(innerContent) ? parseMarkup(innerContent) : null;
+      segments.push({ type: 'link', value: linkMatch[1], content: innerContent, children });
       remaining = remaining.substring(linkMatch[0].length);
       continue;
     }
@@ -146,11 +171,14 @@ export function parseMarkup(text) {
     // Check for <stroke:N:#color>text</stroke> or <stroke:N:name>text</stroke>
     const strokeMatch = remaining.match(/^<stroke:(\d+):(#[a-fA-F0-9a-zA-Z]+|[a-zA-Z]+)>(.*?)<\/stroke>/);
     if (strokeMatch) {
+      const innerContent = strokeMatch[3];
+      const children = hasMarkup(innerContent) ? parseMarkup(innerContent) : null;
       segments.push({
         type: 'stroke',
         strokeWidth: parseInt(strokeMatch[1], 10),
         strokeColor: strokeMatch[2],
-        content: strokeMatch[3]
+        content: innerContent,
+        children
       });
       remaining = remaining.substring(strokeMatch[0].length);
       continue;
@@ -159,7 +187,9 @@ export function parseMarkup(text) {
     // Check for <background:#color>text</background> or <background:name>text</background>
     const bgMatch = remaining.match(/^<background:(#[a-fA-F0-9a-zA-Z]+|[a-zA-Z]+)>(.*?)<\/background>/);
     if (bgMatch) {
-      segments.push({ type: 'background', value: bgMatch[1], content: bgMatch[2] });
+      const innerContent = bgMatch[2];
+      const children = hasMarkup(innerContent) ? parseMarkup(innerContent) : null;
+      segments.push({ type: 'background', value: bgMatch[1], content: innerContent, children });
       remaining = remaining.substring(bgMatch[0].length);
       continue;
     }

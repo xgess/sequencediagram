@@ -21,12 +21,12 @@ describe('Markup Parser (BACKLOG-045)', () => {
 
     it('should parse **bold** text', () => {
       const result = parseMarkup('**bold**');
-      expect(result).toEqual([{ type: 'bold', content: 'bold' }]);
+      expect(result).toEqual([{ type: 'bold', content: 'bold', children: null }]);
     });
 
     it('should parse //italic// text', () => {
       const result = parseMarkup('//italic//');
-      expect(result).toEqual([{ type: 'italic', content: 'italic' }]);
+      expect(result).toEqual([{ type: 'italic', content: 'italic', children: null }]);
     });
 
     it('should parse \\n linebreak', () => {
@@ -42,9 +42,9 @@ describe('Markup Parser (BACKLOG-045)', () => {
       const result = parseMarkup('Hello **bold** and //italic// world');
       expect(result).toEqual([
         { type: 'text', content: 'Hello ' },
-        { type: 'bold', content: 'bold' },
+        { type: 'bold', content: 'bold', children: null },
         { type: 'text', content: ' and ' },
-        { type: 'italic', content: 'italic' },
+        { type: 'italic', content: 'italic', children: null },
         { type: 'text', content: ' world' }
       ]);
     });
@@ -52,9 +52,9 @@ describe('Markup Parser (BACKLOG-045)', () => {
     it('should parse multiple bold segments', () => {
       const result = parseMarkup('**one** and **two**');
       expect(result).toEqual([
-        { type: 'bold', content: 'one' },
+        { type: 'bold', content: 'one', children: null },
         { type: 'text', content: ' and ' },
-        { type: 'bold', content: 'two' }
+        { type: 'bold', content: 'two', children: null }
       ]);
     });
 
@@ -87,9 +87,9 @@ describe('Markup Parser (BACKLOG-045)', () => {
     it('should parse bold at start and end', () => {
       const result = parseMarkup('**start** middle **end**');
       expect(result).toEqual([
-        { type: 'bold', content: 'start' },
+        { type: 'bold', content: 'start', children: null },
         { type: 'text', content: ' middle ' },
-        { type: 'bold', content: 'end' }
+        { type: 'bold', content: 'end', children: null }
       ]);
     });
   });
@@ -274,14 +274,14 @@ describe('Advanced Text Markup (BACKLOG-139)', () => {
   describe('Parse __underline__', () => {
     it('should parse underline text', () => {
       const result = parseMarkup('__underline__');
-      expect(result).toEqual([{ type: 'underline', content: 'underline' }]);
+      expect(result).toEqual([{ type: 'underline', content: 'underline', children: null }]);
     });
 
     it('should parse mixed with underline', () => {
       const result = parseMarkup('normal __underlined__ text');
       expect(result).toEqual([
         { type: 'text', content: 'normal ' },
-        { type: 'underline', content: 'underlined' },
+        { type: 'underline', content: 'underlined', children: null },
         { type: 'text', content: ' text' }
       ]);
     });
@@ -290,14 +290,14 @@ describe('Advanced Text Markup (BACKLOG-139)', () => {
   describe('Parse --small--', () => {
     it('should parse small text', () => {
       const result = parseMarkup('--small--');
-      expect(result).toEqual([{ type: 'small', content: 'small' }]);
+      expect(result).toEqual([{ type: 'small', content: 'small', children: null }]);
     });
 
     it('should parse mixed with small', () => {
       const result = parseMarkup('normal --tiny-- text');
       expect(result).toEqual([
         { type: 'text', content: 'normal ' },
-        { type: 'small', content: 'tiny' },
+        { type: 'small', content: 'tiny', children: null },
         { type: 'text', content: ' text' }
       ]);
     });
@@ -306,14 +306,14 @@ describe('Advanced Text Markup (BACKLOG-139)', () => {
   describe('Parse ++big++', () => {
     it('should parse big text', () => {
       const result = parseMarkup('++big++');
-      expect(result).toEqual([{ type: 'big', content: 'big' }]);
+      expect(result).toEqual([{ type: 'big', content: 'big', children: null }]);
     });
 
     it('should parse mixed with big', () => {
       const result = parseMarkup('normal ++large++ text');
       expect(result).toEqual([
         { type: 'text', content: 'normal ' },
-        { type: 'big', content: 'large' },
+        { type: 'big', content: 'large', children: null },
         { type: 'text', content: ' text' }
       ]);
     });
@@ -322,14 +322,14 @@ describe('Advanced Text Markup (BACKLOG-139)', () => {
   describe('Parse ""mono""', () => {
     it('should parse mono text', () => {
       const result = parseMarkup('""code""');
-      expect(result).toEqual([{ type: 'mono', content: 'code' }]);
+      expect(result).toEqual([{ type: 'mono', content: 'code', children: null }]);
     });
 
     it('should parse mixed with mono', () => {
       const result = parseMarkup('use ""monospace"" font');
       expect(result).toEqual([
         { type: 'text', content: 'use ' },
-        { type: 'mono', content: 'monospace' },
+        { type: 'mono', content: 'monospace', children: null },
         { type: 'text', content: ' font' }
       ]);
     });
@@ -338,14 +338,14 @@ describe('Advanced Text Markup (BACKLOG-139)', () => {
   describe('Parse ~~strike~~', () => {
     it('should parse strikethrough text', () => {
       const result = parseMarkup('~~deleted~~');
-      expect(result).toEqual([{ type: 'strike', content: 'deleted' }]);
+      expect(result).toEqual([{ type: 'strike', content: 'deleted', children: null }]);
     });
 
     it('should parse mixed with strikethrough', () => {
       const result = parseMarkup('not ~~crossed out~~ text');
       expect(result).toEqual([
         { type: 'text', content: 'not ' },
-        { type: 'strike', content: 'crossed out' },
+        { type: 'strike', content: 'crossed out', children: null },
         { type: 'text', content: ' text' }
       ]);
     });
@@ -354,19 +354,19 @@ describe('Advanced Text Markup (BACKLOG-139)', () => {
   describe('Parse <color:...>...</color>', () => {
     it('should parse color with hex', () => {
       const result = parseMarkup('<color:#ff0000>red text</color>');
-      expect(result).toEqual([{ type: 'color', value: '#ff0000', content: 'red text' }]);
+      expect(result).toEqual([{ type: 'color', value: '#ff0000', content: 'red text', children: null }]);
     });
 
     it('should parse color with named color', () => {
       const result = parseMarkup('<color:blue>blue text</color>');
-      expect(result).toEqual([{ type: 'color', value: 'blue', content: 'blue text' }]);
+      expect(result).toEqual([{ type: 'color', value: 'blue', content: 'blue text', children: null }]);
     });
 
     it('should parse mixed with color', () => {
       const result = parseMarkup('normal <color:#green>green</color> text');
       expect(result).toEqual([
         { type: 'text', content: 'normal ' },
-        { type: 'color', value: '#green', content: 'green' },
+        { type: 'color', value: '#green', content: 'green', children: null },
         { type: 'text', content: ' text' }
       ]);
     });
@@ -375,14 +375,14 @@ describe('Advanced Text Markup (BACKLOG-139)', () => {
   describe('Parse <size:N>...</size>', () => {
     it('should parse size', () => {
       const result = parseMarkup('<size:20>big text</size>');
-      expect(result).toEqual([{ type: 'size', value: 20, content: 'big text' }]);
+      expect(result).toEqual([{ type: 'size', value: 20, content: 'big text', children: null }]);
     });
 
     it('should parse mixed with size', () => {
       const result = parseMarkup('normal <size:8>tiny</size> text');
       expect(result).toEqual([
         { type: 'text', content: 'normal ' },
-        { type: 'size', value: 8, content: 'tiny' },
+        { type: 'size', value: 8, content: 'tiny', children: null },
         { type: 'text', content: ' text' }
       ]);
     });
@@ -393,7 +393,7 @@ describe('Advanced Text Markup (BACKLOG-139)', () => {
       const result = parseMarkup('H<sub>2</sub>O');
       expect(result).toEqual([
         { type: 'text', content: 'H' },
-        { type: 'sub', content: '2' },
+        { type: 'sub', content: '2', children: null },
         { type: 'text', content: 'O' }
       ]);
     });
@@ -404,7 +404,7 @@ describe('Advanced Text Markup (BACKLOG-139)', () => {
       const result = parseMarkup('x<sup>2</sup>');
       expect(result).toEqual([
         { type: 'text', content: 'x' },
-        { type: 'sup', content: '2' }
+        { type: 'sup', content: '2', children: null }
       ]);
     });
   });
@@ -412,14 +412,14 @@ describe('Advanced Text Markup (BACKLOG-139)', () => {
   describe('Parse <link:URL>...</link>', () => {
     it('should parse link', () => {
       const result = parseMarkup('<link:https://example.com>Click here</link>');
-      expect(result).toEqual([{ type: 'link', value: 'https://example.com', content: 'Click here' }]);
+      expect(result).toEqual([{ type: 'link', value: 'https://example.com', content: 'Click here', children: null }]);
     });
 
     it('should parse link in text', () => {
       const result = parseMarkup('Visit <link:https://example.com>this site</link> now');
       expect(result).toEqual([
         { type: 'text', content: 'Visit ' },
-        { type: 'link', value: 'https://example.com', content: 'this site' },
+        { type: 'link', value: 'https://example.com', content: 'this site', children: null },
         { type: 'text', content: ' now' }
       ]);
     });
@@ -432,7 +432,8 @@ describe('Advanced Text Markup (BACKLOG-139)', () => {
         type: 'stroke',
         strokeWidth: 2,
         strokeColor: '#000000',
-        content: 'outlined'
+        content: 'outlined',
+        children: null
       }]);
     });
 
@@ -442,7 +443,8 @@ describe('Advanced Text Markup (BACKLOG-139)', () => {
         type: 'stroke',
         strokeWidth: 1,
         strokeColor: 'black',
-        content: 'text'
+        content: 'text',
+        children: null
       }]);
     });
   });
@@ -450,12 +452,12 @@ describe('Advanced Text Markup (BACKLOG-139)', () => {
   describe('Parse <background:color>...</background>', () => {
     it('should parse background', () => {
       const result = parseMarkup('<background:#yellow>highlighted</background>');
-      expect(result).toEqual([{ type: 'background', value: '#yellow', content: 'highlighted' }]);
+      expect(result).toEqual([{ type: 'background', value: '#yellow', content: 'highlighted', children: null }]);
     });
 
     it('should parse background with named color', () => {
       const result = parseMarkup('<background:lightblue>text</background>');
-      expect(result).toEqual([{ type: 'background', value: 'lightblue', content: 'text' }]);
+      expect(result).toEqual([{ type: 'background', value: 'lightblue', content: 'text', children: null }]);
     });
   });
 
@@ -715,6 +717,56 @@ describe('Advanced Text Markup (BACKLOG-139)', () => {
       const el = renderMarkupText('<background:#yellow>highlight</background>', { x: 0, y: 0 });
       const tspan = el.querySelector('tspan');
       expect(tspan.getAttribute('data-background')).toBe('#yellow');
+    });
+  });
+
+  describe('Nested markup', () => {
+    it('should parse nested markup ""++big mono++""', () => {
+      const result = parseMarkup('""++big mono++""');
+      expect(result).toEqual([{
+        type: 'mono',
+        content: '++big mono++',
+        children: [{
+          type: 'big',
+          content: 'big mono',
+          children: null
+        }]
+      }]);
+    });
+
+    it('should parse nested markup **//bold italic//**', () => {
+      const result = parseMarkup('**//bold italic//**');
+      expect(result).toEqual([{
+        type: 'bold',
+        content: '//bold italic//',
+        children: [{
+          type: 'italic',
+          content: 'bold italic',
+          children: null
+        }]
+      }]);
+    });
+
+    it('should render nested ""++big mono++"" with both styles', () => {
+      const el = renderMarkupText('""++big mono++""', { x: 0, y: 0, fontSize: '12' });
+      const tspan = el.querySelector('tspan');
+      expect(tspan.getAttribute('font-family')).toBe('monospace');
+      expect(parseInt(tspan.getAttribute('font-size'))).toBeGreaterThan(12);
+    });
+
+    it('should render nested **//bold italic//** with both styles', () => {
+      const el = renderMarkupText('**//bold italic//**', { x: 0, y: 0 });
+      const tspan = el.querySelector('tspan');
+      expect(tspan.getAttribute('font-weight')).toBe('bold');
+      expect(tspan.getAttribute('font-style')).toBe('italic');
+    });
+
+    it('should render triple nested <color:#red>**//colored bold italic//**</color>', () => {
+      const el = renderMarkupText('<color:#red>**//text//**</color>', { x: 0, y: 0 });
+      const tspan = el.querySelector('tspan');
+      expect(tspan.getAttribute('fill')).toBe('#red');
+      expect(tspan.getAttribute('font-weight')).toBe('bold');
+      expect(tspan.getAttribute('font-style')).toBe('italic');
     });
   });
 });
