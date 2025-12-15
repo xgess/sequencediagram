@@ -225,12 +225,19 @@ body {
   background: #e5e5e5;
 }
 
-#diagram {
-  width: 100%;
+#diagram-container {
+  flex: 1;
   min-height: 400px;
   background: white;
   border: 1px solid #ccc;
   border-radius: 4px;
+  overflow: auto;
+  position: relative;
+}
+
+#diagram {
+  display: block;
+  transform-origin: top left;
 }
 
 /* SVG Element Styles */
@@ -312,7 +319,7 @@ body {
   display: none;
 }
 
-.presentation-mode #diagram {
+.presentation-mode #diagram-container {
   margin-top: 50px;
   min-height: calc(100vh - 50px);
   border: none;

@@ -110,7 +110,21 @@ function updateZoom() {
   const diagramEl = getDiagramEl();
   if (diagramEl) {
     diagramEl.style.transform = `scale(${currentZoom})`;
-    diagramEl.style.transformOrigin = 'top left';
+
+    // Update container size so scrollbars work correctly
+    // CSS transform doesn't affect layout, so we need to set explicit dimensions
+    const viewBox = diagramEl.getAttribute('viewBox');
+    if (viewBox) {
+      const [, , svgWidth, svgHeight] = viewBox.split(' ').map(Number);
+      if (svgWidth && svgHeight) {
+        const container = diagramEl.parentElement;
+        if (container && container.id === 'diagram-container') {
+          // Set min dimensions to scaled SVG size so scrolling works
+          container.style.minWidth = `${svgWidth * currentZoom}px`;
+          container.style.minHeight = `${svgHeight * currentZoom}px`;
+        }
+      }
+    }
   }
   if (zoomLevelEl) {
     zoomLevelEl.textContent = `${Math.round(currentZoom * 100)}%`;
@@ -155,18 +169,22 @@ export function shrinkToFit() {
     return;
   }
 
-  // Get the container dimensions (diagram pane)
+  // Get the container dimensions (diagram-container inside diagram-pane)
   const container = diagramEl.parentElement;
   if (!container) return;
 
+  // Get the diagram pane (parent of container) for available space calculation
+  const diagramPane = container.parentElement;
+  if (!diagramPane) return;
+
   // Account for padding and header
-  const containerRect = container.getBoundingClientRect();
-  const headerEl = container.querySelector('#diagram-header');
+  const paneRect = diagramPane.getBoundingClientRect();
+  const headerEl = diagramPane.querySelector('#diagram-header');
   const headerHeight = headerEl ? headerEl.getBoundingClientRect().height : 0;
 
-  // Available space (with some margin)
-  const availableWidth = containerRect.width - 32; // 16px padding each side
-  const availableHeight = containerRect.height - headerHeight - 32;
+  // Available space (with margin for padding and borders)
+  const availableWidth = paneRect.width - 48; // padding + border
+  const availableHeight = paneRect.height - headerHeight - 48;
 
   // Calculate scale factors for both dimensions
   const scaleX = availableWidth / svgWidth;

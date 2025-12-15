@@ -57,8 +57,10 @@ describe('Zoom Controls (BACKLOG-110)', () => {
       expect(zoomLevelEl.textContent).toBe('100%');
     });
 
-    it('should set transform origin to top left', () => {
-      expect(diagramEl.style.transformOrigin).toBe('top left');
+    // Note: transform-origin is now set via CSS on #diagram, not via JavaScript
+    it('should have diagram element ready for transforms', () => {
+      expect(diagramEl).toBeDefined();
+      expect(diagramEl.id).toBe('diagram');
     });
   });
 

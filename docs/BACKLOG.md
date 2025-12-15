@@ -6,7 +6,13 @@ Remaining work items. See FEATURES.md for what's already implemented.
 
 ## Bug Fixes
 
-No known bugs. All syntax matches sequencediagram.org/instructions.html.
+### Fixed
+- [x] BUG-016: Zooming moves diagram off to the right/out of screen - Fixed by wrapping SVG in scrollable container
+
+### Pending
+- [ ] BUG-017: "note right of alice" attaches to wrong participant
+- [ ] BUG-018: Double-click edit should be multiline (may already be fixed by BUG-012) 
+
 
 ---
 
