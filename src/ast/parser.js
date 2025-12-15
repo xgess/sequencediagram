@@ -349,7 +349,180 @@ function parseDirective(line, lineNumber) {
     };
   }
 
+  // Match style definition: style myName #fill #border;width;style,textMarkup
+  // Syntax: style name [#fill] [#border[;width][;style]][,textMarkup]
+  const styleMatch = line.match(/^style\s+(\S+)\s+(.+)$/);
+  if (styleMatch) {
+    const styleName = styleMatch[1];
+    const styleSpec = styleMatch[2];
+    const parsedStyle = parseNamedStyleSpec(styleSpec);
+
+    return {
+      id: generateId('directive'),
+      type: 'directive',
+      directiveType: 'style',
+      name: styleName,
+      style: parsedStyle,
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
+  }
+
+  // Match type-based style directives
+  // Syntax: typestyle #fill #border;width;style,textMarkup
+  // Types: participantstyle, notestyle, messagestyle, dividerstyle, boxstyle,
+  //        aboxstyle, rboxstyle, aboxrightstyle, aboxleftstyle
+  const typeStyleMatch = line.match(/^(participantstyle|notestyle|messagestyle|dividerstyle|boxstyle|aboxstyle|rboxstyle|aboxrightstyle|aboxleftstyle)(?:\s+(.*))?$/);
+  if (typeStyleMatch) {
+    const typeStyleName = typeStyleMatch[1];
+    const styleSpec = typeStyleMatch[2] || '';
+    const parsedStyle = parseTypeStyleSpec(styleSpec);
+
+    return {
+      id: generateId('directive'),
+      type: 'directive',
+      directiveType: typeStyleName,
+      style: parsedStyle,
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
+  }
+
   return null;
+}
+
+/**
+ * Parse named style specification
+ * Syntax: #fill #border;width;style,textMarkup
+ * @param {string} spec - Style specification string
+ * @returns {Object} Parsed style object
+ */
+function parseNamedStyleSpec(spec) {
+  const style = {};
+
+  // Split by comma to separate shape styling from text markup
+  const commaIndex = spec.indexOf(',');
+  let shapePart = spec;
+  let textMarkup = null;
+
+  if (commaIndex > -1) {
+    shapePart = spec.substring(0, commaIndex);
+    textMarkup = spec.substring(commaIndex + 1);
+    if (textMarkup) {
+      style.textMarkup = textMarkup;
+    }
+  }
+
+  // Parse shape styling: #fill #border;width;style
+  const parts = shapePart.trim().split(/\s+/);
+
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    if (!part.startsWith('#')) continue;
+
+    // Check if this part has semicolons (border styling)
+    if (part.includes(';') || (i > 0 && parts[i - 1] && !parts[i - 1].includes(';'))) {
+      // This is likely border styling: #color;width;style
+      const borderMatch = part.match(/^(#[^\s;]+)(?:;(\d+))?(?:;(solid|dashed|dotted))?$/);
+      if (borderMatch) {
+        if (borderMatch[1]) style.border = borderMatch[1];
+        if (borderMatch[2]) style.borderWidth = parseInt(borderMatch[2], 10);
+        if (borderMatch[3]) style.borderStyle = borderMatch[3];
+      }
+    } else if (!style.fill) {
+      // First standalone color is fill
+      style.fill = part;
+    } else if (!style.border) {
+      // Second standalone color is border (without width/style)
+      style.border = part;
+    }
+  }
+
+  return style;
+}
+
+/**
+ * Parse type-based style specification
+ * Can be just text markup (e.g., "<color:#blue>//**") or shape+text styling
+ * Syntax: [#fill] [#border;width;style],textMarkup  OR  just textMarkup
+ * @param {string} spec - Style specification string
+ * @returns {Object} Parsed style object
+ */
+function parseTypeStyleSpec(spec) {
+  const style = {};
+
+  if (!spec || spec.trim() === '') {
+    return style;
+  }
+
+  // Check if starts with # (shape styling) or < (text markup) or just text markup chars
+  const trimmed = spec.trim();
+
+  // Split by comma to separate shape styling from text markup
+  const commaIndex = trimmed.indexOf(',');
+
+  if (commaIndex > -1) {
+    // Has comma - split shape part and text markup
+    const shapePart = trimmed.substring(0, commaIndex);
+    const textMarkup = trimmed.substring(commaIndex + 1);
+    if (textMarkup) {
+      style.textMarkup = textMarkup;
+    }
+
+    // Parse shape part if it exists and starts with # or ;
+    if (shapePart.trim()) {
+      parseShapeStyling(shapePart.trim(), style);
+    }
+  } else if (trimmed.startsWith('#')) {
+    // No comma, but starts with # - this is shape-only styling
+    parseShapeStyling(trimmed, style);
+  } else {
+    // No comma and no #, treat entire string as text markup
+    style.textMarkup = trimmed;
+  }
+
+  return style;
+}
+
+/**
+ * Parse shape styling portion of a type style
+ * @param {string} shapePart - Shape styling string
+ * @param {Object} style - Style object to populate
+ */
+function parseShapeStyling(shapePart, style) {
+  // Handle formats like:
+  // #green - fill only
+  // #green #red - fill and border
+  // #green #red;3;dashed - fill and border with width/style
+  // #lightblue;2 - color with width (treated as message color+width)
+  // ;3 - just width
+
+  const parts = shapePart.split(/\s+/);
+
+  for (const part of parts) {
+    if (part.startsWith('#')) {
+      // Color with optional width/style
+      const colorMatch = part.match(/^(#[^\s;]+)(?:;(\d+))?(?:;(solid|dashed|dotted))?$/);
+      if (colorMatch) {
+        if (!style.fill) {
+          style.fill = colorMatch[1];
+          if (colorMatch[2]) style.borderWidth = parseInt(colorMatch[2], 10);
+          if (colorMatch[3]) style.borderStyle = colorMatch[3];
+        } else if (!style.border) {
+          style.border = colorMatch[1];
+          if (colorMatch[2]) style.borderWidth = parseInt(colorMatch[2], 10);
+          if (colorMatch[3]) style.borderStyle = colorMatch[3];
+        }
+      }
+    } else if (part.startsWith(';')) {
+      // Just width/style without color: ;3 or ;3;dashed
+      const widthMatch = part.match(/^;(\d+)(?:;(solid|dashed|dotted))?$/);
+      if (widthMatch) {
+        if (widthMatch[1]) style.borderWidth = parseInt(widthMatch[1], 10);
+        if (widthMatch[2]) style.borderStyle = widthMatch[2];
+      }
+    }
+  }
 }
 
 /**
@@ -378,7 +551,7 @@ function parseComment(line, lineNumber) {
  * @returns {boolean}
  */
 function isFragmentStart(trimmed) {
-  return /^(alt|loop|opt|par|break|critical|ref|seq|strict|neg|ignore|consider|assert|region|group)\b/.test(trimmed);
+  return /^(alt|loop|opt|par|break|critical|ref|seq|strict|neg|ignore|consider|assert|region|group|expandable[+\-])(\s|$|#)/.test(trimmed);
 }
 
 /**
@@ -496,9 +669,19 @@ function parseFragment(lines, startLine, ast) {
   const firstLine = lines[startLine].trim();
   // Match fragment type, optional styling, and optional condition
   // Syntax: fragmentType[#operatorColor] [#fill] [#border;width;style] [condition]
-  const match = firstLine.match(/^(alt|loop|opt|par|break|critical|ref|seq|strict|neg|ignore|consider|assert|region|group)(#[^\s#]+)?(.*)$/);
+  const match = firstLine.match(/^(alt|loop|opt|par|break|critical|ref|seq|strict|neg|ignore|consider|assert|region|group|expandable[+\-])(#[^\s#]+)?(.*)$/);
 
-  const fragmentType = match[1];
+  let fragmentType = match[1];
+
+  // Handle expandable+ and expandable- with collapsed state
+  let collapsed = false;
+  if (fragmentType === 'expandable+') {
+    fragmentType = 'expandable';
+    collapsed = false;
+  } else if (fragmentType === 'expandable-') {
+    fragmentType = 'expandable';
+    collapsed = true;
+  }
   const { style, condition } = parseFragmentStyleAndCondition(match[2] || '', match[3] || '');
 
   const fragmentId = generateId('fragment');
@@ -526,6 +709,10 @@ function parseFragment(lines, startLine, ast) {
         sourceLineStart: fragmentStartLine,
         sourceLineEnd: i + 1 // 1-indexed
       };
+      // Add collapsed property only for expandable fragments
+      if (fragmentType === 'expandable') {
+        fragmentNode.collapsed = collapsed;
+      }
       ast.push(fragmentNode);
       return { endLine: i };
     }
@@ -635,6 +822,10 @@ function parseFragment(lines, startLine, ast) {
     sourceLineStart: fragmentStartLine,
     sourceLineEnd: i // End of file
   };
+  // Add collapsed property only for expandable fragments
+  if (fragmentType === 'expandable') {
+    fragmentNode.collapsed = collapsed;
+  }
   ast.push(fragmentNode);
   return { endLine: i - 1 };
 }
@@ -648,6 +839,49 @@ function parseFragment(lines, startLine, ast) {
  * @returns {Object|null} Participant AST node or null
  */
 function parseParticipant(line, lineNumber) {
+  // Try icon participant types with quoted display name:
+  // fontawesome7solid f48e "Display Name" as Alias [styling]
+  // mdi F01C9 "Display Name" as Alias [styling]
+  const iconQuotedMatch = line.match(/^(fontawesome7solid|fontawesome7regular|fontawesome7brands|mdi)\s+([a-fA-F0-9]+)\s+"((?:[^"\\]|\\.)*)"\s+as\s+([^\s#]+)(.*)$/);
+  if (iconQuotedMatch) {
+    const [, participantType, iconCode, displayNameRaw, alias, styleStr] = iconQuotedMatch;
+    const displayName = unescapeString(displayNameRaw);
+    const style = parseParticipantStyle(styleStr.trim());
+
+    return {
+      id: generateId('participant'),
+      type: 'participant',
+      participantType,
+      iconCode,
+      alias,
+      displayName,
+      style,
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
+  }
+
+  // Try icon participant simple syntax:
+  // fontawesome7solid f48e Name [styling]
+  // mdi F01C9 Name [styling]
+  const iconMatch = line.match(/^(fontawesome7solid|fontawesome7regular|fontawesome7brands|mdi)\s+([a-fA-F0-9]+)\s+([^\s#]+)(.*)$/);
+  if (iconMatch) {
+    const [, participantType, iconCode, name, styleStr] = iconMatch;
+    const style = parseParticipantStyle(styleStr.trim());
+
+    return {
+      id: generateId('participant'),
+      type: 'participant',
+      participantType,
+      iconCode,
+      alias: name,
+      displayName: name,
+      style,
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
+  }
+
   // Try quoted display name with alias first: participant "Display Name" as Alias [styling]
   const quotedMatch = line.match(/^(participant|rparticipant|actor|database|boundary|control|entity)\s+"((?:[^"\\]|\\.)*)"\s+as\s+([^\s#]+)(.*)$/);
   if (quotedMatch) {
@@ -836,15 +1070,35 @@ function parseParticipantStyle(styleStr) {
  */
 function parseMessage(line, lineNumber) {
   // Try styled message first: A-[#color;width]>B or A-[##style]>B
-  // The bracket style goes between the dash(es) and the arrow head
+  // Also supports: A-[style]->B, A-[style]->>B, A<-[style]-B (reversed)
+  // The bracket style goes between parts of the arrow
   // Also handles create syntax with * prefix: A-[#red]>*B:<<create>>
-  const styledMatch = line.match(/^(\[|[^\s\-<\[]+)(-{1,2})\[([^\]]+)\](>>?|x)(\(\d+\))?(\*)?(\]|[^\s:\]]+):(.*)$/);
+  const styledMatch = line.match(/^(\[|[^\s\-<\[]+)(<)?(-{1,2})\[([^\]]+)\](-{0,2})(>>?|>|x)?(\(\d+\))?(\*)?(\]|[^\s:\]]+):(.*)$/);
   if (styledMatch) {
-    const [, from, dashes, styleStr, arrowHead, delayStr, createMarker, to, label] = styledMatch;
+    const [, from, startArrow, startDashes, styleStr, endDashes, arrowHead, delayStr, createMarker, to, label] = styledMatch;
     const delay = delayStr ? parseInt(delayStr.slice(1, -1), 10) : null;
-    const arrowType = dashes + '>' + (arrowHead === '>>' ? '>' : arrowHead === 'x' ? '' : '');
-    // Reconstruct proper arrow: - + > or >> or x
-    const actualArrow = dashes + (arrowHead === 'x' ? 'x' : arrowHead);
+
+    // Reconstruct arrow type from parts
+    // startArrow: < or undefined (for reversed arrows)
+    // startDashes: - or --
+    // endDashes: - or -- or empty (extra dash before head)
+    // arrowHead: > or >> or x or undefined
+    let arrowType;
+    if (startArrow === '<') {
+      // Reversed arrow: A<-[style]-B becomes <-
+      arrowType = '<' + startDashes;
+    } else {
+      // Forward arrow: A-[style]->B becomes ->
+      // The dashes are startDashes, and endDashes is what's after the bracket
+      // If endDashes has -, we're looking at something like -[style]->
+      // where startDashes=- and endDashes=-
+      // We want -> not -->
+      // Actually the regex captures: A(-)(stuff)(-)> so startDashes=-, endDashes=-
+      // The intended arrow is -> not -->
+      // So we should use startDashes if endDashes is empty, or just -(head)
+      arrowType = startDashes + (arrowHead || '>');
+    }
+
     const isCreate = createMarker === '*' || label.trim().includes('<<create>>');
 
     return {
@@ -852,7 +1106,7 @@ function parseMessage(line, lineNumber) {
       type: 'message',
       from,
       to,
-      arrowType: actualArrow,
+      arrowType,
       delay,
       label: label.trim(),
       style: parseMessageStyle(styleStr),

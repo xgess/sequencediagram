@@ -118,6 +118,11 @@ function indentStr(level) {
 function serializeParticipant(node) {
   let output = node.participantType;
 
+  // Font Awesome icon types need the icon code
+  if (node.iconCode) {
+    output += ` ${node.iconCode}`;
+  }
+
   // If displayName differs from alias, use quoted syntax
   if (node.displayName !== node.alias) {
     const escapedName = escapeString(node.displayName);
@@ -375,7 +380,107 @@ function serializeDirective(node) {
     output += ` ${node.color}`;
     return output;
   }
+  // Handle style definition directive
+  if (node.directiveType === 'style') {
+    let output = `style ${node.name}`;
+    const style = node.style || {};
+
+    // Add fill color
+    if (style.fill) {
+      output += ' ' + style.fill;
+    }
+
+    // Add border styling
+    if (style.border) {
+      let borderPart = style.border;
+      if (style.borderWidth !== undefined) {
+        borderPart += ';' + style.borderWidth;
+      }
+      if (style.borderStyle) {
+        if (style.borderWidth === undefined) borderPart += ';';
+        borderPart += ';' + style.borderStyle;
+      }
+      output += ' ' + borderPart;
+    }
+
+    // Add text markup
+    if (style.textMarkup) {
+      output += ',' + style.textMarkup;
+    }
+
+    return output;
+  }
+
+  // Handle type-based style directives
+  const typeStyleDirectives = [
+    'participantstyle', 'notestyle', 'messagestyle', 'dividerstyle',
+    'boxstyle', 'aboxstyle', 'rboxstyle', 'aboxrightstyle', 'aboxleftstyle'
+  ];
+  if (typeStyleDirectives.includes(node.directiveType)) {
+    return serializeTypeStyle(node);
+  }
+
   return '';
+}
+
+/**
+ * Serialize a type-based style directive
+ * @param {Object} node - Type style directive node
+ * @returns {string} Serialized directive
+ */
+function serializeTypeStyle(node) {
+  let output = node.directiveType;
+  const style = node.style || {};
+
+  // Build style string
+  let styleStr = '';
+
+  // Add shape styling (fill, border, width)
+  if (style.fill) {
+    styleStr += style.fill;
+    if (style.borderWidth !== undefined && !style.border) {
+      styleStr += ';' + style.borderWidth;
+    }
+    if (style.borderStyle && !style.border) {
+      if (style.borderWidth === undefined) styleStr += ';';
+      styleStr += ';' + style.borderStyle;
+    }
+  }
+
+  if (style.border) {
+    if (styleStr) styleStr += ' ';
+    styleStr += style.border;
+    if (style.borderWidth !== undefined) {
+      styleStr += ';' + style.borderWidth;
+    }
+    if (style.borderStyle) {
+      if (style.borderWidth === undefined) styleStr += ';';
+      styleStr += ';' + style.borderStyle;
+    }
+  }
+
+  // Width without color
+  if (!style.fill && !style.border && style.borderWidth !== undefined) {
+    styleStr += ';' + style.borderWidth;
+    if (style.borderStyle) {
+      styleStr += ';' + style.borderStyle;
+    }
+  }
+
+  // Add text markup
+  if (style.textMarkup) {
+    if (styleStr) {
+      styleStr += ',' + style.textMarkup;
+    } else {
+      styleStr += style.textMarkup;
+    }
+  }
+
+  if (styleStr) {
+    output += ' ' + styleStr;
+  }
+
+  return output;
 }
 
 /**
@@ -390,18 +495,34 @@ function serializeMessage(node) {
   // If message has styling, use bracket syntax
   if (node.style && (node.style.color || node.style.width || node.style.styleName)) {
     const styleStr = serializeMessageStyle(node.style);
-    // Insert style brackets between dashes and arrow head
-    // e.g., -> becomes -[#red;3]>
+    // Styled message format: A-[style]->B (bracket goes between dash and arrowhead)
+    // Forward arrows: A-[style]->B, A--[style]-->B
+    // Reversed arrows: A<-[style]-B, A<--[style]--B
     const arrow = node.arrowType;
-    let dashes, head;
-    if (arrow.startsWith('--')) {
-      dashes = '--';
-      head = arrow.slice(2);
+    let prefix, suffix;
+
+    if (arrow.startsWith('<--')) {
+      // Reversed dashed arrow: <-- or <-->> etc
+      prefix = '<--';
+      suffix = '--';
+    } else if (arrow.startsWith('<-')) {
+      // Reversed arrow: <- or <->> etc
+      prefix = '<-';
+      suffix = '-';
+    } else if (arrow.startsWith('--')) {
+      // Dashed forward arrow: --> or -->> etc
+      prefix = '--';
+      suffix = arrow; // Use full arrow as suffix: -->>, -->, --x
+    } else if (arrow.startsWith('-')) {
+      // Normal forward arrow: -> or ->> or -x etc
+      prefix = '-';
+      suffix = arrow; // Use full arrow as suffix: ->, ->>, -x
     } else {
-      dashes = '-';
-      head = arrow.slice(1);
+      prefix = '-';
+      suffix = arrow;
     }
-    return `${node.from}${dashes}[${styleStr}]${head}${delay}${createMarker}${node.to}:${node.label}`;
+
+    return `${node.from}${prefix}[${styleStr}]${suffix}${delay}${createMarker}${node.to}:${node.label}`;
   }
 
   return `${node.from}${node.arrowType}${delay}${createMarker}${node.to}:${node.label}`;
@@ -440,6 +561,11 @@ function serializeFragment(node, nodeById, indent) {
 
   // Opening line: fragmentType[#operatorColor] [#fill] [#border;width;style] [condition]
   let opening = node.fragmentType;
+
+  // Handle expandable fragments - append + or - to indicate collapsed state
+  if (node.fragmentType === 'expandable') {
+    opening = node.collapsed ? 'expandable-' : 'expandable+';
+  }
 
   // Add styling
   const styleStr = serializeFragmentStyle(node.style);
