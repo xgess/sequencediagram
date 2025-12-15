@@ -8,9 +8,10 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
  * @param {Object} node - Message AST node
  * @param {Object} layoutInfo - Position info {y, fromX, toX, delay}
  * @param {number|null} messageNumber - Autonumber value or null
+ * @param {Object|null} resolvedStyle - Resolved style (named style looked up)
  * @returns {SVGGElement} Rendered message group
  */
-export function renderMessage(node, layoutInfo, messageNumber = null) {
+export function renderMessage(node, layoutInfo, messageNumber = null, resolvedStyle = null) {
   const { y, fromX, toX, delay } = layoutInfo;
   const arrowType = node.arrowType;
 
@@ -44,8 +45,8 @@ export function renderMessage(node, layoutInfo, messageNumber = null) {
   line.setAttribute('x2', lineToX);
   line.setAttribute('y2', endY);
 
-  // Apply styling (color and width)
-  const style = node.style || {};
+  // Apply styling (color and width) - use resolved style if provided
+  const style = resolvedStyle || node.style || {};
   line.setAttribute('stroke', style.color || 'black');
   line.setAttribute('stroke-width', style.width !== undefined ? style.width : 1);
 

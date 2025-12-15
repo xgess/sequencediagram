@@ -263,25 +263,25 @@ describe('Message Styling (BACKLOG-123)', () => {
     it('should serialize styled message with color', () => {
       const ast = parse('participant A\nparticipant B\nA-[#red]>B:test');
       const output = serialize(ast);
-      expect(output).toContain('A-[#red]>B:test');
+      expect(output).toContain('A-[#red]->B:test');
     });
 
     it('should serialize styled message with width', () => {
       const ast = parse('participant A\nparticipant B\nA-[;3]>B:test');
       const output = serialize(ast);
-      expect(output).toContain('A-[;3]>B:test');
+      expect(output).toContain('A-[;3]->B:test');
     });
 
     it('should serialize styled message with color and width', () => {
       const ast = parse('participant A\nparticipant B\nA-[#blue;4]>B:test');
       const output = serialize(ast);
-      expect(output).toContain('A-[#blue;4]>B:test');
+      expect(output).toContain('A-[#blue;4]->B:test');
     });
 
     it('should serialize named style reference', () => {
       const ast = parse('participant A\nparticipant B\nA-[##myStyle]>B:test');
       const output = serialize(ast);
-      expect(output).toContain('A-[##myStyle]>B:test');
+      expect(output).toContain('A-[##myStyle]->B:test');
     });
   });
 

@@ -280,18 +280,24 @@ export function calculateLayout(ast) {
       const fragmentStart = currentY;
       currentY += FRAGMENT_PADDING; // Top padding
 
-      // Layout entries in the main section
-      for (const entryId of node.entries) {
-        currentY = layoutEntry(entryId, nodeById, participantLayout, layout, currentY, messageSpacing);
-      }
-
-      // Layout else clauses
-      for (const elseClause of node.elseClauses) {
-        // Store else clause divider position
-        elseClause.dividerY = currentY;
-
-        for (const entryId of elseClause.entries) {
+      // For collapsed expandable fragments, only show header
+      if (node.fragmentType === 'expandable' && node.collapsed) {
+        // Collapsed: just add minimal padding for the header
+        currentY += 10; // Minimal content area
+      } else {
+        // Layout entries in the main section
+        for (const entryId of node.entries) {
           currentY = layoutEntry(entryId, nodeById, participantLayout, layout, currentY, messageSpacing);
+        }
+
+        // Layout else clauses
+        for (const elseClause of node.elseClauses) {
+          // Store else clause divider position
+          elseClause.dividerY = currentY;
+
+          for (const entryId of elseClause.entries) {
+            currentY = layoutEntry(entryId, nodeById, participantLayout, layout, currentY, messageSpacing);
+          }
         }
       }
 
@@ -305,7 +311,8 @@ export function calculateLayout(ast) {
         height: currentY - fragmentStart,
         x: bounds.minX,
         width: bounds.maxX - bounds.minX,
-        type: 'fragment'
+        type: 'fragment',
+        collapsed: node.collapsed || false
       });
     }
   }

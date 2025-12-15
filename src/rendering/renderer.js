@@ -94,6 +94,12 @@ export function render(ast) {
   // Build lifeline styles map from lifelinestyle directives
   const lifelineStyles = buildLifelineStyles(ast);
 
+  // Build named styles map from style directives
+  const namedStyles = buildNamedStyles(ast);
+
+  // Build type-based styles map from type style directives
+  const typeStyles = buildTypeStyles(ast);
+
   // Calculate final height for lifelines
   const height = Math.max(totalHeight, 160);
 
@@ -218,7 +224,20 @@ export function render(ast) {
     const layoutInfo = layout.get(message.id);
     if (layoutInfo) {
       const messageNumber = messageNumbers.get(message.id);
-      const messageEl = renderMessage(message, layoutInfo, messageNumber);
+      // Resolve named style if message has styleName reference
+      let resolvedStyle = resolveStyle(message.style, namedStyles);
+      // If no explicit style, apply type-based style
+      if (!resolvedStyle) {
+        const typeStyle = getTypeStyle('message', null, typeStyles);
+        if (typeStyle) {
+          // Convert type style properties to message style format
+          resolvedStyle = {};
+          if (typeStyle.fill) resolvedStyle.color = typeStyle.fill;
+          if (typeStyle.borderWidth !== undefined) resolvedStyle.width = typeStyle.borderWidth;
+          if (typeStyle.textMarkup) resolvedStyle.textMarkup = typeStyle.textMarkup;
+        }
+      }
+      const messageEl = renderMessage(message, layoutInfo, messageNumber, resolvedStyle);
       messagesGroup.appendChild(messageEl);
     }
   });
@@ -549,6 +568,138 @@ function buildLifelineStyles(ast) {
   }
 
   return styles;
+}
+
+/**
+ * Build named styles map from style directives
+ * @param {Array} ast - AST nodes
+ * @returns {Map} style name -> style object
+ */
+function buildNamedStyles(ast) {
+  const styles = new Map();
+
+  for (const node of ast) {
+    if (node.type === 'directive' && node.directiveType === 'style') {
+      styles.set(node.name, node.style || {});
+    }
+  }
+
+  return styles;
+}
+
+/**
+ * Build type-based styles map from type style directives
+ * @param {Array} ast - AST nodes
+ * @returns {Map} directive type -> style object
+ */
+function buildTypeStyles(ast) {
+  const typeStyles = new Map();
+
+  const typeStyleDirectives = [
+    'participantstyle', 'notestyle', 'messagestyle', 'dividerstyle',
+    'boxstyle', 'aboxstyle', 'rboxstyle', 'aboxrightstyle', 'aboxleftstyle'
+  ];
+
+  for (const node of ast) {
+    if (node.type === 'directive' && typeStyleDirectives.includes(node.directiveType)) {
+      typeStyles.set(node.directiveType, node.style || {});
+    }
+  }
+
+  return typeStyles;
+}
+
+/**
+ * Get the type style for an element type
+ * @param {string} elementType - The element type (e.g., 'note', 'message', 'participant')
+ * @param {string|null} subType - Optional sub-type (e.g., 'box', 'abox', 'rbox' for notes)
+ * @param {Map} typeStyles - Map of type styles
+ * @returns {Object|null} Type style or null
+ */
+function getTypeStyle(elementType, subType, typeStyles) {
+  // Map element types to their style directive names
+  let styleKey = null;
+
+  switch (elementType) {
+    case 'participant':
+      styleKey = 'participantstyle';
+      break;
+    case 'message':
+      styleKey = 'messagestyle';
+      break;
+    case 'divider':
+      styleKey = 'dividerstyle';
+      break;
+    case 'note':
+      // Notes have sub-types: note, box, abox, aboxright, aboxleft, rbox
+      if (subType === 'box') {
+        styleKey = typeStyles.has('boxstyle') ? 'boxstyle' : 'notestyle';
+      } else if (subType === 'abox') {
+        styleKey = typeStyles.has('aboxstyle') ? 'aboxstyle' : 'notestyle';
+      } else if (subType === 'aboxright') {
+        styleKey = typeStyles.has('aboxrightstyle') ? 'aboxrightstyle' : 'notestyle';
+      } else if (subType === 'aboxleft') {
+        styleKey = typeStyles.has('aboxleftstyle') ? 'aboxleftstyle' : 'notestyle';
+      } else if (subType === 'rbox') {
+        styleKey = typeStyles.has('rboxstyle') ? 'rboxstyle' : 'notestyle';
+      } else {
+        styleKey = 'notestyle';
+      }
+      break;
+    default:
+      return null;
+  }
+
+  return typeStyles.get(styleKey) || null;
+}
+
+/**
+ * Resolve a style reference to the actual style object
+ * If the style has a styleName, look it up in namedStyles and merge
+ * Also maps named style properties to message style properties:
+ *   - fill -> color (for messages, fill is used as stroke color)
+ *   - borderWidth -> width
+ * @param {Object} style - Style object (may have styleName)
+ * @param {Map} namedStyles - Map of named styles
+ * @returns {Object} Resolved style object
+ */
+function resolveStyle(style, namedStyles) {
+  if (!style) return null;
+
+  // If there's a styleName reference, look it up
+  if (style.styleName) {
+    const namedStyle = namedStyles.get(style.styleName);
+    if (namedStyle) {
+      // Convert named style properties to message style format
+      const resolved = {};
+      // Use fill color as the message stroke color
+      if (namedStyle.fill) {
+        resolved.color = namedStyle.fill;
+      }
+      // Use border color if no fill (for messages, border=stroke)
+      if (!resolved.color && namedStyle.border) {
+        resolved.color = namedStyle.border;
+      }
+      // Use border width as line width
+      if (namedStyle.borderWidth !== undefined) {
+        resolved.width = namedStyle.borderWidth;
+      }
+      // Copy text markup if present
+      if (namedStyle.textMarkup) {
+        resolved.textMarkup = namedStyle.textMarkup;
+      }
+
+      // Apply any explicit overrides from the style reference
+      if (style.color) resolved.color = style.color;
+      if (style.width !== undefined) resolved.width = style.width;
+
+      return resolved;
+    }
+    // If named style not found, return original style without styleName
+    return { ...style, styleName: undefined };
+  }
+
+  return style;
 }
 
 /**

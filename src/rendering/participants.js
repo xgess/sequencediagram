@@ -33,6 +33,14 @@ export function renderParticipant(node, layoutInfo) {
     case 'entity':
       renderEntity(group, node, layoutInfo);
       break;
+    case 'fontawesome7solid':
+    case 'fontawesome7regular':
+    case 'fontawesome7brands':
+      renderFontAwesomeIcon(group, node, layoutInfo);
+      break;
+    case 'mdi':
+      renderMaterialDesignIcon(group, node, layoutInfo);
+      break;
     default:
       renderBox(group, node, layoutInfo);
   }
@@ -425,4 +433,99 @@ function addTextLabel(group, displayName, centerX, y, height) {
   }
 
   group.appendChild(text);
+}
+
+/**
+ * Render a Font Awesome icon participant
+ * Uses the Font Awesome 7 webfont with a hex codepoint
+ */
+function renderFontAwesomeIcon(group, node, layoutInfo) {
+  const { x, y, width, height } = layoutInfo;
+  const style = node.style || {};
+
+  const centerX = x + width / 2;
+  const iconY = y + 10;
+  const iconSize = 30;
+
+  // Determine the font family based on the participant type
+  let fontFamily;
+  switch (node.participantType) {
+    case 'fontawesome7solid':
+      fontFamily = 'Font Awesome 6 Free'; // FA7 uses "Font Awesome 6 Free" for webfonts
+      break;
+    case 'fontawesome7regular':
+      fontFamily = 'Font Awesome 6 Free';
+      break;
+    case 'fontawesome7brands':
+      fontFamily = 'Font Awesome 6 Brands';
+      break;
+    default:
+      fontFamily = 'Font Awesome 6 Free';
+  }
+
+  // Determine font weight (solid = 900, regular = 400, brands = 400)
+  const fontWeight = node.participantType === 'fontawesome7solid' ? '900' : '400';
+
+  // Convert hex codepoint to Unicode character
+  const iconChar = String.fromCodePoint(parseInt(node.iconCode, 16));
+
+  // Render the icon using a text element with Font Awesome font
+  const icon = document.createElementNS(SVG_NS, 'text');
+  icon.setAttribute('x', centerX);
+  icon.setAttribute('y', iconY + iconSize * 0.8);
+  icon.setAttribute('text-anchor', 'middle');
+  icon.setAttribute('font-family', fontFamily);
+  icon.setAttribute('font-weight', fontWeight);
+  icon.setAttribute('font-size', iconSize);
+  icon.setAttribute('fill', style.fill || 'black');
+  icon.textContent = iconChar;
+  group.appendChild(icon);
+
+  // Add text label below icon
+  const text = document.createElementNS(SVG_NS, 'text');
+  text.setAttribute('x', centerX);
+  text.setAttribute('y', y + height - 4);
+  text.setAttribute('text-anchor', 'middle');
+  text.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, sans-serif');
+  text.setAttribute('font-size', '12');
+  text.textContent = node.displayName;
+  group.appendChild(text);
+}
+
+/**
+ * Render a Material Design Icon participant
+ * Uses the MDI webfont with a hex codepoint
+ */
+function renderMaterialDesignIcon(group, node, layoutInfo) {
+  const { x, y, width, height } = layoutInfo;
+  const style = node.style || {};
+
+  const centerX = x + width / 2;
+  const iconY = y + 10;
+  const iconSize = 30;
+
+  // Convert hex codepoint to Unicode character
+  const iconChar = String.fromCodePoint(parseInt(node.iconCode, 16));
+
+  // Render the icon using a text element with MDI font
+  const icon = document.createElementNS(SVG_NS, 'text');
+  icon.setAttribute('x', centerX);
+  icon.setAttribute('y', iconY + iconSize * 0.8);
+  icon.setAttribute('text-anchor', 'middle');
+  icon.setAttribute('font-family', 'Material Design Icons');
+  icon.setAttribute('font-weight', 'normal');
+  icon.setAttribute('font-size', iconSize);
+  icon.setAttribute('fill', style.fill || 'black');
+  icon.textContent = iconChar;
+  group.appendChild(icon);
+
+  // Add text label below icon
+  const mdiLabel = document.createElementNS(SVG_NS, 'text');
+  mdiLabel.setAttribute('x', centerX);
+  mdiLabel.setAttribute('y', y + height - 4);
+  mdiLabel.setAttribute('text-anchor', 'middle');
+  mdiLabel.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, sans-serif');
+  mdiLabel.setAttribute('font-size', '12');
+  mdiLabel.textContent = node.displayName;
+  group.appendChild(mdiLabel);
 }
