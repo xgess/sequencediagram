@@ -1,13 +1,17 @@
 // Text markup renderer
 // See DESIGN.md for markup rendering strategy
+// BACKLOG-139: Advanced text markup support
 
 import { parseMarkup, hasMarkup } from './parser.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
+const XLINK_NS = 'http://www.w3.org/1999/xlink';
 const LINE_HEIGHT = 16;
 
 /**
  * Render text with markup to SVG text element
+ * Supports: bold, italic, underline, small, big, mono, strike,
+ * color, size, sub, sup, link, stroke, background
  * @param {string} text - Text with markup
  * @param {Object} options - Rendering options
  * @param {number} options.x - X position
@@ -16,7 +20,7 @@ const LINE_HEIGHT = 16;
  * @param {string} [options.fontFamily] - Font family
  * @param {string} [options.fontSize] - Font size
  * @param {string} [options.fontWeight] - Base font weight
- * @returns {SVGTextElement} SVG text element with tspans
+ * @returns {SVGElement} SVG element (text or g with text/rect elements)
  */
 export function renderMarkupText(text, options = {}) {
   const {
@@ -28,6 +32,32 @@ export function renderMarkupText(text, options = {}) {
     fontWeight = 'normal'
   } = options;
 
+  const baseFontSize = parseInt(fontSize, 10) || 12;
+
+  // If no markup, return simple text element
+  if (!hasMarkup(text)) {
+    const textEl = document.createElementNS(SVG_NS, 'text');
+    textEl.setAttribute('x', x);
+    textEl.setAttribute('y', y);
+    textEl.setAttribute('text-anchor', textAnchor);
+    textEl.setAttribute('font-family', fontFamily);
+    textEl.setAttribute('font-size', fontSize);
+    if (fontWeight !== 'normal') {
+      textEl.setAttribute('font-weight', fontWeight);
+    }
+    textEl.textContent = text;
+    return textEl;
+  }
+
+  // Parse markup segments
+  const segments = parseMarkup(text);
+
+  // Check if we need background (requires wrapper group)
+  const hasBackground = segments.some(s => s.type === 'background');
+
+  // Create wrapper group if needed for background
+  const wrapper = hasBackground ? document.createElementNS(SVG_NS, 'g') : null;
+
   const textEl = document.createElementNS(SVG_NS, 'text');
   textEl.setAttribute('x', x);
   textEl.setAttribute('y', y);
@@ -38,14 +68,6 @@ export function renderMarkupText(text, options = {}) {
     textEl.setAttribute('font-weight', fontWeight);
   }
 
-  // If no markup, just set text content directly
-  if (!hasMarkup(text)) {
-    textEl.textContent = text;
-    return textEl;
-  }
-
-  // Parse and render markup
-  const segments = parseMarkup(text);
   let currentLine = 0;
 
   for (const segment of segments) {
@@ -54,24 +76,95 @@ export function renderMarkupText(text, options = {}) {
       continue;
     }
 
-    const tspan = document.createElementNS(SVG_NS, 'tspan');
-    tspan.textContent = segment.content || '';
+    // Create appropriate element based on type
+    let el;
+
+    if (segment.type === 'link') {
+      // Wrap in <a> element for clickable link
+      const link = document.createElementNS(SVG_NS, 'a');
+      link.setAttributeNS(XLINK_NS, 'xlink:href', segment.value);
+      link.setAttribute('href', segment.value);
+      link.setAttribute('target', '_blank');
+      el = document.createElementNS(SVG_NS, 'tspan');
+      el.textContent = segment.content || '';
+      el.setAttribute('fill', '#0066cc');
+      el.setAttribute('text-decoration', 'underline');
+      link.appendChild(el);
+      textEl.appendChild(link);
+
+      // Handle line positioning
+      if (currentLine > 0) {
+        el.setAttribute('x', x);
+        el.setAttribute('dy', LINE_HEIGHT);
+        currentLine = 0;
+      }
+      continue;
+    }
+
+    el = document.createElementNS(SVG_NS, 'tspan');
+    el.textContent = segment.content || '';
 
     // Position for new lines
     if (currentLine > 0) {
-      tspan.setAttribute('x', x);
-      tspan.setAttribute('dy', LINE_HEIGHT);
-      currentLine = 0; // Reset after applying dy
+      el.setAttribute('x', x);
+      el.setAttribute('dy', LINE_HEIGHT);
+      currentLine = 0;
     }
 
     // Apply styling based on segment type
-    if (segment.type === 'bold') {
-      tspan.setAttribute('font-weight', 'bold');
-    } else if (segment.type === 'italic') {
-      tspan.setAttribute('font-style', 'italic');
+    switch (segment.type) {
+      case 'bold':
+        el.setAttribute('font-weight', 'bold');
+        break;
+      case 'italic':
+        el.setAttribute('font-style', 'italic');
+        break;
+      case 'underline':
+        el.setAttribute('text-decoration', 'underline');
+        break;
+      case 'small':
+        el.setAttribute('font-size', Math.round(baseFontSize * 0.8));
+        break;
+      case 'big':
+        el.setAttribute('font-size', Math.round(baseFontSize * 1.3));
+        break;
+      case 'mono':
+        el.setAttribute('font-family', 'monospace');
+        break;
+      case 'strike':
+        el.setAttribute('text-decoration', 'line-through');
+        break;
+      case 'color':
+        el.setAttribute('fill', segment.value);
+        break;
+      case 'size':
+        el.setAttribute('font-size', segment.value);
+        break;
+      case 'sub':
+        el.setAttribute('font-size', Math.round(baseFontSize * 0.7));
+        el.setAttribute('baseline-shift', 'sub');
+        break;
+      case 'sup':
+        el.setAttribute('font-size', Math.round(baseFontSize * 0.7));
+        el.setAttribute('baseline-shift', 'super');
+        break;
+      case 'stroke':
+        el.setAttribute('stroke', segment.strokeColor);
+        el.setAttribute('stroke-width', segment.strokeWidth);
+        el.setAttribute('paint-order', 'stroke fill');
+        break;
+      case 'background':
+        // Background is handled separately - mark with data attribute
+        el.setAttribute('data-background', segment.value);
+        break;
     }
 
-    textEl.appendChild(tspan);
+    textEl.appendChild(el);
+  }
+
+  if (wrapper) {
+    wrapper.appendChild(textEl);
+    return wrapper;
   }
 
   return textEl;
