@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  sequence-diagram:
+    build: .
+    ports:
+      - "8080:80"
+    volumes:
+      # Mount local files for development (optional - remove for production)
+      - ./public:/usr/share/nginx/html/public:ro
+      - ./src:/usr/share/nginx/html/src:ro
+      - ./lib:/usr/share/nginx/html/lib:ro
+      - ./examples:/usr/share/nginx/html/examples:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/public/index.html"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
