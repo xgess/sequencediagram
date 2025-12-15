@@ -18,6 +18,8 @@ import { EditElseConditionCommand } from '../src/commands/EditElseConditionComma
 import { ChangeEntrySpacingCommand } from '../src/commands/ChangeEntrySpacingCommand.js';
 import { AddParticipantCommand } from '../src/commands/AddParticipantCommand.js';
 import { AddFragmentCommand } from '../src/commands/AddFragmentCommand.js';
+import { EditNoteTextCommand } from '../src/commands/EditNoteTextCommand.js';
+import { ToggleExpandableCommand } from '../src/commands/ToggleExpandableCommand.js';
 
 // Test command that adds an item to AST
 class AddItemCommand extends Command {
@@ -815,6 +817,72 @@ describe('ReorderNodeCommand (BACKLOG-073)', () => {
       expect(result[4].id).toBe('p_1');
     });
   });
+
+  describe('Divider reordering (BACKLOG-087)', () => {
+    let dividerAst;
+
+    beforeEach(() => {
+      dividerAst = [
+        { id: 'p_1', type: 'participant', alias: 'Alice' },
+        { id: 'p_2', type: 'participant', alias: 'Bob' },
+        { id: 'm_1', type: 'message', from: 'Alice', to: 'Bob', label: 'First' },
+        { id: 'd_1', type: 'divider', text: 'Section 1' },
+        { id: 'm_2', type: 'message', from: 'Bob', to: 'Alice', label: 'Second' },
+        { id: 'd_2', type: 'divider', text: 'Section 2' },
+        { id: 'm_3', type: 'message', from: 'Alice', to: 'Bob', label: 'Third' }
+      ];
+    });
+
+    it('should move divider forward in AST', () => {
+      const cmd = new ReorderNodeCommand('d_1', 3, 5);
+
+      const result = cmd.do(dividerAst);
+
+      expect(result[3].id).toBe('m_2');
+      expect(result[4].id).toBe('d_2');
+      expect(result[5].id).toBe('d_1');
+    });
+
+    it('should move divider backward in AST', () => {
+      const cmd = new ReorderNodeCommand('d_2', 5, 3);
+
+      const result = cmd.do(dividerAst);
+
+      expect(result[3].id).toBe('d_2');
+      expect(result[4].id).toBe('d_1');
+      expect(result[5].id).toBe('m_2');
+    });
+
+    it('should undo divider move', () => {
+      const cmd = new ReorderNodeCommand('d_1', 3, 5);
+
+      const afterDo = cmd.do(dividerAst);
+      expect(afterDo[5].id).toBe('d_1');
+
+      const afterUndo = cmd.undo(afterDo);
+      expect(afterUndo[3].id).toBe('d_1');
+      expect(afterUndo[4].id).toBe('m_2');
+      expect(afterUndo[5].id).toBe('d_2');
+    });
+
+    it('should move divider before first message', () => {
+      const cmd = new ReorderNodeCommand('d_1', 3, 2);
+
+      const result = cmd.do(dividerAst);
+
+      expect(result[2].id).toBe('d_1');
+      expect(result[3].id).toBe('m_1');
+    });
+
+    it('should move divider to end', () => {
+      const cmd = new ReorderNodeCommand('d_1', 3, 6);
+
+      const result = cmd.do(dividerAst);
+
+      expect(result[6].id).toBe('d_1');
+      expect(result[3].id).toBe('m_2');
+    });
+  });
 });
 
 describe('MoveMessageTargetCommand (BACKLOG-074)', () => {
@@ -1148,6 +1216,207 @@ describe('EditMessageLabelCommand (BACKLOG-076)', () => {
 
       expect(afterUndo[2].entries[0].label).toBe('Hello');
     });
+  });
+});
+
+describe('EditNoteTextCommand (BACKLOG-128)', () => {
+  let history;
+  let initialAst;
+
+  beforeEach(() => {
+    history = new CommandHistory();
+    initialAst = [
+      { id: 'p_1', type: 'participant', alias: 'Alice' },
+      { id: 'p_2', type: 'participant', alias: 'Bob' },
+      { id: 'n_1', type: 'note', noteType: 'note', text: 'Original note', participants: ['Alice'] }
+    ];
+  });
+
+  it('should change note text with do()', () => {
+    const cmd = new EditNoteTextCommand('n_1', 'Original note', 'Updated note');
+
+    const result = cmd.do(initialAst);
+    const note = result.find(n => n.id === 'n_1');
+
+    expect(note.text).toBe('Updated note');
+    expect(note.noteType).toBe('note'); // type unchanged
+  });
+
+  it('should restore original text with undo()', () => {
+    const cmd = new EditNoteTextCommand('n_1', 'Original note', 'Updated note');
+
+    const afterDo = cmd.do(initialAst);
+    expect(afterDo.find(n => n.id === 'n_1').text).toBe('Updated note');
+
+    const afterUndo = cmd.undo(afterDo);
+    expect(afterUndo.find(n => n.id === 'n_1').text).toBe('Original note');
+  });
+
+  it('should have descriptive description', () => {
+    const cmd = new EditNoteTextCommand('n_1', 'Original note', 'Updated note');
+    expect(cmd.description).toBe('Edit note text');
+  });
+
+  it('should work with CommandHistory', () => {
+    const cmd = new EditNoteTextCommand('n_1', 'Original note', 'Updated note');
+
+    let current = history.execute(cmd, initialAst);
+    expect(current.find(n => n.id === 'n_1').text).toBe('Updated note');
+
+    current = history.undo(current);
+    expect(current.find(n => n.id === 'n_1').text).toBe('Original note');
+
+    current = history.redo(current);
+    expect(current.find(n => n.id === 'n_1').text).toBe('Updated note');
+  });
+
+  it('should handle empty text', () => {
+    const cmd = new EditNoteTextCommand('n_1', 'Original note', '');
+
+    const result = cmd.do(initialAst);
+    expect(result.find(n => n.id === 'n_1').text).toBe('');
+  });
+
+  describe('fragment entries', () => {
+    let fragmentAst;
+
+    beforeEach(() => {
+      fragmentAst = [
+        { id: 'p_1', type: 'participant', alias: 'Alice' },
+        { id: 'p_2', type: 'participant', alias: 'Bob' },
+        {
+          id: 'f_1',
+          type: 'fragment',
+          fragmentType: 'alt',
+          condition: 'cond',
+          entries: [
+            { id: 'n_1', type: 'note', noteType: 'note', text: 'Note in fragment', participants: ['Alice'] }
+          ],
+          elseClauses: [
+            {
+              condition: 'else',
+              entries: [
+                { id: 'n_2', type: 'note', noteType: 'box', text: 'Note in else', participants: ['Bob'] }
+              ]
+            }
+          ]
+        }
+      ];
+    });
+
+    it('should change text of note in fragment entries', () => {
+      const cmd = new EditNoteTextCommand('n_1', 'Note in fragment', 'New text');
+
+      const result = cmd.do(fragmentAst);
+
+      expect(result[2].entries[0].text).toBe('New text');
+    });
+
+    it('should change text of note in else clause', () => {
+      const cmd = new EditNoteTextCommand('n_2', 'Note in else', 'Updated else note');
+
+      const result = cmd.do(fragmentAst);
+
+      expect(result[2].elseClauses[0].entries[0].text).toBe('Updated else note');
+    });
+
+    it('should restore note in fragment on undo', () => {
+      const cmd = new EditNoteTextCommand('n_1', 'Note in fragment', 'New text');
+
+      const afterDo = cmd.do(fragmentAst);
+      const afterUndo = cmd.undo(afterDo);
+
+      expect(afterUndo[2].entries[0].text).toBe('Note in fragment');
+    });
+  });
+});
+
+describe('ToggleExpandableCommand (BACKLOG-125)', () => {
+  let history;
+  let initialAst;
+
+  beforeEach(() => {
+    history = new CommandHistory();
+    initialAst = [
+      { id: 'p_1', type: 'participant', alias: 'Alice' },
+      { id: 'p_2', type: 'participant', alias: 'Bob' },
+      {
+        id: 'f_1',
+        type: 'fragment',
+        fragmentType: 'expandable',
+        condition: 'Details',
+        collapsed: false,
+        entries: ['m_1']
+      },
+      { id: 'm_1', type: 'message', from: 'Alice', to: 'Bob', label: 'Hidden message' }
+    ];
+  });
+
+  it('should toggle collapsed state from false to true with do()', () => {
+    const cmd = new ToggleExpandableCommand('f_1', false);
+
+    const result = cmd.do(initialAst);
+    const fragment = result.find(n => n.id === 'f_1');
+
+    expect(fragment.collapsed).toBe(true);
+    expect(fragment.fragmentType).toBe('expandable');
+  });
+
+  it('should toggle collapsed state from true to false with do()', () => {
+    // First collapse it
+    initialAst[2].collapsed = true;
+    const cmd = new ToggleExpandableCommand('f_1', true);
+
+    const result = cmd.do(initialAst);
+    const fragment = result.find(n => n.id === 'f_1');
+
+    expect(fragment.collapsed).toBe(false);
+  });
+
+  it('should restore original state with undo()', () => {
+    const cmd = new ToggleExpandableCommand('f_1', false);
+
+    const afterDo = cmd.do(initialAst);
+    expect(afterDo.find(n => n.id === 'f_1').collapsed).toBe(true);
+
+    const afterUndo = cmd.undo(afterDo);
+    expect(afterUndo.find(n => n.id === 'f_1').collapsed).toBe(false);
+  });
+
+  it('should have descriptive description', () => {
+    const cmd = new ToggleExpandableCommand('f_1', false);
+    expect(cmd.description).toBe('Toggle expandable fragment');
+  });
+
+  it('should work with CommandHistory', () => {
+    const cmd = new ToggleExpandableCommand('f_1', false);
+
+    let current = history.execute(cmd, initialAst);
+    expect(current.find(n => n.id === 'f_1').collapsed).toBe(true);
+
+    current = history.undo(current);
+    expect(current.find(n => n.id === 'f_1').collapsed).toBe(false);
+
+    current = history.redo(current);
+    expect(current.find(n => n.id === 'f_1').collapsed).toBe(true);
+  });
+
+  it('should only affect expandable fragments', () => {
+    // Add a non-expandable fragment
+    initialAst.push({
+      id: 'f_2',
+      type: 'fragment',
+      fragmentType: 'alt',
+      condition: 'cond',
+      entries: []
+    });
+
+    const cmd = new ToggleExpandableCommand('f_2', false);
+    const result = cmd.do(initialAst);
+
+    // Non-expandable fragment should be unchanged
+    const altFragment = result.find(n => n.id === 'f_2');
+    expect(altFragment.collapsed).toBeUndefined();
   });
 });
 

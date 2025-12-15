@@ -11,7 +11,9 @@ const DRAG_MODE = {
   PARTICIPANT: 'participant',   // Drag participant to reorder horizontally
   FRAGMENT_TOP: 'fragment_top', // Drag fragment top boundary
   FRAGMENT_BOTTOM: 'fragment_bottom', // Drag fragment bottom boundary
-  ELSE_DIVIDER: 'else_divider'  // Drag else divider line
+  ELSE_DIVIDER: 'else_divider', // Drag else divider line
+  DIVIDER: 'divider',           // Drag section divider (==text==)
+  NOTE: 'note'                  // Drag note to reorder vertically
 };
 
 // Drag state
@@ -146,6 +148,20 @@ function handleMouseDown(event) {
     }
   }
 
+  // Check for section divider drag (==text==)
+  const dividerGroup = target.closest('.divider');
+  if (dividerGroup) {
+    startDividerDrag(event, dividerGroup);
+    return;
+  }
+
+  // Check for note drag (all note types: note, box, abox, rbox)
+  const noteGroup = target.closest('.note');
+  if (noteGroup) {
+    startNoteDrag(event, noteGroup);
+    return;
+  }
+
   // Check for participant drag first
   const participantGroup = target.closest('.participant');
   if (participantGroup) {
@@ -233,6 +249,84 @@ function startParticipantDrag(event, participantGroup) {
 
   // Create ghost for participant
   createParticipantGhost(participantGroup);
+}
+
+/**
+ * Start divider drag for vertical repositioning
+ * @param {MouseEvent} event
+ * @param {SVGElement} dividerGroup
+ */
+function startDividerDrag(event, dividerGroup) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  isDragging = true;
+  dragMode = DRAG_MODE.DIVIDER;
+  dragNode = dividerGroup;
+  dragNodeId = dividerGroup.getAttribute('data-node-id');
+  dragStartX = event.clientX;
+  dragStartY = event.clientY;
+  dragCurrentX = event.clientX;
+  dragCurrentY = event.clientY;
+
+  // Add dragging class
+  dividerGroup.classList.add('dragging');
+  svg.classList.add('dragging-active');
+
+  // Create ghost for divider
+  createDividerGhost(dividerGroup);
+}
+
+/**
+ * Create ghost element for divider drag
+ * @param {SVGElement} dividerGroup
+ */
+function createDividerGhost(dividerGroup) {
+  dragGhost = dividerGroup.cloneNode(true);
+  dragGhost.classList.add('drag-ghost', 'divider-ghost');
+  dragGhost.removeAttribute('data-node-id');
+
+  // Insert after original
+  dividerGroup.parentNode.appendChild(dragGhost);
+}
+
+/**
+ * Start note drag for vertical repositioning
+ * @param {MouseEvent} event
+ * @param {SVGElement} noteGroup
+ */
+function startNoteDrag(event, noteGroup) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  isDragging = true;
+  dragMode = DRAG_MODE.NOTE;
+  dragNode = noteGroup;
+  dragNodeId = noteGroup.getAttribute('data-node-id');
+  dragStartX = event.clientX;
+  dragStartY = event.clientY;
+  dragCurrentX = event.clientX;
+  dragCurrentY = event.clientY;
+
+  // Add dragging class
+  noteGroup.classList.add('dragging');
+  svg.classList.add('dragging-active');
+
+  // Create ghost for note
+  createNoteGhost(noteGroup);
+}
+
+/**
+ * Create ghost element for note drag
+ * @param {SVGElement} noteGroup
+ */
+function createNoteGhost(noteGroup) {
+  dragGhost = noteGroup.cloneNode(true);
+  dragGhost.classList.add('drag-ghost', 'note-ghost');
+  dragGhost.removeAttribute('data-node-id');
+
+  // Insert after original
+  noteGroup.parentNode.appendChild(dragGhost);
 }
 
 /**
@@ -426,6 +520,18 @@ function handleMouseMove(event) {
   } else if (dragMode === DRAG_MODE.ELSE_DIVIDER) {
     // Update drag line for else divider
     updateFragmentBoundaryLine(); // Reuse the same function
+  } else if (dragMode === DRAG_MODE.DIVIDER) {
+    // Update ghost position for divider drag (vertical reorder)
+    if (dragGhost) {
+      const deltaY = dragCurrentY - dragStartY;
+      dragGhost.setAttribute('transform', `translate(0, ${deltaY})`);
+    }
+  } else if (dragMode === DRAG_MODE.NOTE) {
+    // Update ghost position for note drag (vertical reorder)
+    if (dragGhost) {
+      const deltaY = dragCurrentY - dragStartY;
+      dragGhost.setAttribute('transform', `translate(0, ${deltaY})`);
+    }
   }
 }
 
@@ -488,6 +594,26 @@ function handleMouseUp(event) {
 
     if (adjustedDelta !== 0 && onElseDividerChange) {
       onElseDividerChange(dragNodeId, dragElseClauseIndex, adjustedDelta);
+    }
+  } else if (dragMode === DRAG_MODE.DIVIDER) {
+    // Calculate drop position (same as message reorder)
+    const deltaY = dragCurrentY - dragStartY;
+    const entryHeight = 30; // Approximate height between entries
+    const deltaIndex = Math.round(deltaY / entryHeight);
+
+    // Notify callback if moved - reuse the same reorder callback as messages
+    if (deltaIndex !== 0 && onReorderComplete) {
+      onReorderComplete(dragNodeId, deltaIndex);
+    }
+  } else if (dragMode === DRAG_MODE.NOTE) {
+    // Calculate drop position (same as message/divider reorder)
+    const deltaY = dragCurrentY - dragStartY;
+    const entryHeight = 30; // Approximate height between entries
+    const deltaIndex = Math.round(deltaY / entryHeight);
+
+    // Notify callback if moved - reuse the same reorder callback
+    if (deltaIndex !== 0 && onReorderComplete) {
+      onReorderComplete(dragNodeId, deltaIndex);
     }
   }
 
@@ -890,6 +1016,43 @@ function addDragStyles() {
 
     .participant.dragging {
       cursor: grabbing;
+    }
+
+    /* Divider drag styles */
+    .divider {
+      cursor: grab;
+    }
+
+    .divider.dragging {
+      cursor: grabbing;
+    }
+
+    .divider-ghost line {
+      stroke: #4a90d9 !important;
+      stroke-width: 2 !important;
+      stroke-dasharray: 5, 5;
+    }
+
+    .divider-ghost rect {
+      stroke: #4a90d9 !important;
+      stroke-width: 2 !important;
+      stroke-dasharray: 5, 5;
+    }
+
+    /* Note drag styles */
+    .note {
+      cursor: grab;
+    }
+
+    .note.dragging {
+      cursor: grabbing;
+    }
+
+    .note-ghost path,
+    .note-ghost rect {
+      stroke: #4a90d9 !important;
+      stroke-width: 2 !important;
+      stroke-dasharray: 5, 5;
     }
   `;
 
