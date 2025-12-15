@@ -1,6 +1,8 @@
 // Render message arrows between participants
 // See DESIGN.md for message rendering details
 
+import { renderMarkupText } from '../markup/renderer.js';
+
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 /**
@@ -75,15 +77,9 @@ export function renderMessage(node, layoutInfo, messageNumber = null, resolvedSt
 
   // Create label text
   if (node.label || messageNumber !== null) {
-    const text = document.createElementNS(SVG_NS, 'text');
     const midX = (fromX + toX) / 2;
     // Position label at midpoint of the line (accounts for slope)
     const midY = (startY + endY) / 2 - 8;
-    text.setAttribute('x', midX);
-    text.setAttribute('y', midY);
-    text.setAttribute('text-anchor', 'middle');
-    text.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, sans-serif');
-    text.setAttribute('font-size', '11');
 
     // Build label with optional number prefix
     let labelText = '';
@@ -91,8 +87,16 @@ export function renderMessage(node, layoutInfo, messageNumber = null, resolvedSt
       labelText = `${messageNumber}. `;
     }
     labelText += node.label || '';
-    text.textContent = labelText;
-    group.appendChild(text);
+
+    // Use markup renderer to handle \n and other formatting
+    const textEl = renderMarkupText(labelText, {
+      x: midX,
+      y: midY,
+      textAnchor: 'middle',
+      fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+      fontSize: '11'
+    });
+    group.appendChild(textEl);
   }
 
   return group;
