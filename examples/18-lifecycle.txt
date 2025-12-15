@@ -1,0 +1,39 @@
+// Example 18: Participant Lifecycle
+// Demonstrates create and destroy of participants
+
+title Lifecycle Demo
+
+participant Client
+participant Server
+
+Client->Server:Request to create resource
+
+// Create a new participant dynamically
+Server->*Worker:<<create>>
+
+note over Worker:Worker created\nat runtime
+
+Worker->Worker:Initialize
+
+Server->Worker:Assign task
+Worker-->Server:Task accepted
+
+Worker->Worker:Process
+
+Worker-->Server:Complete
+
+// Destroy the participant
+destroy Worker
+
+note right of Server:Worker destroyed\nafter completion
+
+Server-->Client:Resource processed
+
+// Alternative: destroysilent (no X marker)
+Client->Server:Create temporary
+
+Server->*Temp:<<create>>
+Temp-->Server:Ready
+destroysilent Temp
+
+Server-->Client:Done

@@ -1,0 +1,41 @@
+// Example 15: Spacing Controls
+// Demonstrates space, entryspacing, and participantspacing
+
+title Spacing Demo
+
+// Set consistent spacing between participants
+participantspacing 150
+
+participant A
+participant B
+participant C
+
+// Default entry spacing
+A->B:Message 1
+B->C:Message 2
+
+// Add vertical space
+space
+
+C-->B:Response
+B-->A:Response
+
+// Multiple space units
+space 3
+
+// Or use entryspacing to change default
+entryspacing 40
+
+A->B:Closer messages
+B->C:Due to entryspacing
+
+// Reset to normal spacing
+entryspacing 20
+
+space 2
+
+C->B:Back to normal
+B->A:Spacing reset
+
+// Participant spacing can also use 'equal'
+// participantspacing equal

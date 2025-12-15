@@ -1,0 +1,34 @@
+// Example 23: Type-Based Styles
+// Demonstrates default styles for element types
+
+title Type-Based Styles Demo
+
+// Set default styles for all elements of each type
+messagestyle #blue
+notestyle #lightyellow
+dividerstyle **
+
+participant Client
+participant Server
+participant Database
+
+// All messages will be blue by default
+Client->Server:Request (blue by default)
+
+// All notes will have yellow background
+note over Server:This note is yellow
+
+Server->Database:Query (also blue)
+
+// Dividers use bold text
+==Data Processing==
+
+Database-->Server:Results
+Server-->Client:Response
+
+// Can still override with explicit inline styles
+Client-[#red]->Server:Red override
+
+note over Client #lightgreen:Green override
+
+==Complete==

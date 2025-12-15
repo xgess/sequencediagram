@@ -1,0 +1,89 @@
+// Example 25: Complete Feature Demo
+// Comprehensive example using all major features from REQUIREMENTS.md
+
+title <size:16>**Complete Feature Demo**</size>
+fontfamily sans-serif
+participantspacing equal
+
+// Type-based styles
+notestyle #lightyellow
+messagestyle #333333
+
+// Named styles
+style warning #white #red;2;dashed
+style success #green
+style async #blue
+
+// Frame around the diagram
+frame SD E-Commerce Checkout
+
+// Participant groups
+participantgroup #lightblue **Frontend**
+  actor User
+  participant "Web App" as App #lightcyan
+end
+
+participantgroup #lightgreen **Backend**
+  control "API Gateway" as API #palegreen
+  entity "Order Service" as Order #lightgreen
+end
+
+participantgroup #lightyellow **Infrastructure**
+  database DB #ffffcc
+  boundary "Payment\nGateway" as Pay #ffeecc
+end
+
+// Start with autonumber
+autonumber 1
+
+// User initiates checkout
+[->User:Clicks checkout
+
+User->App:Initiate checkout
+
+activate App
+
+App->API:POST /checkout
+activate API
+
+==Order Creation==
+
+API->Order:Create order
+activate Order #lightblue
+
+Order->DB:INSERT order
+DB-[##success]->Order:Order ID: 12345
+
+note over Order:Order created\nStatus: PENDING
+
+Order-->API:Order details
+deactivate Order
+
+==Payment Processing==
+
+API->Pay:Process payment
+activate Pay
+
+// Delayed response from payment gateway
+Pay-->(2)API:Payment authorized
+deactivate Pay
+
+note right of Pay #lightgreen:Payment\nsuccessful!
+
+API-[##success]->App:Checkout complete
+deactivate API
+
+App-->User:Show confirmation
+deactivate App
+
+// Parallel notifications
+parallel
+API->Order:Update status
+API->User:Email confirmation
+parallel off
+
+space 2
+
+==Completion==
+
+note over User,DB #lightgreen:**Order Complete**\nThank you for your purchase!

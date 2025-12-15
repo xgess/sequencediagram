@@ -1,0 +1,24 @@
+// Example 19: Frame Directive
+// Demonstrates the frame directive for diagram borders
+
+title Frame Demo
+
+// Add a frame around the entire diagram
+frame SD Authentication Flow
+
+participant User
+participant Auth
+participant Database
+
+User->Auth:Login(user, pass)
+
+alt Valid credentials
+  Auth->Database:Validate
+  Database-->Auth:Success
+  Auth-->User:Token
+else Invalid
+  Auth-->User:Error
+end
+
+// Frame can include styling
+// frame#red #lightblue #green;2 My Styled Frame
