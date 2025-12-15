@@ -61,13 +61,13 @@ Format: `#fill` or `#fill #border;width;style`
 ### Icon Participants
 
 ```
-fontawesome7solid f007 User
-fontawesome7regular f0e0 Email
-fontawesome7brands f09b GitHub
-mdi F01C9 Database
+fontawesome6solid f007 User
+fontawesome6regular f0e0 Email
+fontawesome6brands f09b GitHub
+materialdesignicons F01C9 Database
 ```
 
-Uses Font Awesome 7 or Material Design Icons by hex codepoint.
+Uses Font Awesome 6 or Material Design Icons by hex codepoint.
 
 ---
 
