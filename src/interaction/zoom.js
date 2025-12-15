@@ -5,15 +5,24 @@ const ZOOM_STEP = 0.1;
 const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 5;
 let zoomLevelEl;
-let diagramEl;
+let diagramSelector;
+
+/**
+ * Get the current diagram element (queries fresh to handle re-renders)
+ * @returns {HTMLElement|null}
+ */
+function getDiagramEl() {
+  return document.querySelector(diagramSelector);
+}
 
 /**
  * Initialize zoom controls
- * @param {HTMLElement} diagram - The diagram element to scale
+ * @param {HTMLElement} diagram - The diagram element to scale (used for selector)
  * @param {HTMLElement} zoomLevel - The element to display zoom level
  */
 export function initZoom(diagram, zoomLevel) {
-  diagramEl = diagram;
+  // Store selector to query fresh each time (SVG gets replaced on re-render)
+  diagramSelector = diagram ? `#${diagram.id}` : '#diagram';
   zoomLevelEl = zoomLevel;
 
   // Button handlers
@@ -98,6 +107,7 @@ export function resetZoom() {
  * Update the zoom display and transform
  */
 function updateZoom() {
+  const diagramEl = getDiagramEl();
   if (diagramEl) {
     diagramEl.style.transform = `scale(${currentZoom})`;
     diagramEl.style.transformOrigin = 'top left';
@@ -129,6 +139,7 @@ export function setZoomLevel(level) {
  * Calculates the optimal zoom level to fit the entire diagram in the viewport
  */
 export function shrinkToFit() {
+  const diagramEl = getDiagramEl();
   if (!diagramEl) return;
 
   // Get the SVG's actual content dimensions from its viewBox or bbox
