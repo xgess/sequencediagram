@@ -24,11 +24,12 @@ export function showInlineEdit(svgElement, nodeId, currentValue, onComplete) {
   // Get position from SVG element
   const bbox = svgElement.getBoundingClientRect();
 
-  // Create dialog
+  // Create dialog with textarea for multi-line editing
   dialogElement = document.createElement('div');
   dialogElement.className = 'inline-edit-dialog';
   dialogElement.innerHTML = `
-    <input type="text" class="inline-edit-input" value="">
+    <textarea class="inline-edit-input inline-edit-textarea" rows="3"></textarea>
+    <div class="inline-edit-hint">Shift+Enter to save</div>
     <div class="inline-edit-buttons">
       <button type="button" class="inline-edit-ok">OK</button>
       <button type="button" class="inline-edit-cancel">Cancel</button>
@@ -44,8 +45,9 @@ export function showInlineEdit(svgElement, nodeId, currentValue, onComplete) {
   document.body.appendChild(dialogElement);
 
   // Get input and set value
+  // Convert \n markup to actual newlines for display in textarea
   const input = dialogElement.querySelector('.inline-edit-input');
-  input.value = currentValue;
+  input.value = currentValue.replace(/\\n/g, '\n');
 
   // Add event handlers
   const okBtn = dialogElement.querySelector('.inline-edit-ok');
@@ -172,9 +174,10 @@ function handleOk() {
     hideInlineEdit();
     callback(nodeId, result);
   } else {
-    // Simple single-field edit
+    // Simple single-field edit (textarea for messages)
     const input = dialogElement.querySelector('.inline-edit-input');
-    const newValue = input.value;
+    // Convert actual newlines to \n markup for proper rendering
+    const newValue = input.value.replace(/\n/g, '\\n');
     hideInlineEdit();
     callback(nodeId, newValue);
   }
@@ -194,13 +197,26 @@ function handleCancel() {
 }
 
 /**
- * Handle keydown in input
+ * Handle keydown in input/textarea
+ * For textarea: Shift+Enter submits, Enter adds newline
+ * For input: Enter submits
  * @param {KeyboardEvent} event
  */
 function handleKeydown(event) {
   if (event.key === 'Enter') {
-    event.preventDefault();
-    handleOk();
+    const isTextarea = event.target.tagName === 'TEXTAREA';
+    if (isTextarea) {
+      // Textarea: Shift+Enter submits, plain Enter is newline
+      if (event.shiftKey) {
+        event.preventDefault();
+        handleOk();
+      }
+      // Plain Enter: allow default behavior (newline)
+    } else {
+      // Input: Enter submits
+      event.preventDefault();
+      handleOk();
+    }
   } else if (event.key === 'Escape') {
     event.preventDefault();
     handleCancel();
@@ -289,6 +305,20 @@ function addInlineEditStyles() {
 
     .participant-edit-dialog .inline-edit-input {
       margin-bottom: 0;
+    }
+
+    /* Textarea for multi-line message editing */
+    .inline-edit-textarea {
+      resize: vertical;
+      min-height: 60px;
+      font-family: inherit;
+    }
+
+    .inline-edit-hint {
+      font-size: 11px;
+      color: #888;
+      margin-bottom: 8px;
+      text-align: right;
     }
   `;
 
