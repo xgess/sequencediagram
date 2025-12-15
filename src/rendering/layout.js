@@ -182,9 +182,8 @@ export function calculateLayout(ast) {
     // Skip other directives (they don't affect layout)
     if (node.type === 'directive') continue;
 
-    // Handle blank lines - add spacing
+    // Skip blank lines - they don't add visual space (use 'space' directive for that)
     if (node.type === 'blankline') {
-      currentY += BLANKLINE_SPACING;
       continue;
     }
 
@@ -344,9 +343,9 @@ function layoutEntry(entryId, nodeById, participantLayout, layout, currentY, mes
   // Skip comments (they don't affect layout)
   if (entry.type === 'comment') return currentY;
 
-  // Handle blank lines - add spacing
+  // Skip blank lines - they don't add visual space (use 'space' directive for that)
   if (entry.type === 'blankline') {
-    return currentY + BLANKLINE_SPACING;
+    return currentY;
   }
 
   // Handle error nodes inside fragments

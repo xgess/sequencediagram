@@ -439,7 +439,7 @@ describe('Renderer', () => {
   });
 
   describe('blank line layout (BACKLOG-041)', () => {
-    it('should add extra spacing for blank lines', () => {
+    it('should NOT add extra spacing for blank lines (BUG-010)', () => {
       // Without blank line
       const ast1 = parse('participant Alice\nparticipant Bob\nAlice->Bob:First\nBob-->Alice:Second');
       const svg1 = render(ast1);
@@ -456,11 +456,11 @@ describe('Renderer', () => {
       const y2Second = parseFloat(messages2[1].querySelector('line').getAttribute('y1'));
       const spacing2 = y2Second - y2First;
 
-      // Spacing with blank line should be greater
-      expect(spacing2).toBeGreaterThan(spacing1);
+      // Blank lines should NOT affect spacing (use 'space' directive for that)
+      expect(spacing2).toBe(spacing1);
     });
 
-    it('should add spacing for blank lines inside fragments', () => {
+    it('should NOT add spacing for blank lines inside fragments (BUG-010)', () => {
       // Without blank line
       const ast1 = parse('participant Alice\nparticipant Bob\nalt test\nAlice->Bob:First\nBob-->Alice:Second\nend');
       const svg1 = render(ast1);
@@ -473,8 +473,8 @@ describe('Renderer', () => {
       const fragment2 = svg2.querySelector('.fragment-box');
       const height2 = parseFloat(fragment2.getAttribute('height'));
 
-      // Fragment with blank line should be taller
-      expect(height2).toBeGreaterThan(height1);
+      // Blank lines should NOT affect fragment height (use 'space' directive for that)
+      expect(height2).toBe(height1);
     });
   });
 
