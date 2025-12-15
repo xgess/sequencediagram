@@ -1,7 +1,7 @@
 // Render message arrows between participants
 // See DESIGN.md for message rendering details
 
-import { renderMarkupText } from '../markup/renderer.js';
+import { renderMarkupText, getLineCount } from '../markup/renderer.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -78,8 +78,6 @@ export function renderMessage(node, layoutInfo, messageNumber = null, resolvedSt
   // Create label text
   if (node.label || messageNumber !== null) {
     const midX = (fromX + toX) / 2;
-    // Position label at midpoint of the line (accounts for slope)
-    const midY = (startY + endY) / 2 - 8;
 
     // Build label with optional number prefix
     let labelText = '';
@@ -87,6 +85,15 @@ export function renderMessage(node, layoutInfo, messageNumber = null, resolvedSt
       labelText = `${messageNumber}. `;
     }
     labelText += node.label || '';
+
+    // Calculate line count and offset so ALL lines are above the arrow
+    // Each line is 16px (LINE_HEIGHT), and we want bottom of text 8px above arrow
+    const lineCount = getLineCount(labelText);
+    const lineHeight = 16;
+    const baseOffset = 8; // Distance from arrow to bottom of text
+    // For single line: midY - 8 (same as before)
+    // For multi-line: move up by (lineCount - 1) * lineHeight
+    const midY = (startY + endY) / 2 - baseOffset - (lineCount - 1) * lineHeight;
 
     // Use markup renderer to handle \n and other formatting
     const textEl = renderMarkupText(labelText, {

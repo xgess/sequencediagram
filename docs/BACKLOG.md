@@ -13,11 +13,13 @@ Remaining work items. See FEATURES.md for what's already implemented.
 ### Fixed
 - [x] BUG-016: Zooming moves diagram off to the right/out of screen - Fixed by wrapping SVG in scrollable container
 - [x] BUG-017: "note right of alice" attaches to wrong participant - Fixed by positioning relative to lifeline (centerX)
+- [x] BUG-018: Double-click edit should be multiline - Already fixed by BUG-012
+- [x] BUG-019: Multiline message text should be above arrow - Fixed by offsetting Y based on line count
 
 ### Pending
-- [ ] BUG-018: Double-click edit should be multiline (may already be fixed by BUG-012)
-- [ ] BUG-019: Multiline message text should be above arrow, not below
-- [ ] BUG-020: Adding new messages resets zoom - should preserve 
+- [ ] BUG-020: Adding new messages resets zoom - should preserve
+- [ ] BUG-021: Note box should expand to fit long text
+- [ ] BUG-022: Textarea resize should expand width, not just height 
 
 
 ---
