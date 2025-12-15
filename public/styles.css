@@ -226,13 +226,11 @@ body {
 }
 
 #diagram-container {
-  flex: 1;
-  min-height: 400px;
   background: white;
   border: 1px solid #ccc;
   border-radius: 4px;
   overflow: auto;
-  position: relative;
+  max-height: calc(100vh - 120px);
 }
 
 #diagram {
