@@ -8,60 +8,60 @@ import { render } from '../src/rendering/renderer.js';
 describe('Font Awesome 7 Participant Types (BACKLOG-117)', () => {
 
   describe('Parsing', () => {
-    it('should parse fontawesome7solid participant', () => {
-      const ast = parse('fontawesome7solid f48e Server');
+    it('should parse fontawesome6solid participant', () => {
+      const ast = parse('fontawesome6solid f48e Server');
       const participant = ast.find(n => n.type === 'participant');
 
       expect(participant).toBeDefined();
-      expect(participant.participantType).toBe('fontawesome7solid');
+      expect(participant.participantType).toBe('fontawesome6solid');
       expect(participant.iconCode).toBe('f48e');
       expect(participant.alias).toBe('Server');
       expect(participant.displayName).toBe('Server');
     });
 
-    it('should parse fontawesome7regular participant', () => {
-      const ast = parse('fontawesome7regular f004 Heart');
+    it('should parse fontawesome6regular participant', () => {
+      const ast = parse('fontawesome6regular f004 Heart');
       const participant = ast.find(n => n.type === 'participant');
 
       expect(participant).toBeDefined();
-      expect(participant.participantType).toBe('fontawesome7regular');
+      expect(participant.participantType).toBe('fontawesome6regular');
       expect(participant.iconCode).toBe('f004');
       expect(participant.alias).toBe('Heart');
     });
 
-    it('should parse fontawesome7brands participant', () => {
-      const ast = parse('fontawesome7brands f09b GitHub');
+    it('should parse fontawesome6brands participant', () => {
+      const ast = parse('fontawesome6brands f09b GitHub');
       const participant = ast.find(n => n.type === 'participant');
 
       expect(participant).toBeDefined();
-      expect(participant.participantType).toBe('fontawesome7brands');
+      expect(participant.participantType).toBe('fontawesome6brands');
       expect(participant.iconCode).toBe('f09b');
       expect(participant.alias).toBe('GitHub');
     });
 
     it('should parse fontawesome with quoted display name and alias', () => {
-      const ast = parse('fontawesome7solid f233 "Web Server" as Server');
+      const ast = parse('fontawesome6solid f233 "Web Server" as Server');
       const participant = ast.find(n => n.type === 'participant');
 
       expect(participant).toBeDefined();
-      expect(participant.participantType).toBe('fontawesome7solid');
+      expect(participant.participantType).toBe('fontawesome6solid');
       expect(participant.iconCode).toBe('f233');
       expect(participant.displayName).toBe('Web Server');
       expect(participant.alias).toBe('Server');
     });
 
     it('should parse fontawesome with styling', () => {
-      const ast = parse('fontawesome7solid f233 Server #blue');
+      const ast = parse('fontawesome6solid f233 Server #blue');
       const participant = ast.find(n => n.type === 'participant');
 
       expect(participant).toBeDefined();
-      expect(participant.participantType).toBe('fontawesome7solid');
+      expect(participant.participantType).toBe('fontawesome6solid');
       expect(participant.iconCode).toBe('f233');
       expect(participant.style.fill).toBe('#blue');
     });
 
     it('should parse fontawesome with quoted name and styling', () => {
-      const ast = parse('fontawesome7solid f48e "My Server" as Srv #red');
+      const ast = parse('fontawesome6solid f48e "My Server" as Srv #red');
       const participant = ast.find(n => n.type === 'participant');
 
       expect(participant).toBeDefined();
@@ -71,7 +71,7 @@ describe('Font Awesome 7 Participant Types (BACKLOG-117)', () => {
     });
 
     it('should handle uppercase hex codes', () => {
-      const ast = parse('fontawesome7solid F48E Server');
+      const ast = parse('fontawesome6solid F48E Server');
       const participant = ast.find(n => n.type === 'participant');
 
       expect(participant).toBeDefined();
@@ -80,50 +80,50 @@ describe('Font Awesome 7 Participant Types (BACKLOG-117)', () => {
   });
 
   describe('Serialization', () => {
-    it('should serialize fontawesome7solid participant', () => {
-      const input = 'fontawesome7solid f48e Server';
+    it('should serialize fontawesome6solid participant', () => {
+      const input = 'fontawesome6solid f48e Server';
       const ast = parse(input);
       const output = serialize(ast);
 
-      expect(output).toBe('fontawesome7solid f48e Server');
+      expect(output).toBe('fontawesome6solid f48e Server');
     });
 
-    it('should serialize fontawesome7regular participant', () => {
-      const input = 'fontawesome7regular f004 Heart';
+    it('should serialize fontawesome6regular participant', () => {
+      const input = 'fontawesome6regular f004 Heart';
       const ast = parse(input);
       const output = serialize(ast);
 
-      expect(output).toBe('fontawesome7regular f004 Heart');
+      expect(output).toBe('fontawesome6regular f004 Heart');
     });
 
-    it('should serialize fontawesome7brands participant', () => {
-      const input = 'fontawesome7brands f09b GitHub';
+    it('should serialize fontawesome6brands participant', () => {
+      const input = 'fontawesome6brands f09b GitHub';
       const ast = parse(input);
       const output = serialize(ast);
 
-      expect(output).toBe('fontawesome7brands f09b GitHub');
+      expect(output).toBe('fontawesome6brands f09b GitHub');
     });
 
     it('should serialize fontawesome with quoted display name', () => {
-      const input = 'fontawesome7solid f233 "Web Server" as Server';
+      const input = 'fontawesome6solid f233 "Web Server" as Server';
       const ast = parse(input);
       const output = serialize(ast);
 
-      expect(output).toBe('fontawesome7solid f233 "Web Server" as Server');
+      expect(output).toBe('fontawesome6solid f233 "Web Server" as Server');
     });
 
     it('should serialize fontawesome with styling', () => {
-      const input = 'fontawesome7solid f233 Server #blue';
+      const input = 'fontawesome6solid f233 Server #blue';
       const ast = parse(input);
       const output = serialize(ast);
 
-      expect(output).toBe('fontawesome7solid f233 Server #blue');
+      expect(output).toBe('fontawesome6solid f233 Server #blue');
     });
   });
 
   describe('Round-trip', () => {
-    it('should round-trip fontawesome7solid', () => {
-      const input = 'fontawesome7solid f48e Server';
+    it('should round-trip fontawesome6solid', () => {
+      const input = 'fontawesome6solid f48e Server';
       const ast1 = parse(input);
       const output = serialize(ast1);
       const ast2 = parse(output);
@@ -137,7 +137,7 @@ describe('Font Awesome 7 Participant Types (BACKLOG-117)', () => {
     });
 
     it('should round-trip fontawesome with quoted name', () => {
-      const input = 'fontawesome7solid f233 "Web Server" as WS';
+      const input = 'fontawesome6solid f233 "Web Server" as WS';
       const ast1 = parse(input);
       const output = serialize(ast1);
       const ast2 = parse(output);
@@ -152,8 +152,8 @@ describe('Font Awesome 7 Participant Types (BACKLOG-117)', () => {
   });
 
   describe('Rendering', () => {
-    it('should render fontawesome7solid participant', () => {
-      const input = `fontawesome7solid f48e Server
+    it('should render fontawesome6solid participant', () => {
+      const input = `fontawesome6solid f48e Server
 participant Client
 Server->Client:msg`;
       const ast = parse(input);
@@ -164,8 +164,8 @@ Server->Client:msg`;
       expect(participants.length).toBeGreaterThanOrEqual(1);
     });
 
-    it('should render fontawesome7regular participant', () => {
-      const input = `fontawesome7regular f004 Heart
+    it('should render fontawesome6regular participant', () => {
+      const input = `fontawesome6regular f004 Heart
 participant Client
 Heart->Client:msg`;
       const ast = parse(input);
@@ -175,8 +175,8 @@ Heart->Client:msg`;
       expect(participants.length).toBeGreaterThanOrEqual(1);
     });
 
-    it('should render fontawesome7brands participant', () => {
-      const input = `fontawesome7brands f09b GitHub
+    it('should render fontawesome6brands participant', () => {
+      const input = `fontawesome6brands f09b GitHub
 participant Client
 GitHub->Client:msg`;
       const ast = parse(input);
@@ -189,8 +189,8 @@ GitHub->Client:msg`;
 
   describe('Messages with fontawesome participants', () => {
     it('should parse messages between fontawesome participants', () => {
-      const input = `fontawesome7solid f233 Server
-fontawesome7solid f109 Client
+      const input = `fontawesome6solid f233 Server
+fontawesome6solid f109 Client
 Server->Client:request
 Client->Server:response`;
       const ast = parse(input);

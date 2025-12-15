@@ -274,6 +274,19 @@ function parseDirective(line, lineNumber) {
     };
   }
 
+  // Match create directive: create participantName
+  const createMatch = line.match(/^create\s+(\S+)$/);
+  if (createMatch) {
+    return {
+      id: generateId('directive'),
+      type: 'directive',
+      directiveType: 'create',
+      participant: createMatch[1],
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
+  }
+
   // Match activate directive: activate B or activate B #lightblue
   const activateMatch = line.match(/^activate\s+(\S+)(?:\s+(#[^\s]+))?$/);
   if (activateMatch) {
@@ -682,7 +695,7 @@ function parseFragment(lines, startLine, ast) {
     fragmentType = 'expandable';
     collapsed = true;
   }
-  const { style, condition } = parseFragmentStyleAndCondition(match[2] || '', match[3] || '');
+  const { style, condition, bracketText } = parseFragmentStyleAndCondition(match[2] || '', match[3] || '');
 
   const fragmentId = generateId('fragment');
   const entries = [];
@@ -709,6 +722,10 @@ function parseFragment(lines, startLine, ast) {
         sourceLineStart: fragmentStartLine,
         sourceLineEnd: i + 1 // 1-indexed
       };
+      // Add bracketText if present (for group fragments with [text])
+      if (bracketText !== null) {
+        fragmentNode.bracketText = bracketText;
+      }
       // Add collapsed property only for expandable fragments
       if (fragmentType === 'expandable') {
         fragmentNode.collapsed = collapsed;
@@ -840,9 +857,9 @@ function parseFragment(lines, startLine, ast) {
  */
 function parseParticipant(line, lineNumber) {
   // Try icon participant types with quoted display name:
-  // fontawesome7solid f48e "Display Name" as Alias [styling]
-  // mdi F01C9 "Display Name" as Alias [styling]
-  const iconQuotedMatch = line.match(/^(fontawesome7solid|fontawesome7regular|fontawesome7brands|mdi)\s+([a-fA-F0-9]+)\s+"((?:[^"\\]|\\.)*)"\s+as\s+([^\s#]+)(.*)$/);
+  // fontawesome6solid f48e "Display Name" as Alias [styling]
+  // materialdesignicons F01C9 "Display Name" as Alias [styling]
+  const iconQuotedMatch = line.match(/^(fontawesome6solid|fontawesome6regular|fontawesome6brands|materialdesignicons)\s+([a-fA-F0-9]+)\s+"((?:[^"\\]|\\.)*)"\s+as\s+([^\s#]+)(.*)$/);
   if (iconQuotedMatch) {
     const [, participantType, iconCode, displayNameRaw, alias, styleStr] = iconQuotedMatch;
     const displayName = unescapeString(displayNameRaw);
@@ -862,9 +879,9 @@ function parseParticipant(line, lineNumber) {
   }
 
   // Try icon participant simple syntax:
-  // fontawesome7solid f48e Name [styling]
-  // mdi F01C9 Name [styling]
-  const iconMatch = line.match(/^(fontawesome7solid|fontawesome7regular|fontawesome7brands|mdi)\s+([a-fA-F0-9]+)\s+([^\s#]+)(.*)$/);
+  // fontawesome6solid f48e Name [styling]
+  // materialdesignicons F01C9 Name [styling]
+  const iconMatch = line.match(/^(fontawesome6solid|fontawesome6regular|fontawesome6brands|materialdesignicons)\s+([a-fA-F0-9]+)\s+([^\s#]+)(.*)$/);
   if (iconMatch) {
     const [, participantType, iconCode, name, styleStr] = iconMatch;
     const style = parseParticipantStyle(styleStr.trim());
@@ -946,7 +963,8 @@ function parseElseStyleAndCondition(rest) {
   rest = rest.trim();
 
   // Match fill color (a # followed by non-space, non-# chars, not followed by ;)
-  const fillMatch = rest.match(/^(#[^\s#;]+)(?:\s|$)/);
+  // Also handle #auto as a special fill value
+  const fillMatch = rest.match(/^(#auto|#[^\s#;]+)(?:\s|$)/);
   if (fillMatch) {
     style.fill = fillMatch[1];
     rest = rest.slice(fillMatch[0].length).trim();
@@ -986,9 +1004,10 @@ function parseFragmentStyleAndCondition(operatorColorStr, rest) {
     style.operatorColor = operatorColorStr;
   }
 
-  // Now parse rest which may contain: [#fill] [#border;width;style] [condition]
+  // Now parse rest which may contain: [#fill|#auto] [#border;width;style] [condition]
   // Match fill color (a # followed by non-space, non-# chars, not followed by ;)
-  const fillMatch = rest.match(/^(#[^\s#;]+)(?:\s|$)/);
+  // Also handle #auto as a special fill value
+  const fillMatch = rest.match(/^(#auto|#[^\s#;]+)(?:\s|$)/);
   if (fillMatch) {
     style.fill = fillMatch[1];
     rest = rest.slice(fillMatch[0].length).trim();
@@ -1012,10 +1031,22 @@ function parseFragmentStyleAndCondition(operatorColorStr, rest) {
     // This case is handled above, so we just continue
   }
 
-  // What remains is the condition
-  const condition = rest;
+  // What remains is the condition, possibly with bracket text like "name [label]"
+  let condition = rest;
+  let bracketText = null;
 
-  return { style: Object.keys(style).length > 0 ? style : null, condition };
+  // Check for bracket text: "name [some text]"
+  const bracketMatch = rest.match(/^(.*?)\s*\[([^\]]*)\]\s*$/);
+  if (bracketMatch) {
+    condition = bracketMatch[1].trim();
+    bracketText = bracketMatch[2];
+  }
+
+  return {
+    style: Object.keys(style).length > 0 ? style : null,
+    condition,
+    bracketText
+  };
 }
 
 /**
@@ -1069,6 +1100,26 @@ function parseParticipantStyle(styleStr) {
  * @returns {Object|null} Message AST node or null
  */
 function parseMessage(line, lineNumber) {
+  // Try sender-side failure with styled bracket: Ax[#style]-B (x before bracket, no dash before)
+  const xStyledMatch = line.match(/^([^\s\-<\[x]+)x\[([^\]]+)\](-{1,2})(\*)?([^\s:\]]+):(.*)$/);
+  if (xStyledMatch) {
+    const [, from, styleStr, dashes, createMarker, to, label] = xStyledMatch;
+    const isCreate = createMarker === '*' || label.trim().includes('<<create>>');
+    return {
+      id: generateId('message'),
+      type: 'message',
+      from,
+      to,
+      arrowType: 'x' + dashes, // x- or x--
+      delay: null,
+      label: label.trim(),
+      style: parseMessageStyle(styleStr),
+      isCreate: isCreate || null,
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
+  }
+
   // Try styled message first: A-[#color;width]>B or A-[##style]>B
   // Also supports: A-[style]->B, A-[style]->>B, A<-[style]-B (reversed)
   // The bracket style goes between parts of the arrow
@@ -1118,7 +1169,8 @@ function parseMessage(line, lineNumber) {
 
   // Try boundary/regular message: [->A or A->]
   // Also handles create syntax: A->*B:<<create>> (with * prefix on target)
-  const boundaryMatch = line.match(/^(\[|[^\s\-<\[]+)(<-->>|<->>|<-->|<->|<--|<-|-->>|-->|->>|->|--x|-x)(\(\d+\))?(\*)?(\]|[^\s:\]]+):(.*)$/);
+  // Failure variants: -x, --x (receiver lost), x-, x-- (sender lost)
+  const boundaryMatch = line.match(/^(\[|[^\s\-<\[]+)(<-->>|<->>|<-->|<->|<--|<-|-->>|-->|->>|->|--x|-x|x--|x-)(\(\d+\))?(\*)?(\]|[^\s:\]]+):(.*)$/);
   if (boundaryMatch) {
     const [, from, arrowType, delayStr, createMarker, to, label] = boundaryMatch;
     const delay = delayStr ? parseInt(delayStr.slice(1, -1), 10) : null;
@@ -1218,8 +1270,8 @@ function parseDivider(line, lineNumber) {
  */
 function parseNote(line, lineNumber) {
   // Match note types with various positions
-  // Syntax: (note|box|abox|rbox|ref|state) (over|left of|right of) participant(,participant)?:text
-  const match = line.match(/^(note|box|abox|rbox|ref|state)\s+(over|left of|right of)\s+([^:]+):(.*)$/);
+  // Syntax: (note|box|abox|aboxright|aboxleft|rbox|ref|state) (over|left of|right of) participant(,participant)?:text
+  const match = line.match(/^(note|box|abox|aboxright|aboxleft|rbox|ref|state)\s+(over|left of|right of)\s+([^:]+):(.*)$/);
   if (!match) {
     return null;
   }

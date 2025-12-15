@@ -33,12 +33,12 @@ export function renderParticipant(node, layoutInfo) {
     case 'entity':
       renderEntity(group, node, layoutInfo);
       break;
-    case 'fontawesome7solid':
-    case 'fontawesome7regular':
-    case 'fontawesome7brands':
+    case 'fontawesome6solid':
+    case 'fontawesome6regular':
+    case 'fontawesome6brands':
       renderFontAwesomeIcon(group, node, layoutInfo);
       break;
-    case 'mdi':
+    case 'materialdesignicons':
       renderMaterialDesignIcon(group, node, layoutInfo);
       break;
     default:
@@ -450,13 +450,13 @@ function renderFontAwesomeIcon(group, node, layoutInfo) {
   // Determine the font family based on the participant type
   let fontFamily;
   switch (node.participantType) {
-    case 'fontawesome7solid':
-      fontFamily = 'Font Awesome 6 Free'; // FA7 uses "Font Awesome 6 Free" for webfonts
-      break;
-    case 'fontawesome7regular':
+    case 'fontawesome6solid':
       fontFamily = 'Font Awesome 6 Free';
       break;
-    case 'fontawesome7brands':
+    case 'fontawesome6regular':
+      fontFamily = 'Font Awesome 6 Free';
+      break;
+    case 'fontawesome6brands':
       fontFamily = 'Font Awesome 6 Brands';
       break;
     default:
@@ -464,7 +464,7 @@ function renderFontAwesomeIcon(group, node, layoutInfo) {
   }
 
   // Determine font weight (solid = 900, regular = 400, brands = 400)
-  const fontWeight = node.participantType === 'fontawesome7solid' ? '900' : '400';
+  const fontWeight = node.participantType === 'fontawesome6solid' ? '900' : '400';
 
   // Convert hex codepoint to Unicode character
   const iconChar = String.fromCodePoint(parseInt(node.iconCode, 16));

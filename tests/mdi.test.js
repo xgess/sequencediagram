@@ -8,49 +8,49 @@ import { render } from '../src/rendering/renderer.js';
 describe('Material Design Icons Participant Types (BACKLOG-118)', () => {
 
   describe('Parsing', () => {
-    it('should parse mdi participant with hex code', () => {
-      const ast = parse('mdi F01C9 Testing');
+    it('should parse materialdesignicons participant with hex code', () => {
+      const ast = parse('materialdesignicons F01C9 Testing');
       const participant = ast.find(n => n.type === 'participant');
 
       expect(participant).toBeDefined();
-      expect(participant.participantType).toBe('mdi');
+      expect(participant.participantType).toBe('materialdesignicons');
       expect(participant.iconCode).toBe('F01C9');
       expect(participant.alias).toBe('Testing');
       expect(participant.displayName).toBe('Testing');
     });
 
-    it('should parse mdi participant with lowercase hex code', () => {
-      const ast = parse('mdi f01c9 Testing');
+    it('should parse materialdesignicons participant with lowercase hex code', () => {
+      const ast = parse('materialdesignicons f01c9 Testing');
       const participant = ast.find(n => n.type === 'participant');
 
       expect(participant).toBeDefined();
-      expect(participant.participantType).toBe('mdi');
+      expect(participant.participantType).toBe('materialdesignicons');
       expect(participant.iconCode).toBe('f01c9');
     });
 
-    it('should parse mdi with quoted display name and alias', () => {
-      const ast = parse('mdi F0544 "Database Server" as DB');
+    it('should parse materialdesignicons with quoted display name and alias', () => {
+      const ast = parse('materialdesignicons F0544 "Database Server" as DB');
       const participant = ast.find(n => n.type === 'participant');
 
       expect(participant).toBeDefined();
-      expect(participant.participantType).toBe('mdi');
+      expect(participant.participantType).toBe('materialdesignicons');
       expect(participant.iconCode).toBe('F0544');
       expect(participant.displayName).toBe('Database Server');
       expect(participant.alias).toBe('DB');
     });
 
     it('should parse mdi with styling', () => {
-      const ast = parse('mdi F0544 Database #blue');
+      const ast = parse('materialdesignicons F0544 Database #blue');
       const participant = ast.find(n => n.type === 'participant');
 
       expect(participant).toBeDefined();
-      expect(participant.participantType).toBe('mdi');
+      expect(participant.participantType).toBe('materialdesignicons');
       expect(participant.iconCode).toBe('F0544');
       expect(participant.style.fill).toBe('#blue');
     });
 
     it('should parse mdi with quoted name and styling', () => {
-      const ast = parse('mdi F0544 "My DB" as DB #red');
+      const ast = parse('materialdesignicons F0544 "My DB" as DB #red');
       const participant = ast.find(n => n.type === 'participant');
 
       expect(participant).toBeDefined();
@@ -62,33 +62,33 @@ describe('Material Design Icons Participant Types (BACKLOG-118)', () => {
 
   describe('Serialization', () => {
     it('should serialize mdi participant', () => {
-      const input = 'mdi F01C9 Testing';
+      const input = 'materialdesignicons F01C9 Testing';
       const ast = parse(input);
       const output = serialize(ast);
 
-      expect(output).toBe('mdi F01C9 Testing');
+      expect(output).toBe('materialdesignicons F01C9 Testing');
     });
 
     it('should serialize mdi with quoted display name', () => {
-      const input = 'mdi F0544 "Database Server" as DB';
+      const input = 'materialdesignicons F0544 "Database Server" as DB';
       const ast = parse(input);
       const output = serialize(ast);
 
-      expect(output).toBe('mdi F0544 "Database Server" as DB');
+      expect(output).toBe('materialdesignicons F0544 "Database Server" as DB');
     });
 
     it('should serialize mdi with styling', () => {
-      const input = 'mdi F0544 Database #blue';
+      const input = 'materialdesignicons F0544 Database #blue';
       const ast = parse(input);
       const output = serialize(ast);
 
-      expect(output).toBe('mdi F0544 Database #blue');
+      expect(output).toBe('materialdesignicons F0544 Database #blue');
     });
   });
 
   describe('Round-trip', () => {
     it('should round-trip mdi participant', () => {
-      const input = 'mdi F01C9 Testing';
+      const input = 'materialdesignicons F01C9 Testing';
       const ast1 = parse(input);
       const output = serialize(ast1);
       const ast2 = parse(output);
@@ -102,7 +102,7 @@ describe('Material Design Icons Participant Types (BACKLOG-118)', () => {
     });
 
     it('should round-trip mdi with quoted name', () => {
-      const input = 'mdi F0544 "Database Server" as DB';
+      const input = 'materialdesignicons F0544 "Database Server" as DB';
       const ast1 = parse(input);
       const output = serialize(ast1);
       const ast2 = parse(output);
@@ -118,7 +118,7 @@ describe('Material Design Icons Participant Types (BACKLOG-118)', () => {
 
   describe('Rendering', () => {
     it('should render mdi participant', () => {
-      const input = `mdi F01C9 Testing
+      const input = `materialdesignicons F01C9 Testing
 participant Client
 Testing->Client:msg`;
       const ast = parse(input);
@@ -130,7 +130,7 @@ Testing->Client:msg`;
     });
 
     it('should render mdi participant with styling', () => {
-      const input = `mdi F0544 Database #blue
+      const input = `materialdesignicons F0544 Database #blue
 participant Client
 Database->Client:query`;
       const ast = parse(input);
@@ -143,8 +143,8 @@ Database->Client:query`;
 
   describe('Messages with mdi participants', () => {
     it('should parse messages between mdi participants', () => {
-      const input = `mdi F0544 Database
-mdi F109 Client
+      const input = `materialdesignicons F0544 Database
+materialdesignicons F109 Client
 Database->Client:data
 Client->Database:query`;
       const ast = parse(input);
@@ -159,8 +159,8 @@ Client->Database:query`;
 
     it('should work with mixed participant types', () => {
       const input = `participant User
-mdi F0544 Database
-fontawesome7solid f233 Server
+materialdesignicons F0544 Database
+fontawesome6solid f233 Server
 User->Server:request
 Server->Database:query
 Database->Server:result
