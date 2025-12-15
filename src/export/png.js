@@ -121,6 +121,28 @@ export async function downloadPNG(svgElement, filename = 'diagram.png', scale = 
 }
 
 /**
+ * Copy PNG to clipboard (BACKLOG-094)
+ * @param {SVGElement} svgElement - The SVG element to export
+ * @param {number} scale - Scale factor
+ * @returns {Promise<void>}
+ */
+export async function copyPNGToClipboard(svgElement, scale = 2) {
+  const blob = await exportPNG(svgElement, scale);
+
+  // Use the Clipboard API to write the image
+  try {
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        'image/png': blob
+      })
+    ]);
+  } catch (err) {
+    // Fallback error - Clipboard API may not be available or permission denied
+    throw new Error(`Failed to copy to clipboard: ${err.message}`);
+  }
+}
+
+/**
  * Inline CSS styles into SVG elements
  * This ensures styles are preserved when the SVG is rendered as an image
  * @param {SVGElement} svg - SVG element to process
