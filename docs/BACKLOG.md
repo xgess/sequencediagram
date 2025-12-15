@@ -6,7 +6,7 @@ Remaining work items. See FEATURES.md for what's already implemented.
 
 ## Bug Fixes
 
-No known syntax compatibility issues. All syntax matches sequencediagram.org/instructions.html.
+No known bugs. All syntax matches sequencediagram.org/instructions.html.
 
 ---
 
