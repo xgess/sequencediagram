@@ -6,12 +6,18 @@ Remaining work items. See FEATURES.md for what's already implemented.
 
 ## Bug Fixes
 
+### To Be Ingested
+(leave this here for easily adding new bugs):
+
+
 ### Fixed
 - [x] BUG-016: Zooming moves diagram off to the right/out of screen - Fixed by wrapping SVG in scrollable container
+- [x] BUG-017: "note right of alice" attaches to wrong participant - Fixed by positioning relative to lifeline (centerX)
 
 ### Pending
-- [ ] BUG-017: "note right of alice" attaches to wrong participant
-- [ ] BUG-018: Double-click edit should be multiline (may already be fixed by BUG-012) 
+- [ ] BUG-018: Double-click edit should be multiline (may already be fixed by BUG-012)
+- [ ] BUG-019: Multiline message text should be above arrow, not below
+- [ ] BUG-020: Adding new messages resets zoom - should preserve 
 
 
 ---

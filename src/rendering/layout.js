@@ -542,11 +542,11 @@ function calculateNoteLayout(node, participantLayout) {
       width = maxX - minX + NOTE_WIDTH / 2;
     }
   } else if (position === 'left of') {
-    // Place to the left of the participant
-    x = pLayouts[0].x - NOTE_WIDTH - NOTE_MARGIN;
+    // Place to the left of the participant's lifeline (centerX)
+    x = pLayouts[0].centerX - NOTE_WIDTH - NOTE_MARGIN;
   } else if (position === 'right of') {
-    // Place to the right of the participant
-    x = pLayouts[0].x + PARTICIPANT_WIDTH + NOTE_MARGIN;
+    // Place to the right of the participant's lifeline (centerX)
+    x = pLayouts[0].centerX + NOTE_MARGIN;
   }
 
   return { x, width, height };
