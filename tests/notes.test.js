@@ -1,4 +1,5 @@
 // Tests for notes and dividers (BACKLOG-126)
+// Tests for note and box styling (BACKLOG-127)
 
 import { describe, it, expect } from 'vitest';
 import { parse } from '../src/ast/parser.js';
@@ -213,6 +214,311 @@ describe('Notes and Dividers (BACKLOG-126)', () => {
       const div2 = ast2.find(n => n.type === 'divider');
 
       expect(div2.text).toBe(div1.text);
+    });
+  });
+});
+
+describe('Note and Box Styling (BACKLOG-127)', () => {
+
+  describe('Parsing Note Fill Color', () => {
+    it('should parse note with fill color', () => {
+      const ast = parse('participant A\nnote over A #lightblue:Styled');
+      const note = ast.find(n => n.type === 'note');
+      expect(note.style).toBeDefined();
+      expect(note.style.fill).toBe('#lightblue');
+    });
+
+    it('should parse note with hex color', () => {
+      const ast = parse('participant A\nnote over A #ff5500:Orange note');
+      const note = ast.find(n => n.type === 'note');
+      expect(note.style.fill).toBe('#ff5500');
+    });
+
+    it('should parse box with fill color', () => {
+      const ast = parse('participant A\nbox over A #yellow:Yellow box');
+      const note = ast.find(n => n.type === 'note');
+      expect(note.noteType).toBe('box');
+      expect(note.style.fill).toBe('#yellow');
+    });
+
+    it('should parse abox with fill color', () => {
+      const ast = parse('participant A\nabox over A #e0e0e0:Gray angular');
+      const note = ast.find(n => n.type === 'note');
+      expect(note.noteType).toBe('abox');
+      expect(note.style.fill).toBe('#e0e0e0');
+    });
+
+    it('should parse rbox with fill color', () => {
+      const ast = parse('participant A\nrbox over A #ffd700:Gold rounded');
+      const note = ast.find(n => n.type === 'note');
+      expect(note.noteType).toBe('rbox');
+      expect(note.style.fill).toBe('#ffd700');
+    });
+
+    it('should parse ref with fill color', () => {
+      const ast = parse('participant A\nref over A #f0f0f0:Reference');
+      const note = ast.find(n => n.type === 'note');
+      expect(note.noteType).toBe('ref');
+      expect(note.style.fill).toBe('#f0f0f0');
+    });
+
+    it('should parse state with fill color', () => {
+      const ast = parse('participant A\nstate over A #90ee90:Active state');
+      const note = ast.find(n => n.type === 'note');
+      expect(note.noteType).toBe('state');
+      expect(note.style.fill).toBe('#90ee90');
+    });
+  });
+
+  describe('Parsing Border Styling', () => {
+    it('should parse note with border color', () => {
+      const ast = parse('participant A\nnote over A #white #red:Red bordered');
+      const note = ast.find(n => n.type === 'note');
+      expect(note.style.fill).toBe('#white');
+      expect(note.style.border).toBe('#red');
+    });
+
+    it('should parse note with border width', () => {
+      const ast = parse('participant A\nnote over A #yellow #blue;2:Thick border');
+      const note = ast.find(n => n.type === 'note');
+      expect(note.style.fill).toBe('#yellow');
+      expect(note.style.border).toBe('#blue');
+      expect(note.style.borderWidth).toBe(2);
+    });
+
+    it('should parse note with dashed border style', () => {
+      const ast = parse('participant A\nnote over A #white #333;1;dashed:Dashed note');
+      const note = ast.find(n => n.type === 'note');
+      expect(note.style.fill).toBe('#white');
+      expect(note.style.border).toBe('#333');
+      expect(note.style.borderWidth).toBe(1);
+      expect(note.style.borderStyle).toBe('dashed');
+    });
+
+    it('should parse box with complete border styling', () => {
+      const ast = parse('participant A\nbox over A #f8f8f8 #000;3;solid:Styled box');
+      const note = ast.find(n => n.type === 'note');
+      expect(note.noteType).toBe('box');
+      expect(note.style.fill).toBe('#f8f8f8');
+      expect(note.style.border).toBe('#000');
+      expect(note.style.borderWidth).toBe(3);
+      expect(note.style.borderStyle).toBe('solid');
+    });
+  });
+
+  describe('Styling with Multiple Participants', () => {
+    it('should parse styled note spanning two participants', () => {
+      const ast = parse('participant A\nparticipant B\nnote over A,B #pink:Spanning note');
+      const note = ast.find(n => n.type === 'note');
+      expect(note.participants).toEqual(['A', 'B']);
+      expect(note.style.fill).toBe('#pink');
+    });
+
+    it('should parse styled note spanning three participants', () => {
+      const ast = parse('participant A\nparticipant B\nparticipant C\nnote over A,B,C #lightgray:Wide note');
+      const note = ast.find(n => n.type === 'note');
+      expect(note.participants).toEqual(['A', 'B', 'C']);
+      expect(note.style.fill).toBe('#lightgray');
+    });
+  });
+
+  describe('Styling Left/Right Notes', () => {
+    it('should parse styled note left of participant', () => {
+      const ast = parse('participant A\nnote left of A #cyan:Left note');
+      const note = ast.find(n => n.type === 'note');
+      expect(note.position).toBe('left of');
+      expect(note.style.fill).toBe('#cyan');
+    });
+
+    it('should parse styled note right of participant', () => {
+      const ast = parse('participant A\nnote right of A #magenta:Right note');
+      const note = ast.find(n => n.type === 'note');
+      expect(note.position).toBe('right of');
+      expect(note.style.fill).toBe('#magenta');
+    });
+  });
+
+  describe('Divider Styling', () => {
+    it('should parse divider with fill color', () => {
+      const ast = parse('==Important==#yellow');
+      const divider = ast.find(n => n.type === 'divider');
+      expect(divider.style).toBeDefined();
+      expect(divider.style.fill).toBe('#yellow');
+    });
+
+    it('should parse divider with border color', () => {
+      const ast = parse('==Section==#white #blue');
+      const divider = ast.find(n => n.type === 'divider');
+      expect(divider.style.fill).toBe('#white');
+      expect(divider.style.border).toBe('#blue');
+    });
+  });
+
+  describe('Serialization with Styling', () => {
+    it('should serialize note with fill color', () => {
+      const ast = parse('participant A\nnote over A #lightblue:Styled');
+      const output = serialize(ast);
+      expect(output).toContain('note over A #lightblue:Styled');
+    });
+
+    it('should serialize note with border styling', () => {
+      const ast = parse('participant A\nnote over A #yellow #red;2;dashed:Complex');
+      const output = serialize(ast);
+      expect(output).toContain('#yellow');
+      expect(output).toContain('#red');
+      expect(output).toContain(':Complex');
+    });
+
+    it('should serialize styled box', () => {
+      const ast = parse('participant A\nbox over A #f0f0f0:Gray box');
+      const output = serialize(ast);
+      expect(output).toContain('box over A #f0f0f0:Gray box');
+    });
+
+    it('should serialize styled divider', () => {
+      const ast = parse('==Section==#yellow');
+      const output = serialize(ast);
+      expect(output).toContain('==Section==#yellow');
+    });
+  });
+
+  describe('Round-trip with Styling', () => {
+    it('should round-trip note with fill color', () => {
+      const input = 'participant A\nnote over A #lightblue:Styled note';
+      const ast1 = parse(input);
+      const output = serialize(ast1);
+      const ast2 = parse(output);
+
+      const note1 = ast1.find(n => n.type === 'note');
+      const note2 = ast2.find(n => n.type === 'note');
+
+      expect(note2.style.fill).toBe(note1.style.fill);
+      expect(note2.text).toBe(note1.text);
+    });
+
+    it('should round-trip note with full border styling', () => {
+      const input = 'participant A\nnote over A #white #333;2;dashed:Bordered';
+      const ast1 = parse(input);
+      const output = serialize(ast1);
+      const ast2 = parse(output);
+
+      const note1 = ast1.find(n => n.type === 'note');
+      const note2 = ast2.find(n => n.type === 'note');
+
+      expect(note2.style.fill).toBe(note1.style.fill);
+      expect(note2.style.border).toBe(note1.style.border);
+      expect(note2.style.borderWidth).toBe(note1.style.borderWidth);
+      expect(note2.style.borderStyle).toBe(note1.style.borderStyle);
+    });
+
+    it('should round-trip styled divider', () => {
+      const input = '==Section==#orange #black';
+      const ast1 = parse(input);
+      const output = serialize(ast1);
+      const ast2 = parse(output);
+
+      const div1 = ast1.find(n => n.type === 'divider');
+      const div2 = ast2.find(n => n.type === 'divider');
+
+      expect(div2.style.fill).toBe(div1.style.fill);
+      expect(div2.style.border).toBe(div1.style.border);
+    });
+  });
+
+  describe('Rendering with Styling', () => {
+    it('should apply fill color to note background', () => {
+      const ast = parse('participant A\nnote over A #ff0000:Red note');
+      const svg = render(ast);
+      const noteShape = svg.querySelector('.note path, .note rect');
+      expect(noteShape).toBeDefined();
+      expect(noteShape.getAttribute('fill')).toBe('#ff0000');
+    });
+
+    it('should apply border color to note', () => {
+      const ast = parse('participant A\nnote over A #white #0000ff:Blue border');
+      const svg = render(ast);
+      const noteShape = svg.querySelector('.note path, .note rect');
+      expect(noteShape).toBeDefined();
+      expect(noteShape.getAttribute('stroke')).toBe('#0000ff');
+    });
+
+    it('should apply border width to note', () => {
+      const ast = parse('participant A\nnote over A #white #333;3:Thick border');
+      const svg = render(ast);
+      const noteShape = svg.querySelector('.note path, .note rect');
+      expect(noteShape.getAttribute('stroke-width')).toBe('3');
+    });
+
+    it('should apply dashed border style to note', () => {
+      const ast = parse('participant A\nnote over A #white #333;1;dashed:Dashed');
+      const svg = render(ast);
+      const noteShape = svg.querySelector('.note path, .note rect');
+      expect(noteShape.getAttribute('stroke-dasharray')).toBe('5,5');
+    });
+
+    it('should apply fill color to box', () => {
+      const ast = parse('participant A\nbox over A #00ff00:Green box');
+      const svg = render(ast);
+      const boxShape = svg.querySelector('.note-box rect');
+      expect(boxShape.getAttribute('fill')).toBe('#00ff00');
+    });
+
+    it('should apply fill color to abox', () => {
+      const ast = parse('participant A\nabox over A #ffff00:Yellow angular');
+      const svg = render(ast);
+      const aboxShape = svg.querySelector('.note-abox path');
+      expect(aboxShape.getAttribute('fill')).toBe('#ffff00');
+    });
+
+    it('should apply fill color to rbox', () => {
+      const ast = parse('participant A\nrbox over A #ff00ff:Magenta rounded');
+      const svg = render(ast);
+      const rboxShape = svg.querySelector('.note-rbox rect');
+      expect(rboxShape.getAttribute('fill')).toBe('#ff00ff');
+    });
+
+    it('should apply fill color to ref', () => {
+      const ast = parse('participant A\nref over A #00ffff:Cyan ref');
+      const svg = render(ast);
+      const refShape = svg.querySelector('.note-ref rect');
+      expect(refShape.getAttribute('fill')).toBe('#00ffff');
+    });
+
+    it('should apply fill color to state', () => {
+      const ast = parse('participant A\nstate over A #ffa500:Orange state');
+      const svg = render(ast);
+      const stateShape = svg.querySelector('.note-state rect');
+      expect(stateShape.getAttribute('fill')).toBe('#ffa500');
+    });
+
+    it('should apply fill color to divider', () => {
+      const ast = parse('participant A\n==Break==#lightgreen');
+      const svg = render(ast);
+      const dividerBox = svg.querySelector('.divider rect');
+      expect(dividerBox.getAttribute('fill')).toBe('#lightgreen');
+    });
+  });
+
+  describe('Default Styles', () => {
+    it('should use default yellow fill for unstyled note', () => {
+      const ast = parse('participant A\nnote over A:Default note');
+      const svg = render(ast);
+      const noteShape = svg.querySelector('.note path');
+      expect(noteShape.getAttribute('fill')).toBe('#ffffc0');
+    });
+
+    it('should use default gray fill for unstyled box', () => {
+      const ast = parse('participant A\nbox over A:Default box');
+      const svg = render(ast);
+      const boxShape = svg.querySelector('.note-box rect');
+      expect(boxShape.getAttribute('fill')).toBe('#f8f8f8');
+    });
+
+    it('should use default green fill for unstyled state', () => {
+      const ast = parse('participant A\nstate over A:Default state');
+      const svg = render(ast);
+      const stateShape = svg.querySelector('.note-state rect');
+      expect(stateShape.getAttribute('fill')).toBe('#e8f4e8');
     });
   });
 });
