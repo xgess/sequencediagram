@@ -20,9 +20,17 @@ function stopAutosave() {
 function recoverAutosave() {
   const autosave = localStorage.getItem('autosave');
   if (autosave) {
-    const { text, timestamp } = JSON.parse(autosave);
-    if (confirm(`There is an autosaved diagram from ${new Date(timestamp).toLocaleString()}. Do you want to recover it?`)) {
-      return text;
+    try {
+      const { text, timestamp } = JSON.parse(autosave);
+      // Only offer recovery if there's actual content
+      if (text && text.trim()) {
+        if (confirm(`There is an autosaved diagram from ${new Date(timestamp).toLocaleString()}. Do you want to recover it?`)) {
+          return text;
+        }
+      }
+    } catch (e) {
+      // Invalid autosave data, ignore it
+      console.warn('Invalid autosave data:', e);
     }
   }
   return null;

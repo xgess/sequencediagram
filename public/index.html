@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="../lib/codemirror/addon/hint/show-hint.css">
   <link rel="stylesheet" href="../lib/codemirror/addon/lint/lint.css">
   <link rel="stylesheet" href="../lib/codemirror/addon/dialog/dialog.css">
+  <link rel="stylesheet" href="../lib/fontawesome/css/all.min.css">
+  <link rel="stylesheet" href="../lib/mdi/css/materialdesignicons.min.css">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -30,6 +32,7 @@
         <h3>Diagram</h3>
         <div id="diagram-toolbar">
           <button id="export-png" title="Export as PNG">Export PNG</button>
+          <button id="copy-png" title="Copy PNG to clipboard">Copy PNG</button>
           <button id="export-svg" title="Export as SVG">Export SVG</button>
           <button id="export-txt" title="Export as Text">Export TXT</button>
           <button id="share" title="Share diagram">Share</button>
@@ -54,6 +57,7 @@
   <script src="../lib/codemirror/addon/search/searchcursor.js"></script>
   <script src="../lib/codemirror/addon/search/search.js"></script>
   <script src="../lib/codemirror/addon/search/jump-to-line.js"></script>
+  <script src="../lib/lz-string/lz-string.js"></script>
   <script type="module" src="../src/main.js"></script>
 </body>
 </html>
