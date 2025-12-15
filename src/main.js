@@ -25,6 +25,8 @@ import { MoveEntryBetweenClausesCommand } from './commands/MoveEntryBetweenClaus
 import { EditFragmentConditionCommand } from './commands/EditFragmentConditionCommand.js';
 import { EditElseConditionCommand } from './commands/EditElseConditionCommand.js';
 import { ChangeEntrySpacingCommand } from './commands/ChangeEntrySpacingCommand.js';
+import { EditNoteTextCommand } from './commands/EditNoteTextCommand.js';
+import { ToggleExpandableCommand } from './commands/ToggleExpandableCommand.js';
 import { showInlineEdit, showParticipantEdit, hideInlineEdit } from './interaction/inlineEdit.js';
 import { showConfirmDialog } from './interaction/confirmDialog.js';
 import { initLifelineDrag, removeLifelineDrag } from './interaction/lifelineDrag.js';
@@ -34,7 +36,7 @@ import { showAddMessageDialog, hideAddMessageDialog } from './interaction/addMes
 import { showAddFragmentDialog, hideAddFragmentDialog } from './interaction/addFragmentDialog.js';
 import { AddParticipantCommand } from './commands/AddParticipantCommand.js';
 import { AddFragmentCommand } from './commands/AddFragmentCommand.js';
-import { downloadPNG } from './export/png.js';
+import { downloadPNG, copyPNGToClipboard } from './export/png.js';
 import { showShareDialog } from './interaction/share.js';
 import { showDiagramManager } from './interaction/diagramManager.js';
 import { startAutosave, recoverAutosave } from './storage/autosave.js';
@@ -303,7 +305,7 @@ export function updateFromText(text, createCommand = false) {
 
   // Store reference and initialize interactions
   currentSvg = svg;
-  initSelection(svg, handleSelectionChange, handleDoubleClick, handleContextMenu);
+  initSelection(svg, handleSelectionChange, handleDoubleClick, handleContextMenu, handleExpandableToggle);
   initCursors(svg);
   initDrag(svg, handleDragComplete, handleEndpointChange, handleParticipantReorder, handleFragmentBoundaryChange, handleElseDividerChange);
   initLifelineDrag(svg, handleLifelineDrag);
@@ -508,7 +510,7 @@ function renderCurrentAst() {
 
   // Store reference and initialize interactions
   currentSvg = svg;
-  initSelection(svg, handleSelectionChange, handleDoubleClick, handleContextMenu);
+  initSelection(svg, handleSelectionChange, handleDoubleClick, handleContextMenu, handleExpandableToggle);
   initCursors(svg);
   initDrag(svg, handleDragComplete, handleEndpointChange, handleParticipantReorder, handleFragmentBoundaryChange, handleElseDividerChange);
   initLifelineDrag(svg, handleLifelineDrag);
@@ -753,6 +755,9 @@ function handleDoubleClick(nodeId, element, extra) {
       // Show inline edit for fragment condition
       showInlineEdit(element, nodeId, node.condition || '', handleFragmentConditionEditComplete);
     }
+  } else if (node.type === 'note') {
+    // Show inline edit for note text
+    showInlineEdit(element, nodeId, node.text || '', handleNoteTextEditComplete);
   }
 }
 
@@ -967,6 +972,71 @@ function handleLabelEditComplete(nodeId, newLabel) {
   renderCurrentAst();
 
   console.log(`Changed message ${nodeId} label to "${newLabel}"`);
+}
+
+/**
+ * Handle completion of note text edit
+ * @param {string} nodeId - ID of the edited node
+ * @param {string|null} newText - New text or null if cancelled
+ */
+function handleNoteTextEditComplete(nodeId, newText) {
+  // Cancelled
+  if (newText === null) return;
+
+  // Find the node
+  const node = findNodeById(nodeId);
+  if (!node || node.type !== 'note') return;
+
+  // Don't create command if text unchanged
+  if (node.text === newText) return;
+
+  // Create and execute edit command
+  const cmd = new EditNoteTextCommand(nodeId, node.text || '', newText);
+  currentAst = commandHistory.execute(cmd, currentAst);
+
+  // Update text and re-render
+  const newText2 = serialize(currentAst);
+  previousText = newText2;
+
+  // Update editor without creating another command
+  isUndoRedoInProgress = true;
+  editor.setValue(newText2);
+  isUndoRedoInProgress = false;
+
+  // Re-render
+  renderCurrentAst();
+
+  console.log(`Changed note ${nodeId} text to "${newText}"`);
+}
+
+/**
+ * Handle click on expandable fragment toggle icon
+ * @param {string} nodeId - ID of the expandable fragment
+ */
+function handleExpandableToggle(nodeId) {
+  if (!nodeId) return;
+
+  // Find the fragment
+  const node = findNodeById(nodeId);
+  if (!node || node.type !== 'fragment' || node.fragmentType !== 'expandable') return;
+
+  // Create and execute toggle command
+  const cmd = new ToggleExpandableCommand(nodeId, node.collapsed || false);
+  currentAst = commandHistory.execute(cmd, currentAst);
+
+  // Update text and re-render
+  const newText = serialize(currentAst);
+  previousText = newText;
+
+  // Update editor without creating another command
+  isUndoRedoInProgress = true;
+  editor.setValue(newText);
+  isUndoRedoInProgress = false;
+
+  // Re-render
+  renderCurrentAst();
+
+  console.log(`Toggled expandable fragment ${nodeId} collapsed: ${!node.collapsed}`);
 }
 
 /**
@@ -1597,11 +1667,15 @@ function initToolbar() {
 
   // Export buttons
   const exportPngBtn = document.getElementById('export-png');
+  const copyPngBtn = document.getElementById('copy-png');
   const exportSvgBtn = document.getElementById('export-svg');
   const exportTxtBtn = document.getElementById('export-txt');
 
   if (exportPngBtn) {
     exportPngBtn.addEventListener('click', handleExportPNG);
+  }
+  if (copyPngBtn) {
+    copyPngBtn.addEventListener('click', handleCopyPNG);
   }
   if (exportSvgBtn) {
     exportSvgBtn.addEventListener('click', handleExportSVG);
@@ -1688,6 +1762,25 @@ async function handleExportPNG() {
     console.log(`PNG exported successfully at ${Math.round(zoomLevel * 100)}% zoom (${exportScale}x scale)`);
   } catch (error) {
     console.error('Failed to export PNG:', error);
+  }
+}
+
+/**
+ * Handle Copy PNG to clipboard button click (BACKLOG-094)
+ * Uses zoom level to determine export scale
+ */
+async function handleCopyPNG() {
+  if (!currentSvg) return;
+
+  try {
+    // Base scale is 2x for high DPI, multiply by zoom level
+    const zoomLevel = getZoomLevel();
+    const exportScale = 2 * zoomLevel;
+    await copyPNGToClipboard(currentSvg, exportScale);
+    console.log(`PNG copied to clipboard at ${Math.round(zoomLevel * 100)}% zoom (${exportScale}x scale)`);
+  } catch (error) {
+    console.error('Failed to copy PNG to clipboard:', error);
+    alert('Failed to copy to clipboard. Your browser may not support this feature or clipboard permissions may be denied.');
   }
 }
 

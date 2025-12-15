@@ -62,8 +62,44 @@ export function renderFragment(node, layoutInfo) {
   typeLabel.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, sans-serif');
   typeLabel.setAttribute('font-size', '11');
   typeLabel.setAttribute('font-weight', 'bold');
-  typeLabel.textContent = node.fragmentType;
+  // For expandable fragments, show "expandable" not "expandable+" or "expandable-"
+  typeLabel.textContent = node.fragmentType === 'expandable' ? 'expandable' : node.fragmentType;
   group.appendChild(typeLabel);
+
+  // For expandable fragments, add collapse/expand icon
+  if (node.fragmentType === 'expandable') {
+    const iconX = x + labelBoxWidth - 18;
+    const iconY = y + 5;
+    const iconSize = 12;
+
+    // Draw toggle icon background
+    const iconBg = document.createElementNS(SVG_NS, 'rect');
+    iconBg.setAttribute('class', 'expandable-toggle');
+    iconBg.setAttribute('x', iconX);
+    iconBg.setAttribute('y', iconY);
+    iconBg.setAttribute('width', iconSize);
+    iconBg.setAttribute('height', iconSize);
+    iconBg.setAttribute('fill', '#fff');
+    iconBg.setAttribute('stroke', '#666');
+    iconBg.setAttribute('stroke-width', '1');
+    iconBg.setAttribute('rx', '2');
+    iconBg.style.cursor = 'pointer';
+    group.appendChild(iconBg);
+
+    // Draw + or - symbol
+    const iconSymbol = document.createElementNS(SVG_NS, 'text');
+    iconSymbol.setAttribute('class', 'expandable-toggle-icon');
+    iconSymbol.setAttribute('x', iconX + iconSize / 2);
+    iconSymbol.setAttribute('y', iconY + iconSize / 2 + 1);
+    iconSymbol.setAttribute('text-anchor', 'middle');
+    iconSymbol.setAttribute('dominant-baseline', 'middle');
+    iconSymbol.setAttribute('font-size', '12');
+    iconSymbol.setAttribute('font-weight', 'bold');
+    iconSymbol.setAttribute('fill', '#333');
+    iconSymbol.style.cursor = 'pointer';
+    iconSymbol.textContent = node.collapsed ? '+' : '−';
+    group.appendChild(iconSymbol);
+  }
 
   // Draw condition text (after label box)
   if (node.condition) {

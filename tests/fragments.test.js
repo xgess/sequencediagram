@@ -163,3 +163,159 @@ end`;
     }
   });
 });
+
+describe('Expandable Fragments (BACKLOG-125)', () => {
+
+  describe('Parsing expandable+ (expanded)', () => {
+    it('should parse expandable+ with condition', () => {
+      const input = `participant A
+participant B
+expandable+ Details
+  A->B:message
+end`;
+      const ast = parse(input);
+      const fragment = ast.find(n => n.type === 'fragment');
+
+      expect(fragment).toBeDefined();
+      expect(fragment.fragmentType).toBe('expandable');
+      expect(fragment.condition).toBe('Details');
+      expect(fragment.collapsed).toBe(false);
+      expect(fragment.entries.length).toBe(1);
+    });
+
+    it('should parse expandable+ without condition', () => {
+      const input = `participant A
+expandable+
+  A->A:msg
+end`;
+      const ast = parse(input);
+      const fragment = ast.find(n => n.type === 'fragment');
+
+      expect(fragment.fragmentType).toBe('expandable');
+      expect(fragment.collapsed).toBe(false);
+      expect(fragment.condition).toBe('');
+    });
+  });
+
+  describe('Parsing expandable- (collapsed)', () => {
+    it('should parse expandable- with condition', () => {
+      const input = `participant A
+participant B
+expandable- Hidden
+  A->B:message
+end`;
+      const ast = parse(input);
+      const fragment = ast.find(n => n.type === 'fragment');
+
+      expect(fragment).toBeDefined();
+      expect(fragment.fragmentType).toBe('expandable');
+      expect(fragment.condition).toBe('Hidden');
+      expect(fragment.collapsed).toBe(true);
+    });
+
+    it('should parse expandable- without condition', () => {
+      const input = `participant A
+expandable-
+  A->A:msg
+end`;
+      const ast = parse(input);
+      const fragment = ast.find(n => n.type === 'fragment');
+
+      expect(fragment.fragmentType).toBe('expandable');
+      expect(fragment.collapsed).toBe(true);
+    });
+  });
+
+  describe('Serialization', () => {
+    it('should serialize expanded fragment as expandable+', () => {
+      const input = `participant A
+expandable+ Details
+  A->A:msg
+end`;
+      const ast = parse(input);
+      const output = serialize(ast);
+
+      expect(output).toContain('expandable+ Details');
+    });
+
+    it('should serialize collapsed fragment as expandable-', () => {
+      const input = `participant A
+expandable- Hidden
+  A->A:msg
+end`;
+      const ast = parse(input);
+      const output = serialize(ast);
+
+      expect(output).toContain('expandable- Hidden');
+    });
+  });
+
+  describe('Round-trip', () => {
+    it('should round-trip expandable+ fragment', () => {
+      const input = `participant A
+expandable+ Details
+  A->A:msg
+end`;
+      const ast1 = parse(input);
+      const output = serialize(ast1);
+      const ast2 = parse(output);
+
+      const frag1 = ast1.find(n => n.type === 'fragment');
+      const frag2 = ast2.find(n => n.type === 'fragment');
+
+      expect(frag2.fragmentType).toBe('expandable');
+      expect(frag2.collapsed).toBe(false);
+      expect(frag2.condition).toBe('Details');
+    });
+
+    it('should round-trip expandable- fragment', () => {
+      const input = `participant A
+expandable- Hidden
+  A->A:msg
+end`;
+      const ast1 = parse(input);
+      const output = serialize(ast1);
+      const ast2 = parse(output);
+
+      const frag1 = ast1.find(n => n.type === 'fragment');
+      const frag2 = ast2.find(n => n.type === 'fragment');
+
+      expect(frag2.fragmentType).toBe('expandable');
+      expect(frag2.collapsed).toBe(true);
+      expect(frag2.condition).toBe('Hidden');
+    });
+  });
+
+  describe('Rendering', () => {
+    it('should render expandable+ with expand/collapse icon', () => {
+      const input = `participant A
+participant B
+expandable+ Details
+  A->B:msg
+end`;
+      const ast = parse(input);
+      const svg = render(ast);
+
+      // Check for expandable toggle elements
+      const toggleIcon = svg.querySelector('.expandable-toggle-icon');
+      expect(toggleIcon).toBeDefined();
+      // Expanded shows minus sign
+      expect(toggleIcon.textContent).toBe('−');
+    });
+
+    it('should render expandable- with collapsed icon', () => {
+      const input = `participant A
+participant B
+expandable- Hidden
+  A->B:msg
+end`;
+      const ast = parse(input);
+      const svg = render(ast);
+
+      const toggleIcon = svg.querySelector('.expandable-toggle-icon');
+      expect(toggleIcon).toBeDefined();
+      // Collapsed shows plus sign
+      expect(toggleIcon.textContent).toBe('+');
+    });
+  });
+});

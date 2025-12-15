@@ -1,5 +1,5 @@
-// Selection handling for diagram elements (BACKLOG-069, BACKLOG-076, BACKLOG-088)
-// Provides click-to-select, double-click-to-edit, and right-click context menu functionality
+// Selection handling for diagram elements (BACKLOG-069, BACKLOG-076, BACKLOG-088, BACKLOG-125)
+// Provides click-to-select, double-click-to-edit, right-click context menu, and expandable toggle functionality
 
 // Currently selected element ID
 let selectedElementId = null;
@@ -8,6 +8,7 @@ let selectedElementId = null;
 let onSelectionChange = null;
 let onDoubleClick = null;
 let onContextMenu = null;
+let onExpandableToggle = null;
 
 /**
  * Initialize selection handling on an SVG element
@@ -15,13 +16,15 @@ let onContextMenu = null;
  * @param {Function} selectionCallback - Callback called when selection changes: (nodeId) => void
  * @param {Function} dblClickCallback - Callback called on double-click: (nodeId, element) => void
  * @param {Function} contextMenuCallback - Callback called on right-click: (x, y, nodeId, nodeType) => void
+ * @param {Function} expandableToggleCallback - Callback called when expandable toggle clicked: (nodeId) => void
  */
-export function initSelection(svg, selectionCallback, dblClickCallback, contextMenuCallback) {
+export function initSelection(svg, selectionCallback, dblClickCallback, contextMenuCallback, expandableToggleCallback) {
   if (!svg) return;
 
   onSelectionChange = selectionCallback;
   onDoubleClick = dblClickCallback;
   onContextMenu = contextMenuCallback;
+  onExpandableToggle = expandableToggleCallback;
 
   // Add click handler to SVG for selection
   svg.addEventListener('click', handleSvgClick);
@@ -46,6 +49,7 @@ export function removeSelection(svg) {
   onSelectionChange = null;
   onDoubleClick = null;
   onContextMenu = null;
+  onExpandableToggle = null;
 }
 
 /**
@@ -53,8 +57,22 @@ export function removeSelection(svg) {
  * @param {MouseEvent} event
  */
 function handleSvgClick(event) {
-  // Find the closest selectable group (has data-node-id attribute)
   const target = event.target;
+
+  // Check for expandable toggle click first
+  if ((target.classList.contains('expandable-toggle') ||
+       target.classList.contains('expandable-toggle-icon')) && onExpandableToggle) {
+    const fragmentGroup = target.closest('.fragment');
+    if (fragmentGroup) {
+      const nodeId = fragmentGroup.getAttribute('data-node-id');
+      onExpandableToggle(nodeId);
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+  }
+
+  // Find the closest selectable group (has data-node-id attribute)
   const selectableGroup = target.closest('[data-node-id]');
 
   if (selectableGroup) {
