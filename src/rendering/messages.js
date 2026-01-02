@@ -87,12 +87,13 @@ export function renderMessage(node, layoutInfo, messageNumber = null, resolvedSt
     labelText += node.label || '';
 
     // Calculate line count and offset so ALL lines are above the arrow
-    // Each line is 16px (LINE_HEIGHT), and we want bottom of text 8px above arrow
+    // Each line is 16px (LINE_HEIGHT), and we want bottom of text clearly above arrow
     const lineCount = getLineCount(labelText);
     const lineHeight = 16;
-    const baseOffset = 8; // Distance from arrow to bottom of text
-    // For single line: midY - 8 (same as before)
-    // For multi-line: move up by (lineCount - 1) * lineHeight
+    const baseOffset = 12; // Distance from arrow to bottom line of text
+    // Position first line, then subsequent lines go down with dy
+    // Total text height = (lineCount - 1) * lineHeight
+    // We want the LAST line's baseline to be baseOffset above the arrow
     const midY = (startY + endY) / 2 - baseOffset - (lineCount - 1) * lineHeight;
 
     // Use markup renderer to handle \n and other formatting

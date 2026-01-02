@@ -15,9 +15,9 @@ Remaining work items. See FEATURES.md for what's already implemented.
 - [x] BUG-017: "note right of alice" attaches to wrong participant - Fixed by positioning relative to lifeline (centerX)
 - [x] BUG-018: Double-click edit should be multiline - Already fixed by BUG-012
 - [x] BUG-019: Multiline message text should be above arrow - Fixed by offsetting Y based on line count
+- [x] BUG-020: Adding new messages resets zoom - should preserve - Fixed by calling updateZoom() after re-rendering
 
 ### Pending
-- [ ] BUG-020: Adding new messages resets zoom - should preserve
 - [ ] BUG-021: Note box should expand to fit long text
 - [ ] BUG-022: Textarea resize should expand width, not just height 
 
