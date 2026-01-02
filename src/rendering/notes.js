@@ -10,17 +10,32 @@ const DIVIDER_HEIGHT = 24;
 /**
  * Render a note node to SVG
  * @param {Object} node - Note AST node
- * @param {Object} layoutInfo - Position info {x, y, width, height}
+ * @param {Object} layoutInfo - Position info {x, y, width, height, connectorX?, connectorSide?}
  * @returns {SVGGElement} Rendered note group
  */
 export function renderNote(node, layoutInfo) {
-  const { x, y, width, height } = layoutInfo;
+  const { x, y, width, height, connectorX, connectorSide } = layoutInfo;
   const style = node.style || {};
   const noteType = node.noteType || 'note';
 
   const group = document.createElementNS(SVG_NS, 'g');
   group.setAttribute('data-node-id', node.id);
   group.setAttribute('class', `note note-${noteType}`);
+
+  // Draw connector line first (so it's behind the note box)
+  if (connectorX !== undefined && connectorSide) {
+    const connector = document.createElementNS(SVG_NS, 'line');
+    const noteEdgeX = connectorSide === 'left' ? x + width : x;
+    const connectorY = y + height / 2;
+    connector.setAttribute('x1', connectorX);
+    connector.setAttribute('y1', connectorY);
+    connector.setAttribute('x2', noteEdgeX);
+    connector.setAttribute('y2', connectorY);
+    connector.setAttribute('stroke', style.border || '#333');
+    connector.setAttribute('stroke-width', '1');
+    connector.setAttribute('class', 'note-connector');
+    group.appendChild(connector);
+  }
 
   // Choose rendering based on note type
   switch (noteType) {
@@ -46,15 +61,39 @@ export function renderNote(node, layoutInfo) {
       renderNoteShape(group, x, y, width, height, style);
   }
 
-  // Add text
+  // Add text (handle multiline with \n)
   const text = document.createElementNS(SVG_NS, 'text');
   text.setAttribute('class', 'note-text');
   text.setAttribute('x', x + width / 2);
-  text.setAttribute('y', y + height / 2);
   text.setAttribute('text-anchor', 'middle');
-  text.setAttribute('dominant-baseline', 'middle');
   text.setAttribute('font-size', '11');
-  text.textContent = node.text || '';
+
+  const textContent = node.text || '';
+  const lines = textContent.split('\\n');
+  const lineHeight = 16;
+
+  if (lines.length === 1) {
+    // Single line - center vertically
+    text.setAttribute('y', y + height / 2);
+    text.setAttribute('dominant-baseline', 'middle');
+    text.textContent = textContent;
+  } else {
+    // Multiple lines - position each line
+    const totalTextHeight = lines.length * lineHeight;
+    const startY = y + (height - totalTextHeight) / 2 + lineHeight / 2;
+
+    lines.forEach((line, i) => {
+      const tspan = document.createElementNS(SVG_NS, 'tspan');
+      tspan.setAttribute('x', x + width / 2);
+      tspan.setAttribute('dy', i === 0 ? 0 : lineHeight);
+      tspan.textContent = line;
+      text.appendChild(tspan);
+    });
+
+    text.setAttribute('y', startY);
+    text.setAttribute('dominant-baseline', 'middle');
+  }
+
   group.appendChild(text);
 
   return group;
