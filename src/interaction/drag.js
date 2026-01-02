@@ -199,6 +199,9 @@ function handleMouseDown(event) {
   } else if (target.tagName === 'polygon' || target.tagName === 'path') {
     // Arrowhead clicked - target endpoint
     dragMode = DRAG_MODE.ENDPOINT_TARGET;
+  } else if (target.tagName === 'text' || target.tagName === 'tspan') {
+    // Text label clicked - reorder drag
+    dragMode = DRAG_MODE.REORDER;
   } else {
     return; // Not a draggable element
   }
@@ -1053,6 +1056,15 @@ function addDragStyles() {
       stroke: #4a90d9 !important;
       stroke-width: 2 !important;
       stroke-dasharray: 5, 5;
+    }
+
+    /* Message drag styles */
+    .message {
+      cursor: grab;
+    }
+
+    .message.dragging {
+      cursor: grabbing;
     }
   `;
 
