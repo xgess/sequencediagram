@@ -27,7 +27,7 @@ import { EditElseConditionCommand } from './commands/EditElseConditionCommand.js
 import { ChangeEntrySpacingCommand } from './commands/ChangeEntrySpacingCommand.js';
 import { EditNoteTextCommand } from './commands/EditNoteTextCommand.js';
 import { ToggleExpandableCommand } from './commands/ToggleExpandableCommand.js';
-import { showInlineEdit, showParticipantEdit, hideInlineEdit } from './interaction/inlineEdit.js';
+import { showInlineEdit, showParticipantEdit, hideInlineEdit, isInlineEditVisible } from './interaction/inlineEdit.js';
 import { showConfirmDialog } from './interaction/confirmDialog.js';
 import { initLifelineDrag, removeLifelineDrag } from './interaction/lifelineDrag.js';
 import { showContextMenu, hideContextMenu } from './interaction/contextMenu.js';
@@ -42,7 +42,7 @@ import { showDiagramManager } from './interaction/diagramManager.js';
 import { startAutosave, recoverAutosave } from './storage/autosave.js';
 import { loadFromURL } from './storage/url.js';
 import { initSplitter } from './interaction/splitter.js';
-import { initZoom, getZoomLevel, shrinkToFit as applyShrinkToFit } from './interaction/zoom.js';
+import { initZoom, getZoomLevel, shrinkToFit as applyShrinkToFit, updateZoom } from './interaction/zoom.js';
 import { initPresentation, enterPresentationMode, exitPresentationMode, togglePresentationMode, isInPresentationMode, enterReadOnlyMode, exitReadOnlyMode, toggleReadOnlyMode, isInReadOnlyMode } from './interaction/presentation.js';
 import { initParticipantOverlay, updateParticipantData } from './interaction/participantOverlay.js';
 
@@ -58,6 +58,7 @@ let currentFileHandle = null; // File System Access API handle
 
 // DOM element references
 let editorContainer;
+let diagramPane;
 let diagramContainer;
 let errorsDiv;
 let wrapToggleBtn;
@@ -75,18 +76,19 @@ const STORAGE_KEY_TAB_SIZE = 'sequencediagram.tabSize';
 export function init() {
   // Get DOM elements
   editorContainer = document.getElementById('editor');
-  diagramContainer = document.getElementById('diagram-pane');
+  diagramPane = document.getElementById('diagram-pane');
+  diagramContainer = document.getElementById('diagram-container');
   errorsDiv = document.getElementById('errors');
   const splitter = document.getElementById('splitter');
   const editorPane = document.getElementById('editor-pane');
 
-  if (!editorContainer || !diagramContainer || !splitter || !editorPane) {
+  if (!editorContainer || !diagramPane || !diagramContainer || !splitter || !editorPane) {
     console.error('Required DOM elements not found');
     return;
   }
 
   // Initialize splitter
-  initSplitter(splitter, editorPane, diagramContainer);
+  initSplitter(splitter, editorPane, diagramPane);
 
   // Initialize CodeMirror
   initCodeMirror();
@@ -109,7 +111,7 @@ export function init() {
   });
 
   // Initialize participant overlay
-  initParticipantOverlay(diagramContainer);
+  initParticipantOverlay(diagramPane);
 
   // Initialize keyboard shortcuts for diagram
   initDiagramKeyboard();
@@ -312,6 +314,9 @@ export function updateFromText(text, createCommand = false) {
 
   // Update participant overlay data
   updateParticipantData(svg);
+
+  // Reapply zoom to new SVG
+  updateZoom();
 
   // Check for errors in AST and display them
   displayErrors(currentAst);
@@ -517,6 +522,9 @@ function renderCurrentAst() {
 
   // Update participant overlay data
   updateParticipantData(svg);
+
+  // Reapply zoom to new SVG
+  updateZoom();
 
   // Check for errors in AST and display them
   displayErrors(currentAst);
@@ -1417,8 +1425,8 @@ function initDiagramKeyboard() {
  * @param {KeyboardEvent} event
  */
 function handleDiagramKeydown(event) {
-  // Don't handle keys when typing in editor
-  if (event.target.closest('.CodeMirror')) {
+  // Don't handle keys when typing in editor or inline edit dialog
+  if (event.target.closest('.CodeMirror') || isInlineEditVisible()) {
     return;
   }
 
