@@ -19,7 +19,7 @@ const ERROR_HEIGHT = 40;
 const FRAGMENT_PADDING = 30;
 const NOTE_HEIGHT = 40;
 const NOTE_WIDTH = 100;
-const NOTE_MARGIN = 10;
+const NOTE_MARGIN = 35; // Extra margin to account for message labels above arrows
 const DIVIDER_HEIGHT = 24;
 const MARGIN = 50;
 const BOUNDARY_OFFSET = 30; // How far outside diagram bounds for boundary messages
@@ -236,13 +236,14 @@ export function calculateLayout(ast) {
 
       // Delayed messages need extra vertical space for the slope
       const delayHeight = node.delay ? node.delay * 10 : 0;
-      // Multiline labels need extra vertical space
+      // Multiline labels need extra vertical space above the arrow
       const lineCount = node.label ? getLineCount(node.label) : 1;
       const labelHeight = lineCount > 1 ? (lineCount - 1) * LINE_HEIGHT : 0;
       const totalHeight = messageSpacing + delayHeight + labelHeight;
 
       // In parallel mode, all messages are at the same Y position
-      const messageY = parallelMode ? parallelStartY : currentY;
+      // Offset Y by labelHeight so multiline labels don't overlap previous element
+      const messageY = parallelMode ? parallelStartY + labelHeight : currentY + labelHeight;
 
       layout.set(node.id, {
         y: messageY,

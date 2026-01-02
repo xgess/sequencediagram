@@ -27,6 +27,7 @@ import { EditElseConditionCommand } from './commands/EditElseConditionCommand.js
 import { ChangeEntrySpacingCommand } from './commands/ChangeEntrySpacingCommand.js';
 import { EditNoteTextCommand } from './commands/EditNoteTextCommand.js';
 import { ToggleExpandableCommand } from './commands/ToggleExpandableCommand.js';
+import { MoveNoteToParticipantCommand } from './commands/MoveNoteToParticipantCommand.js';
 import { showInlineEdit, showParticipantEdit, hideInlineEdit, isInlineEditVisible } from './interaction/inlineEdit.js';
 import { showConfirmDialog } from './interaction/confirmDialog.js';
 import { initLifelineDrag, removeLifelineDrag } from './interaction/lifelineDrag.js';
@@ -309,7 +310,7 @@ export function updateFromText(text, createCommand = false) {
   currentSvg = svg;
   initSelection(svg, handleSelectionChange, handleDoubleClick, handleContextMenu, handleExpandableToggle);
   initCursors(svg);
-  initDrag(svg, handleDragComplete, handleEndpointChange, handleParticipantReorder, handleFragmentBoundaryChange, handleElseDividerChange);
+  initDrag(svg, handleDragComplete, handleEndpointChange, handleParticipantReorder, handleFragmentBoundaryChange, handleElseDividerChange, handleNoteParticipantChange);
   initLifelineDrag(svg, handleLifelineDrag);
 
   // Update participant overlay data
@@ -517,7 +518,7 @@ function renderCurrentAst() {
   currentSvg = svg;
   initSelection(svg, handleSelectionChange, handleDoubleClick, handleContextMenu, handleExpandableToggle);
   initCursors(svg);
-  initDrag(svg, handleDragComplete, handleEndpointChange, handleParticipantReorder, handleFragmentBoundaryChange, handleElseDividerChange);
+  initDrag(svg, handleDragComplete, handleEndpointChange, handleParticipantReorder, handleFragmentBoundaryChange, handleElseDividerChange, handleNoteParticipantChange);
   initLifelineDrag(svg, handleLifelineDrag);
 
   // Update participant overlay data
@@ -1345,6 +1346,41 @@ function handleElseDividerChange(nodeId, clauseIndex, delta) {
   renderCurrentAst();
 
   console.log(`Moved entries between fragment ${nodeId} main and else clause ${clauseIndex} by ${delta}`);
+}
+
+/**
+ * Handle note participant change (dragging note to different lifeline)
+ * @param {string} nodeId - ID of the note being moved
+ * @param {string} newParticipant - Alias of the new participant
+ */
+function handleNoteParticipantChange(nodeId, newParticipant) {
+  if (!nodeId || !newParticipant) return;
+
+  // Find the note
+  const note = findNodeById(nodeId);
+  if (!note || note.type !== 'note') return;
+
+  // Get the current participant
+  const oldParticipant = note.participants && note.participants[0];
+  if (!oldParticipant || oldParticipant === newParticipant) return;
+
+  // Create and execute the command
+  const cmd = new MoveNoteToParticipantCommand(nodeId, oldParticipant, newParticipant);
+  currentAst = commandHistory.execute(cmd, currentAst);
+
+  // Update text and re-render
+  const newText = serialize(currentAst);
+  previousText = newText;
+
+  // Update editor without creating another command
+  isUndoRedoInProgress = true;
+  editor.setValue(newText);
+  isUndoRedoInProgress = false;
+
+  // Re-render
+  renderCurrentAst();
+
+  console.log(`Moved note ${nodeId} from ${oldParticipant} to ${newParticipant}`);
 }
 
 /**

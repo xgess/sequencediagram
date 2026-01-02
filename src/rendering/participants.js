@@ -12,6 +12,7 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 export function renderParticipant(node, layoutInfo) {
   const group = document.createElementNS(SVG_NS, 'g');
   group.setAttribute('data-node-id', node.id);
+  group.setAttribute('data-alias', node.alias);
   group.setAttribute('class', 'participant');
 
   switch (node.participantType) {

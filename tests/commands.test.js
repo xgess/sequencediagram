@@ -20,6 +20,7 @@ import { AddParticipantCommand } from '../src/commands/AddParticipantCommand.js'
 import { AddFragmentCommand } from '../src/commands/AddFragmentCommand.js';
 import { EditNoteTextCommand } from '../src/commands/EditNoteTextCommand.js';
 import { ToggleExpandableCommand } from '../src/commands/ToggleExpandableCommand.js';
+import { MoveNoteToParticipantCommand } from '../src/commands/MoveNoteToParticipantCommand.js';
 
 // Test command that adds an item to AST
 class AddItemCommand extends Command {
@@ -2665,6 +2666,129 @@ describe('AddFragmentCommand (BACKLOG-091)', () => {
       const fragment = result.find(n => n.id === fragmentId);
       expect(fragment).toBeDefined();
       expect(fragment.fragmentType).toBe('loop');
+    });
+  });
+});
+
+describe('MoveNoteToParticipantCommand', () => {
+  let ast;
+
+  beforeEach(() => {
+    ast = [
+      { type: 'participant', alias: 'alice', label: 'Alice', id: 'p1' },
+      { type: 'participant', alias: 'bob', label: 'Bob', id: 'p2' },
+      { type: 'participant', alias: 'charlie', label: 'Charlie', id: 'p3' },
+      { type: 'note', id: 'n1', noteType: 'note', placement: 'right', participants: ['alice'], text: 'Hello note' },
+      { type: 'message', from: 'alice', to: 'bob', label: 'msg', id: 'm1' }
+    ];
+  });
+
+  describe('do', () => {
+    it('should change note participant', () => {
+      const cmd = new MoveNoteToParticipantCommand('n1', 'alice', 'bob');
+
+      const result = cmd.do(ast);
+      const note = result.find(n => n.id === 'n1');
+
+      expect(note.participants).toEqual(['bob']);
+    });
+
+    it('should not modify other nodes', () => {
+      const cmd = new MoveNoteToParticipantCommand('n1', 'alice', 'bob');
+
+      const result = cmd.do(ast);
+
+      expect(result.find(n => n.id === 'p1').alias).toBe('alice');
+      expect(result.find(n => n.id === 'm1').from).toBe('alice');
+    });
+
+    it('should preserve other note properties', () => {
+      const cmd = new MoveNoteToParticipantCommand('n1', 'alice', 'charlie');
+
+      const result = cmd.do(ast);
+      const note = result.find(n => n.id === 'n1');
+
+      expect(note.noteType).toBe('note');
+      expect(note.placement).toBe('right');
+      expect(note.text).toBe('Hello note');
+    });
+  });
+
+  describe('undo', () => {
+    it('should restore original participant', () => {
+      const cmd = new MoveNoteToParticipantCommand('n1', 'alice', 'bob');
+
+      const afterDo = cmd.do(ast);
+      const afterUndo = cmd.undo(afterDo);
+      const note = afterUndo.find(n => n.id === 'n1');
+
+      expect(note.participants).toEqual(['alice']);
+    });
+  });
+
+  describe('notes inside fragments', () => {
+    let fragmentAst;
+
+    beforeEach(() => {
+      fragmentAst = [
+        { type: 'participant', alias: 'alice', label: 'Alice', id: 'p1' },
+        { type: 'participant', alias: 'bob', label: 'Bob', id: 'p2' },
+        {
+          type: 'fragment',
+          id: 'f1',
+          fragmentType: 'alt',
+          entries: [
+            { type: 'note', id: 'n1', noteType: 'note', placement: 'left', participants: ['alice'], text: 'Note in fragment' }
+          ],
+          elseClauses: [
+            {
+              condition: 'else',
+              entries: [
+                { type: 'note', id: 'n2', noteType: 'note', placement: 'right', participants: ['bob'], text: 'Note in else' }
+              ]
+            }
+          ]
+        }
+      ];
+    });
+
+    it('should move note inside fragment entries', () => {
+      const cmd = new MoveNoteToParticipantCommand('n1', 'alice', 'bob');
+
+      const result = cmd.do(fragmentAst);
+      const fragment = result.find(n => n.id === 'f1');
+      const note = fragment.entries.find(e => e.id === 'n1');
+
+      expect(note.participants).toEqual(['bob']);
+    });
+
+    it('should move note inside else clause', () => {
+      const cmd = new MoveNoteToParticipantCommand('n2', 'bob', 'alice');
+
+      const result = cmd.do(fragmentAst);
+      const fragment = result.find(n => n.id === 'f1');
+      const note = fragment.elseClauses[0].entries.find(e => e.id === 'n2');
+
+      expect(note.participants).toEqual(['alice']);
+    });
+
+    it('should undo move inside fragment', () => {
+      const cmd = new MoveNoteToParticipantCommand('n1', 'alice', 'bob');
+
+      const afterDo = cmd.do(fragmentAst);
+      const afterUndo = cmd.undo(afterDo);
+      const fragment = afterUndo.find(n => n.id === 'f1');
+      const note = fragment.entries.find(e => e.id === 'n1');
+
+      expect(note.participants).toEqual(['alice']);
+    });
+  });
+
+  describe('description', () => {
+    it('should have descriptive name', () => {
+      const cmd = new MoveNoteToParticipantCommand('n1', 'alice', 'bob');
+
+      expect(cmd.description).toBe('Move note to bob');
     });
   });
 });

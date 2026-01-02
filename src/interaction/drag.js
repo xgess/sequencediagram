@@ -34,6 +34,7 @@ let onEndpointChange = null;
 let onParticipantReorder = null;
 let onFragmentBoundaryChange = null;
 let onElseDividerChange = null;
+let onNoteParticipantChange = null;
 
 // Fragment drag state
 let dragFragmentBoundaryY = 0;
@@ -51,8 +52,9 @@ let participantPositions = [];
  * @param {Function} participantCallback - Callback for participant reorder: (nodeId, oldIndex, newIndex) => void
  * @param {Function} fragmentCallback - Callback for fragment boundary: (nodeId, boundary, delta) => void
  * @param {Function} elseDividerCallback - Callback for else divider: (nodeId, clauseIndex, delta) => void
+ * @param {Function} noteParticipantCallback - Callback for note participant change: (nodeId, newParticipant) => void
  */
-export function initDrag(svgElement, reorderCallback, endpointCallback, participantCallback, fragmentCallback, elseDividerCallback) {
+export function initDrag(svgElement, reorderCallback, endpointCallback, participantCallback, fragmentCallback, elseDividerCallback, noteParticipantCallback) {
   if (!svgElement) return;
 
   svg = svgElement;
@@ -61,6 +63,7 @@ export function initDrag(svgElement, reorderCallback, endpointCallback, particip
   onParticipantReorder = participantCallback;
   onFragmentBoundaryChange = fragmentCallback;
   onElseDividerChange = elseDividerCallback;
+  onNoteParticipantChange = noteParticipantCallback;
 
   // Add drag styles
   addDragStyles();
@@ -91,6 +94,7 @@ export function removeDrag(svgElement) {
   onParticipantReorder = null;
   onFragmentBoundaryChange = null;
   onElseDividerChange = null;
+  onNoteParticipantChange = null;
   participantPositions = [];
   cleanupDrag();
 }
@@ -530,10 +534,17 @@ function handleMouseMove(event) {
       dragGhost.setAttribute('transform', `translate(0, ${deltaY})`);
     }
   } else if (dragMode === DRAG_MODE.NOTE) {
-    // Update ghost position for note drag (vertical reorder)
+    // Update ghost position for note drag (both X and Y)
     if (dragGhost) {
+      const deltaX = dragCurrentX - dragStartX;
       const deltaY = dragCurrentY - dragStartY;
-      dragGhost.setAttribute('transform', `translate(0, ${deltaY})`);
+      dragGhost.setAttribute('transform', `translate(${deltaX}, ${deltaY})`);
+    }
+    // Highlight nearest participant for potential drop target
+    const svgPoint = getSvgPointFromClient(dragCurrentX, dragCurrentY);
+    if (svgPoint) {
+      const nearest = findNearestParticipant(svgPoint.x);
+      highlightNearestParticipant(nearest);
     }
   }
 }
@@ -609,14 +620,28 @@ function handleMouseUp(event) {
       onReorderComplete(dragNodeId, deltaIndex);
     }
   } else if (dragMode === DRAG_MODE.NOTE) {
-    // Calculate drop position (same as message/divider reorder)
+    // Check for horizontal movement to change participant
+    const deltaX = dragCurrentX - dragStartX;
     const deltaY = dragCurrentY - dragStartY;
-    const entryHeight = 30; // Approximate height between entries
-    const deltaIndex = Math.round(deltaY / entryHeight);
 
-    // Notify callback if moved - reuse the same reorder callback
-    if (deltaIndex !== 0 && onReorderComplete) {
-      onReorderComplete(dragNodeId, deltaIndex);
+    // If significant horizontal movement, change participant
+    if (Math.abs(deltaX) > 30 && onNoteParticipantChange) {
+      const svgPoint = getSvgPointFromClient(dragCurrentX, dragCurrentY);
+      if (svgPoint) {
+        const nearestParticipant = findNearestParticipant(svgPoint.x);
+        if (nearestParticipant) {
+          onNoteParticipantChange(dragNodeId, nearestParticipant.alias);
+        }
+      }
+    } else {
+      // Vertical reorder only
+      const entryHeight = 30; // Approximate height between entries
+      const deltaIndex = Math.round(deltaY / entryHeight);
+
+      // Notify callback if moved - reuse the same reorder callback
+      if (deltaIndex !== 0 && onReorderComplete) {
+        onReorderComplete(dragNodeId, deltaIndex);
+      }
     }
   }
 
