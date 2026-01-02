@@ -20,7 +20,7 @@ export function defineMode(CodeMirror) {
       { regex: /\b(participant|actor|database|rparticipant|boundary|control|entity)\b/, token: 'keyword' },
 
       // Fragment keywords
-      { regex: /\b(alt|else|end|loop|opt|par|break|critical|ref|seq|strict|neg|ignore|consider|assert|region|group|expandable)\b/, token: 'keyword' },
+      { regex: /\b(alt|else|end|loop|opt|par|break|critical|seq|strict|neg|ignore|consider|assert|region|group|expandable)\b/, token: 'keyword' },
 
       // Lifecycle keywords
       { regex: /\b(activate|deactivate|destroy|destroyafter|destroysilent|create)\b/, token: 'keyword' },
@@ -31,8 +31,8 @@ export function defineMode(CodeMirror) {
       // Style keywords
       { regex: /\b(style|participantstyle|notestyle|messagestyle|dividerstyle|boxstyle|aboxstyle|rboxstyle)\b/, token: 'keyword' },
 
-      // Note and box types
-      { regex: /\b(note|box|abox|rbox|state|divider|ref)\b/, token: 'keyword' },
+      // Note and box types at start of line only
+      { regex: /^(note|box|abox|rbox|state|divider|ref)\b/, token: 'keyword' },
 
       // Position keywords
       { regex: /\b(over|left|right|of|as)\b/, token: 'keyword' },
@@ -40,11 +40,14 @@ export function defineMode(CodeMirror) {
       // Boolean keywords
       { regex: /\b(on|off|true|false|equal)\b/, token: 'atom' },
 
-      // Arrow operators (message lines)
-      { regex: /-->>|-->|->>/,  token: 'operator' },
-      { regex: /->/,  token: 'operator' },
-      { regex: /<--|<-|<->/,  token: 'operator' },
-      { regex: /-x/,  token: 'operator' },
+      // Arrow operators (message lines) - switch to message content state
+      { regex: /-->>|-->|->>/,  token: 'operator', next: 'messageLabel' },
+      { regex: /->/,  token: 'operator', next: 'messageLabel' },
+      { regex: /<--|<-|<->/,  token: 'operator', next: 'messageLabel' },
+      { regex: /-x/,  token: 'operator', next: 'messageLabel' },
+
+      // Colon starts content (for notes, etc.) - switch to content state
+      { regex: /:/, token: 'punctuation', next: 'content' },
 
       // Divider syntax ==text==
       { regex: /==.*==/, token: 'string-2' },
@@ -62,11 +65,21 @@ export function defineMode(CodeMirror) {
       // Semicolon in styling (border;width;style)
       { regex: /;/, token: 'punctuation' },
 
-      // Colon for message labels
-      { regex: /:/, token: 'punctuation' },
-
       // Identifiers (participant aliases, etc.)
       { regex: /[a-zA-Z_][a-zA-Z0-9_]*/, token: 'variable' },
+    ],
+
+    // Message label state - after arrow, colon starts content
+    messageLabel: [
+      { regex: /:/, token: 'punctuation', next: 'content' },
+      { regex: /[a-zA-Z_][a-zA-Z0-9_]*/, token: 'variable' },
+      { regex: /$/, token: null, next: 'start' },
+      { regex: /./, token: null },
+    ],
+
+    // Content state - everything after : is plain text (no keyword highlighting)
+    content: [
+      { regex: /.*/, token: 'string', next: 'start' },
     ],
 
     // Title state - everything after 'title' is the title text
