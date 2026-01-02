@@ -282,6 +282,14 @@ export function render(ast) {
     }
   });
 
+  // Include note widths
+  notes.forEach(note => {
+    const layoutInfo = layout.get(note.id);
+    if (layoutInfo) {
+      width = Math.max(width, layoutInfo.x + layoutInfo.width + MARGIN);
+    }
+  });
+
   // Render title if present
   if (titleDirective) {
     const titleEl = renderTitle(titleDirective, width);
