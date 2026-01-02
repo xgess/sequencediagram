@@ -309,8 +309,9 @@ function addInlineEditStyles() {
 
     /* Textarea for multi-line message editing */
     .inline-edit-textarea {
-      resize: vertical;
+      resize: both;
       min-height: 60px;
+      min-width: 200px;
       font-family: inherit;
     }
 
