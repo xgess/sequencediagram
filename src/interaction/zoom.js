@@ -106,7 +106,7 @@ export function resetZoom() {
 /**
  * Update the zoom display and transform
  */
-function updateZoom() {
+export function updateZoom() {
   const diagramEl = getDiagramEl();
   if (diagramEl) {
     diagramEl.style.transform = `scale(${currentZoom})`;
