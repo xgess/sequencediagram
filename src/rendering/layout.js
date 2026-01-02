@@ -1,7 +1,11 @@
 // Layout calculation for AST nodes
 // See DESIGN.md for layout algorithm details
 
+import { getLineCount } from '../markup/renderer.js';
+
 // Layout constants
+const LINE_HEIGHT = 16; // Height per line of text
+const CHAR_WIDTH = 7; // Approximate width per character for note sizing
 const PARTICIPANT_WIDTH = 100;
 const PARTICIPANT_HEIGHT = 60;
 const PARTICIPANT_SPACING = 150;
@@ -232,7 +236,10 @@ export function calculateLayout(ast) {
 
       // Delayed messages need extra vertical space for the slope
       const delayHeight = node.delay ? node.delay * 10 : 0;
-      const totalHeight = messageSpacing + delayHeight;
+      // Multiline labels need extra vertical space
+      const lineCount = node.label ? getLineCount(node.label) : 1;
+      const labelHeight = lineCount > 1 ? (lineCount - 1) * LINE_HEIGHT : 0;
+      const totalHeight = messageSpacing + delayHeight + labelHeight;
 
       // In parallel mode, all messages are at the same Y position
       const messageY = parallelMode ? parallelStartY : currentY;
@@ -395,7 +402,10 @@ function layoutEntry(entryId, nodeById, participantLayout, layout, currentY, mes
 
     // Delayed messages need extra vertical space for the slope
     const delayHeight = entry.delay ? entry.delay * 10 : 0;
-    const totalHeight = messageSpacing + delayHeight;
+    // Multiline labels need extra vertical space
+    const lineCount = entry.label ? getLineCount(entry.label) : 1;
+    const labelHeight = lineCount > 1 ? (lineCount - 1) * LINE_HEIGHT : 0;
+    const totalHeight = messageSpacing + delayHeight + labelHeight;
 
     layout.set(entry.id, {
       y: currentY,
@@ -510,11 +520,24 @@ export function buildParticipantMap(ast) {
 function calculateNoteLayout(node, participantLayout) {
   const participants = node.participants || [];
   const position = node.position || 'over';
+  const text = node.text || '';
 
-  // Default dimensions
+  // Calculate dimensions based on text content
+  // Handle \n as line breaks
+  const lines = text.split('\\n');
+  const lineCount = lines.length;
+  const maxLineLength = Math.max(...lines.map(l => l.length), 1);
+
+  // Calculate width based on longest line (with padding)
+  const textWidth = maxLineLength * CHAR_WIDTH + 20; // 20px padding
+  let width = Math.max(NOTE_WIDTH, textWidth);
+
+  // Calculate height based on number of lines (with padding)
+  const textHeight = lineCount * LINE_HEIGHT + 16; // 16px padding
+  const height = Math.max(NOTE_HEIGHT, textHeight);
+
+  // Default X position
   let x = PARTICIPANT_START_X;
-  let width = NOTE_WIDTH;
-  const height = NOTE_HEIGHT;
 
   if (participants.length === 0) {
     // No participants specified, place at left
@@ -532,21 +555,34 @@ function calculateNoteLayout(node, participantLayout) {
   if (position === 'over') {
     // Center over participant(s)
     if (pLayouts.length === 1) {
-      // Over single participant
-      x = pLayouts[0].centerX - NOTE_WIDTH / 2;
+      // Over single participant - center the note
+      x = pLayouts[0].centerX - width / 2;
     } else {
       // Over multiple participants - span between them
       const minX = Math.min(...pLayouts.map(p => p.centerX));
       const maxX = Math.max(...pLayouts.map(p => p.centerX));
-      x = minX - NOTE_WIDTH / 4;
-      width = maxX - minX + NOTE_WIDTH / 2;
+      x = minX - width / 4;
+      width = Math.max(width, maxX - minX + width / 2);
     }
   } else if (position === 'left of') {
     // Place to the left of the participant's lifeline (centerX)
-    x = pLayouts[0].centerX - NOTE_WIDTH - NOTE_MARGIN;
+    const lifelineX = pLayouts[0].centerX;
+    x = lifelineX - width - NOTE_MARGIN;
+    // Ensure note doesn't go off the left edge, but also doesn't overlap lifeline
+    if (x < NOTE_MARGIN) {
+      x = NOTE_MARGIN;
+      // Shrink width if necessary to avoid overlapping lifeline
+      const maxWidth = lifelineX - NOTE_MARGIN - x;
+      if (width > maxWidth) {
+        width = maxWidth;
+      }
+    }
+    return { x, width, height, connectorX: lifelineX, connectorSide: 'left' };
   } else if (position === 'right of') {
     // Place to the right of the participant's lifeline (centerX)
-    x = pLayouts[0].centerX + NOTE_MARGIN;
+    const lifelineX = pLayouts[0].centerX;
+    x = lifelineX + NOTE_MARGIN;
+    return { x, width, height, connectorX: lifelineX, connectorSide: 'right' };
   }
 
   return { x, width, height };
