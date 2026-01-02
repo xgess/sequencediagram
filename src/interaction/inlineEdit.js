@@ -29,7 +29,7 @@ export function showInlineEdit(svgElement, nodeId, currentValue, onComplete) {
   dialogElement.className = 'inline-edit-dialog';
   dialogElement.innerHTML = `
     <textarea class="inline-edit-input inline-edit-textarea" rows="3"></textarea>
-    <div class="inline-edit-hint">Shift+Enter to save</div>
+    <div class="inline-edit-hint">${navigator.platform.includes('Mac') ? 'Cmd' : 'Ctrl'}+Enter to save</div>
     <div class="inline-edit-buttons">
       <button type="button" class="inline-edit-ok">OK</button>
       <button type="button" class="inline-edit-cancel">Cancel</button>
@@ -198,7 +198,7 @@ function handleCancel() {
 
 /**
  * Handle keydown in input/textarea
- * For textarea: Shift+Enter submits, Enter adds newline
+ * For textarea: Cmd/Ctrl+Enter submits, Enter adds newline
  * For input: Enter submits
  * @param {KeyboardEvent} event
  */
@@ -206,12 +206,12 @@ function handleKeydown(event) {
   if (event.key === 'Enter') {
     const isTextarea = event.target.tagName === 'TEXTAREA';
     if (isTextarea) {
-      // Textarea: Shift+Enter submits, plain Enter is newline
-      if (event.shiftKey) {
+      // Textarea: Cmd/Ctrl+Enter submits, plain Enter is newline
+      if (event.metaKey || event.ctrlKey) {
         event.preventDefault();
         handleOk();
       }
-      // Plain Enter: allow default behavior (newline)
+      // Plain Enter or Shift+Enter: allow default behavior (newline)
     } else {
       // Input: Enter submits
       event.preventDefault();

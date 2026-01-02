@@ -609,5 +609,41 @@ end`;
     });
   });
 
+  describe('participant reference validation', () => {
+    it('should create error for note referencing undefined participant', () => {
+      const ast = parse('participant Alice\nnote right of Bob:Hello');
+      const errors = ast.filter(n => n.type === 'error');
+      expect(errors).toHaveLength(1);
+      expect(errors[0].message).toContain('Undefined participant');
+      expect(errors[0].message).toContain('Bob');
+    });
+
+    it('should not create error for note referencing defined participant', () => {
+      const ast = parse('participant Alice\nnote right of Alice:Hello');
+      const errors = ast.filter(n => n.type === 'error');
+      expect(errors).toHaveLength(0);
+    });
+
+    it('should not create error for note referencing message-created participant', () => {
+      const ast = parse('Alice->Bob:Hello\nnote right of Bob:Note');
+      const errors = ast.filter(n => n.type === 'error');
+      expect(errors).toHaveLength(0);
+    });
+
+    it('should not create error for messages with undefined participants', () => {
+      // Messages auto-create participants
+      const ast = parse('Alice->Bob:Hello');
+      const errors = ast.filter(n => n.type === 'error');
+      expect(errors).toHaveLength(0);
+    });
+
+    it('should create error for note with misspelled participant', () => {
+      const ast = parse('participant Alice\nnote over Alcie:Typo');
+      const errors = ast.filter(n => n.type === 'error');
+      expect(errors).toHaveLength(1);
+      expect(errors[0].message).toContain('Alcie');
+    });
+  });
+
   // TODO(Phase1): Add parser tests as features are implemented
 });

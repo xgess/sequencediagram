@@ -18,7 +18,107 @@ export function parse(text) {
     i = result.nextLine;
   }
 
+  // Validate references to participants
+  validateParticipantReferences(ast);
+
   return ast;
+}
+
+/**
+ * Validate that all participant references exist
+ * Adds error nodes for undefined participant references
+ * @param {Array} ast - AST array to validate and modify
+ */
+function validateParticipantReferences(ast) {
+  // Collect all defined participant aliases
+  // Participants can be defined explicitly or created via messages
+  const definedParticipants = new Set();
+  for (const node of ast) {
+    if (node.type === 'participant') {
+      definedParticipants.add(node.alias);
+    } else if (node.type === 'message') {
+      // Messages auto-create participants (from and to)
+      // Also handles ->* create syntax
+      if (node.from && node.from !== '[' && node.from !== ']') {
+        definedParticipants.add(node.from);
+      }
+      if (node.to && node.to !== '[' && node.to !== ']') {
+        definedParticipants.add(node.to);
+      }
+    }
+  }
+
+  // Check all nodes that reference participants
+  const nodesToCheck = [];
+  collectNodesWithParticipantRefs(ast, nodesToCheck);
+
+  for (const { node, participants, source } of nodesToCheck) {
+    for (const participant of participants) {
+      // Skip boundary markers [ and ]
+      if (participant === '[' || participant === ']') continue;
+
+      if (!definedParticipants.has(participant)) {
+        // Add error node after the problematic node
+        const errorNode = {
+          id: generateId('error'),
+          type: 'error',
+          text: source,
+          message: `Undefined participant: "${participant}"`,
+          sourceLineStart: node.sourceLineStart,
+          sourceLineEnd: node.sourceLineEnd
+        };
+        // Insert error after the node
+        const index = ast.indexOf(node);
+        if (index !== -1) {
+          ast.splice(index + 1, 0, errorNode);
+        } else {
+          ast.push(errorNode);
+        }
+        // Auto-create participant to prevent cascading errors
+        definedParticipants.add(participant);
+      }
+    }
+  }
+}
+
+/**
+ * Collect all nodes that reference participants (only notes, not messages)
+ * Messages auto-create participants, but notes referencing undefined participants
+ * cause layout issues and should show an error.
+ * @param {Array} nodes - Nodes to check
+ * @param {Array} result - Array to collect {node, participants, source} objects
+ */
+function collectNodesWithParticipantRefs(nodes, result) {
+  for (const node of nodes) {
+    // Only check notes - messages auto-create participants
+    if (node.type === 'note') {
+      if (node.participants && node.participants.length > 0) {
+        result.push({
+          node,
+          participants: node.participants,
+          source: `note ${node.position} ${node.participants.join(',')}`
+        });
+      }
+    } else if (node.type === 'fragment') {
+      // Check fragment entries recursively
+      if (node.entries) {
+        collectNodesWithParticipantRefs(
+          node.entries.map(id => nodes.find(n => n.id === id)).filter(Boolean),
+          result
+        );
+      }
+      if (node.elseClauses) {
+        for (const clause of node.elseClauses) {
+          if (clause.entries) {
+            collectNodesWithParticipantRefs(
+              clause.entries.map(id => nodes.find(n => n.id === id)).filter(Boolean),
+              result
+            );
+          }
+        }
+      }
+    }
+  }
 }
 
 /**

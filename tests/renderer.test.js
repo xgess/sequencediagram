@@ -173,15 +173,17 @@ describe('Renderer', () => {
   });
 
   describe('SVG dimensions (BACKLOG-013)', () => {
-    it('should set viewBox matching width and height', () => {
+    it('should set viewBox with width and height matching SVG dimensions', () => {
       const ast = parse('participant Alice\nparticipant Bob\nAlice->Bob:Hello');
       const svg = render(ast);
 
       const width = svg.getAttribute('width');
       const height = svg.getAttribute('height');
       const viewBox = svg.getAttribute('viewBox');
+      const [, , vbWidth, vbHeight] = viewBox.split(' ');
 
-      expect(viewBox).toBe(`0 0 ${width} ${height}`);
+      expect(vbWidth).toBe(width);
+      expect(vbHeight).toBe(height);
     });
 
     it('should increase height with more messages', () => {

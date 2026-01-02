@@ -567,17 +567,9 @@ function calculateNoteLayout(node, participantLayout) {
     }
   } else if (position === 'left of') {
     // Place to the left of the participant's lifeline (centerX)
+    // Allow negative X - the viewBox will be adjusted to accommodate
     const lifelineX = pLayouts[0].centerX;
     x = lifelineX - width - NOTE_MARGIN;
-    // Ensure note doesn't go off the left edge, but also doesn't overlap lifeline
-    if (x < NOTE_MARGIN) {
-      x = NOTE_MARGIN;
-      // Shrink width if necessary to avoid overlapping lifeline
-      const maxWidth = lifelineX - NOTE_MARGIN - x;
-      if (width > maxWidth) {
-        width = maxWidth;
-      }
-    }
     return { x, width, height, connectorX: lifelineX, connectorSide: 'left' };
   } else if (position === 'right of') {
     // Place to the right of the participant's lifeline (centerX)

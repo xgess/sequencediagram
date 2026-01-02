@@ -269,26 +269,33 @@ export function render(ast) {
     }
   });
 
-  // Set SVG dimensions (account for fragments that might extend the width)
-  let width = participants.length > 0
-    ? Math.max(...Array.from(participantLayout.values()).map(p => p.x + p.width)) + MARGIN
-    : 300;
+  // Set SVG dimensions (account for fragments and notes that might extend the bounds)
+  let minX = 0;
+  let maxX = participants.length > 0
+    ? Math.max(...Array.from(participantLayout.values()).map(p => p.x + p.width))
+    : 250;
 
-  // Include fragment widths
+  // Include fragment bounds
   fragments.forEach(fragment => {
     const layoutInfo = layout.get(fragment.id);
     if (layoutInfo) {
-      width = Math.max(width, layoutInfo.x + layoutInfo.width + MARGIN);
+      minX = Math.min(minX, layoutInfo.x);
+      maxX = Math.max(maxX, layoutInfo.x + layoutInfo.width);
     }
   });
 
-  // Include note widths
+  // Include note bounds (notes can have negative X if left of leftmost participant)
   notes.forEach(note => {
     const layoutInfo = layout.get(note.id);
     if (layoutInfo) {
-      width = Math.max(width, layoutInfo.x + layoutInfo.width + MARGIN);
+      minX = Math.min(minX, layoutInfo.x);
+      maxX = Math.max(maxX, layoutInfo.x + layoutInfo.width);
     }
   });
+
+  // Calculate width with margins, accounting for negative minX
+  const width = maxX - minX + MARGIN * 2;
+  const viewBoxX = minX - MARGIN;
 
   // Render title if present
   if (titleDirective) {
@@ -304,7 +311,7 @@ export function render(ast) {
 
   svg.setAttribute('width', width);
   svg.setAttribute('height', height);
-  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  svg.setAttribute('viewBox', `${viewBoxX} 0 ${width} ${height}`);
 
   // Apply font family to all text elements if directive present
   if (fontfamilyDirective) {

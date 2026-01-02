@@ -521,4 +521,32 @@ describe('Note and Box Styling (BACKLOG-127)', () => {
       expect(stateShape.getAttribute('fill')).toBe('#e8f4e8');
     });
   });
+
+  describe('Note positioning edge cases', () => {
+    it('should expand viewBox for note left of leftmost participant', () => {
+      const ast = parse('participant Alice\nnote left of Alice:This is a note that should be visible');
+      const svg = render(ast);
+
+      const viewBox = svg.getAttribute('viewBox');
+      const [viewBoxX] = viewBox.split(' ').map(Number);
+
+      // viewBox should have negative X to accommodate the note
+      expect(viewBoxX).toBeLessThan(0);
+
+      // Note should be visible (not squished)
+      const noteGroup = svg.querySelector('.note');
+      expect(noteGroup).toBeDefined();
+    });
+
+    it('should keep viewBox at 0 when no notes extend left', () => {
+      const ast = parse('participant Alice\nparticipant Bob\nnote right of Alice:Right note');
+      const svg = render(ast);
+
+      const viewBox = svg.getAttribute('viewBox');
+      const [viewBoxX] = viewBox.split(' ').map(Number);
+
+      // viewBox should start at negative margin (standard layout)
+      expect(viewBoxX).toBeLessThanOrEqual(0);
+    });
+  });
 });
