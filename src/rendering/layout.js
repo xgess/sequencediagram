@@ -5,7 +5,7 @@ import { getLineCount } from '../markup/renderer.js';
 
 // Layout constants
 const LINE_HEIGHT = 16; // Height per line of text
-const CHAR_WIDTH = 7; // Approximate width per character for note sizing
+const CHAR_WIDTH = 5.5; // Approximate width per character for note sizing (11px font)
 const PARTICIPANT_WIDTH = 100;
 const PARTICIPANT_HEIGHT = 60;
 const PARTICIPANT_SPACING = 150;
@@ -17,9 +17,12 @@ const DEFAULT_MESSAGE_SPACING = 50;
 const BLANKLINE_SPACING = 20;
 const ERROR_HEIGHT = 40;
 const FRAGMENT_PADDING = 30;
-const NOTE_HEIGHT = 40;
-const NOTE_WIDTH = 100;
+const NOTE_HEIGHT = 28; // Reduced for tighter fit
+const NOTE_WIDTH = 50; // Reduced for tighter fit
+const NOTE_PADDING_H = 8; // Horizontal padding around text
+const NOTE_PADDING_V = 6; // Vertical padding around text
 const NOTE_MARGIN = 35; // Extra margin to account for message labels above arrows
+const NOTE_CONNECTOR_GAP = 8; // Gap between note and lifeline connector
 const DIVIDER_HEIGHT = 24;
 const MARGIN = 50;
 const BOUNDARY_OFFSET = 30; // How far outside diagram bounds for boundary messages
@@ -53,28 +56,66 @@ export function calculateLayout(ast) {
     }
   }
 
-  // Calculate participant positions
+  // Calculate participant positions with adjustments for notes
   const participantLayout = new Map();
   const participants = ast.filter(n => n.type === 'participant');
+  const participantOrder = participants.map(p => p.alias);
 
-  // Handle equal spacing - calculate based on number of participants
-  let actualSpacing = participantSpacing;
-  if (participantSpacing === 'equal' && participants.length > 1) {
-    // Distribute participants evenly (use default total width)
-    const totalWidth = (participants.length - 1) * PARTICIPANT_SPACING;
-    actualSpacing = totalWidth / (participants.length - 1);
-  } else if (participantSpacing === 'equal') {
-    actualSpacing = PARTICIPANT_SPACING;
+  // Pre-calculate note widths to determine extra spacing needed between participants
+  // This handles "left of" and "right of" notes that need space between lifelines
+  const notes = ast.filter(n => n.type === 'note');
+  const extraSpacingNeeded = new Map(); // participantIndex -> extra pixels needed before it
+
+  for (const note of notes) {
+    if (!note.participants || note.participants.length === 0) continue;
+    const targetAlias = note.participants[0];
+    const targetIndex = participantOrder.indexOf(targetAlias);
+    if (targetIndex < 0) continue;
+
+    // Calculate note dimensions
+    const text = note.text || '';
+    const lines = text.split('\\n');
+    const maxLineLength = Math.max(...lines.map(l => l.length), 1);
+    const noteWidth = Math.max(NOTE_WIDTH, maxLineLength * CHAR_WIDTH + NOTE_PADDING_H * 2);
+
+    if (note.position === 'left of' && targetIndex > 0) {
+      // Note needs space between previous participant and this one
+      const spaceNeeded = noteWidth + NOTE_CONNECTOR_GAP * 2;
+      const current = extraSpacingNeeded.get(targetIndex) || 0;
+      extraSpacingNeeded.set(targetIndex, Math.max(current, spaceNeeded));
+    } else if (note.position === 'right of' && targetIndex < participantOrder.length - 1) {
+      // Note needs space between this participant and next one
+      const spaceNeeded = noteWidth + NOTE_CONNECTOR_GAP * 2;
+      const current = extraSpacingNeeded.get(targetIndex + 1) || 0;
+      extraSpacingNeeded.set(targetIndex + 1, Math.max(current, spaceNeeded));
+    }
   }
 
+  // Handle equal spacing - calculate based on number of participants
+  let baseSpacing = participantSpacing;
+  if (participantSpacing === 'equal' && participants.length > 1) {
+    const totalWidth = (participants.length - 1) * PARTICIPANT_SPACING;
+    baseSpacing = totalWidth / (participants.length - 1);
+  } else if (participantSpacing === 'equal') {
+    baseSpacing = PARTICIPANT_SPACING;
+  }
+
+  // Position participants with adjusted spacing
+  let currentX = PARTICIPANT_START_X;
   participants.forEach((p, index) => {
-    const x = PARTICIPANT_START_X + (index * actualSpacing);
+    // Add any extra spacing needed before this participant
+    if (index > 0) {
+      const extraSpace = extraSpacingNeeded.get(index) || 0;
+      const spacing = Math.max(baseSpacing, extraSpace);
+      currentX += spacing;
+    }
+
     participantLayout.set(p.alias, {
-      x,
+      x: currentX,
       y: PARTICIPANT_START_Y + titleOffset,
       width: PARTICIPANT_WIDTH,
       height: PARTICIPANT_HEIGHT,
-      centerX: x + PARTICIPANT_WIDTH / 2
+      centerX: currentX + PARTICIPANT_WIDTH / 2
     });
     layout.set(p.id, participantLayout.get(p.alias));
   });
@@ -262,7 +303,7 @@ export function calculateLayout(ast) {
       }
     } else if (node.type === 'note') {
       // Calculate note position based on participants and position
-      const noteLayout = calculateNoteLayout(node, participantLayout);
+      const noteLayout = calculateNoteLayout(node, participantLayout, participantOrder);
       noteLayout.y = currentY;
       layout.set(node.id, noteLayout);
       currentY += noteLayout.height + NOTE_MARGIN;
@@ -518,7 +559,7 @@ export function buildParticipantMap(ast) {
  * @param {Map} participantLayout - Participant positions
  * @returns {Object} Layout info {x, width, height}
  */
-function calculateNoteLayout(node, participantLayout) {
+function calculateNoteLayout(node, participantLayout, participantOrder = []) {
   const participants = node.participants || [];
   const position = node.position || 'over';
   const text = node.text || '';
@@ -529,12 +570,12 @@ function calculateNoteLayout(node, participantLayout) {
   const lineCount = lines.length;
   const maxLineLength = Math.max(...lines.map(l => l.length), 1);
 
-  // Calculate width based on longest line (with padding)
-  const textWidth = maxLineLength * CHAR_WIDTH + 20; // 20px padding
+  // Calculate width based on longest line (with tighter padding)
+  const textWidth = maxLineLength * CHAR_WIDTH + NOTE_PADDING_H * 2;
   let width = Math.max(NOTE_WIDTH, textWidth);
 
-  // Calculate height based on number of lines (with padding)
-  const textHeight = lineCount * LINE_HEIGHT + 16; // 16px padding
+  // Calculate height based on number of lines (with tighter padding)
+  const textHeight = lineCount * LINE_HEIGHT + NOTE_PADDING_V * 2;
   const height = Math.max(NOTE_HEIGHT, textHeight);
 
   // Default X position
@@ -566,15 +607,36 @@ function calculateNoteLayout(node, participantLayout) {
       width = Math.max(width, maxX - minX + width / 2);
     }
   } else if (position === 'left of') {
-    // Place to the left of the participant's lifeline (centerX)
-    // Allow negative X - the viewBox will be adjusted to accommodate
+    // Place to the left of the participant's lifeline
     const lifelineX = pLayouts[0].centerX;
-    x = lifelineX - width - NOTE_MARGIN;
+
+    // Position note to the left of the lifeline with a gap
+    // Allow negative X - the viewBox will expand to accommodate
+    x = lifelineX - width - NOTE_CONNECTOR_GAP;
+
     return { x, width, height, connectorX: lifelineX, connectorSide: 'left' };
   } else if (position === 'right of') {
-    // Place to the right of the participant's lifeline (centerX)
+    // Place to the right of the participant's lifeline
+    const targetAlias = participants[0];
     const lifelineX = pLayouts[0].centerX;
-    x = lifelineX + NOTE_MARGIN;
+
+    // Find the participant to the right (if any)
+    const targetIndex = participantOrder.indexOf(targetAlias);
+    let rightBoundary = Infinity; // Default: no limit
+
+    if (targetIndex >= 0 && targetIndex < participantOrder.length - 1) {
+      const rightParticipant = participantOrder[targetIndex + 1];
+      const rightLayout = participantLayout.get(rightParticipant);
+      if (rightLayout) {
+        // Don't overlap the next participant
+        rightBoundary = rightLayout.centerX - NOTE_CONNECTOR_GAP;
+      }
+    }
+
+    x = lifelineX + NOTE_CONNECTOR_GAP;
+    // Note: we allow the note to extend past rightBoundary if needed
+    // The diagram will expand to accommodate
+
     return { x, width, height, connectorX: lifelineX, connectorSide: 'right' };
   }
 
