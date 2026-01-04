@@ -261,18 +261,37 @@ export function calculateLayout(ast) {
 
       // Get from/to positions (handle boundary markers)
       let fromX, toX;
+      let unknownFrom = null;
+      let unknownTo = null;
+
       if (node.from === '[') {
         fromX = leftBoundary;
       } else {
         const fromLayout = participantLayout.get(node.from);
-        fromX = fromLayout ? fromLayout.centerX : leftBoundary;
+        if (fromLayout) {
+          fromX = fromLayout.centerX;
+        } else {
+          // Unknown participant - use center of diagram for error display
+          fromX = allParticipants.length > 0
+            ? (leftBoundary + rightBoundary) / 2
+            : PARTICIPANT_START_X + PARTICIPANT_WIDTH / 2;
+          unknownFrom = node.from;
+        }
       }
 
       if (node.to === ']') {
         toX = rightBoundary;
       } else {
         const toLayout = participantLayout.get(node.to);
-        toX = toLayout ? toLayout.centerX : rightBoundary;
+        if (toLayout) {
+          toX = toLayout.centerX;
+        } else {
+          // Unknown participant - use center of diagram for error display
+          toX = allParticipants.length > 0
+            ? (leftBoundary + rightBoundary) / 2
+            : PARTICIPANT_START_X + PARTICIPANT_WIDTH / 2;
+          unknownTo = node.to;
+        }
       }
 
       // Delayed messages need extra vertical space for the slope
@@ -292,7 +311,9 @@ export function calculateLayout(ast) {
         toX,
         height: totalHeight,
         delay: node.delay || 0,
-        isBoundary: node.from === '[' || node.to === ']'
+        isBoundary: node.from === '[' || node.to === ']',
+        unknownFrom,
+        unknownTo
       });
 
       if (parallelMode) {
@@ -428,18 +449,35 @@ function layoutEntry(entryId, nodeById, participantLayout, layout, currentY, mes
 
     // Get from/to positions (handle boundary markers)
     let fromX, toX;
+    let unknownFrom = null;
+    let unknownTo = null;
+
     if (entry.from === '[') {
       fromX = leftBoundary;
     } else {
       const fromLayout = participantLayout.get(entry.from);
-      fromX = fromLayout ? fromLayout.centerX : leftBoundary;
+      if (fromLayout) {
+        fromX = fromLayout.centerX;
+      } else {
+        fromX = allParticipants.length > 0
+          ? (leftBoundary + rightBoundary) / 2
+          : PARTICIPANT_START_X + PARTICIPANT_WIDTH / 2;
+        unknownFrom = entry.from;
+      }
     }
 
     if (entry.to === ']') {
       toX = rightBoundary;
     } else {
       const toLayout = participantLayout.get(entry.to);
-      toX = toLayout ? toLayout.centerX : rightBoundary;
+      if (toLayout) {
+        toX = toLayout.centerX;
+      } else {
+        toX = allParticipants.length > 0
+          ? (leftBoundary + rightBoundary) / 2
+          : PARTICIPANT_START_X + PARTICIPANT_WIDTH / 2;
+        unknownTo = entry.to;
+      }
     }
 
     // Delayed messages need extra vertical space for the slope
@@ -455,7 +493,9 @@ function layoutEntry(entryId, nodeById, participantLayout, layout, currentY, mes
       toX,
       height: totalHeight,
       delay: entry.delay || 0,
-      isBoundary: entry.from === '[' || entry.to === ']'
+      isBoundary: entry.from === '[' || entry.to === ']',
+      unknownFrom,
+      unknownTo
     });
 
     return currentY + totalHeight;

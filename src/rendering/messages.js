@@ -12,19 +12,24 @@ const coloredMarkers = new Map();
 /**
  * Render a message node to SVG
  * @param {Object} node - Message AST node
- * @param {Object} layoutInfo - Position info {y, fromX, toX, delay}
+ * @param {Object} layoutInfo - Position info {y, fromX, toX, delay, unknownFrom, unknownTo}
  * @param {number|null} messageNumber - Autonumber value or null
  * @param {Object|null} resolvedStyle - Resolved style (named style looked up)
  * @param {SVGDefsElement|null} defs - The SVG defs element for adding markers
  * @returns {SVGGElement} Rendered message group
  */
 export function renderMessage(node, layoutInfo, messageNumber = null, resolvedStyle = null, defs = null) {
-  const { y, fromX, toX, delay } = layoutInfo;
+  const { y, fromX, toX, delay, unknownFrom, unknownTo } = layoutInfo;
   const arrowType = node.arrowType;
 
   const group = document.createElementNS(SVG_NS, 'g');
   group.setAttribute('data-node-id', node.id);
   group.setAttribute('class', 'message');
+
+  // If there's an unknown participant, render an error message instead
+  if (unknownFrom || unknownTo) {
+    return renderUnknownParticipantError(group, node, layoutInfo, unknownFrom, unknownTo);
+  }
 
   // Determine if this is a reversed arrow (starts with <)
   const isReversed = arrowType.startsWith('<') && !arrowType.startsWith('<->');
@@ -209,4 +214,56 @@ function getOrCreateColoredMarker(type, color, defs) {
  */
 export function clearColoredMarkersCache() {
   coloredMarkers.clear();
+}
+
+/**
+ * Render an error indicator for messages referencing unknown participants
+ * @param {SVGGElement} group - The message group element
+ * @param {Object} node - Message AST node
+ * @param {Object} layoutInfo - Position info
+ * @param {string|null} unknownFrom - Unknown source participant name
+ * @param {string|null} unknownTo - Unknown target participant name
+ * @returns {SVGGElement} The group with error rendering
+ */
+function renderUnknownParticipantError(group, node, layoutInfo, unknownFrom, unknownTo) {
+  const { y, fromX } = layoutInfo;
+
+  // Build error message
+  let errorMsg = 'Unknown participant: ';
+  if (unknownFrom && unknownTo) {
+    errorMsg += `${unknownFrom}, ${unknownTo}`;
+  } else if (unknownFrom) {
+    errorMsg += unknownFrom;
+  } else {
+    errorMsg += unknownTo;
+  }
+
+  // Add error class for styling
+  group.setAttribute('class', 'message message-error');
+
+  // Render error background box
+  const rect = document.createElementNS(SVG_NS, 'rect');
+  const textWidth = Math.max(errorMsg.length * 7, 150);
+  rect.setAttribute('x', fromX - textWidth / 2);
+  rect.setAttribute('y', y - 18);
+  rect.setAttribute('width', textWidth);
+  rect.setAttribute('height', 22);
+  rect.setAttribute('rx', 3);
+  rect.setAttribute('fill', '#ffeeee');
+  rect.setAttribute('stroke', '#cc0000');
+  rect.setAttribute('stroke-width', '1');
+  group.appendChild(rect);
+
+  // Render error text
+  const text = document.createElementNS(SVG_NS, 'text');
+  text.setAttribute('x', fromX);
+  text.setAttribute('y', y - 3);
+  text.setAttribute('text-anchor', 'middle');
+  text.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, sans-serif');
+  text.setAttribute('font-size', '11');
+  text.setAttribute('fill', '#cc0000');
+  text.textContent = errorMsg;
+  group.appendChild(text);
+
+  return group;
 }
