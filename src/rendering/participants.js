@@ -333,7 +333,7 @@ function renderActor(group, node, layoutInfo) {
   // Add text label below figure
   const text = document.createElementNS(SVG_NS, 'text');
   text.setAttribute('x', centerX);
-  text.setAttribute('y', y + height - 4);
+  text.setAttribute('y', y + height + 8);
   text.setAttribute('text-anchor', 'middle');
   text.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, sans-serif');
   text.setAttribute('font-size', '12');
@@ -434,7 +434,7 @@ function renderDatabase(group, node, layoutInfo) {
   // Add text label BELOW the icon (not centered inside)
   const text = document.createElementNS(SVG_NS, 'text');
   text.setAttribute('x', centerX);
-  text.setAttribute('y', y + height - 4);
+  text.setAttribute('y', y + height + 8);
   text.setAttribute('text-anchor', 'middle');
   text.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, sans-serif');
   text.setAttribute('font-size', '12');
@@ -489,19 +489,20 @@ function renderFontAwesomeIcon(group, node, layoutInfo) {
   const iconSize = 30;
 
   // Determine the font family based on the participant type
+  // Note: Using FA7 font names (installed lib is v7)
   let fontFamily;
   switch (node.participantType) {
     case 'fontawesome6solid':
-      fontFamily = 'Font Awesome 6 Free';
+      fontFamily = 'Font Awesome 7 Free';
       break;
     case 'fontawesome6regular':
-      fontFamily = 'Font Awesome 6 Free';
+      fontFamily = 'Font Awesome 7 Free';
       break;
     case 'fontawesome6brands':
-      fontFamily = 'Font Awesome 6 Brands';
+      fontFamily = 'Font Awesome 7 Brands';
       break;
     default:
-      fontFamily = 'Font Awesome 6 Free';
+      fontFamily = 'Font Awesome 7 Free';
   }
 
   // Determine font weight (solid = 900, regular = 400, brands = 400)
