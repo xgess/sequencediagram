@@ -34,7 +34,9 @@ Remaining work items. See FEATURES.md for what's already implemented.
 ### Pending
 - [ ] BUG-021: Note box should expand to fit long text
 - [ ] BUG-022: Textarea resize should expand width, not just height
-- [ ] BUG-041: Participant overlay on scroll doesn't work correctly - Only detects rect-based participants (missing actors, databases, icons), sticky positioning broken, always visible when should only show on scroll
+
+### Fixed (Recent)
+- [x] BUG-041: Participant overlay on scroll - Fixed by using sticky positioning in diagram pane, listening to scroll on correct element (diagram-pane), extracting position data from all participant types (actors, databases, icons), centering overlay boxes over lifelines, and adding translucent backdrop
 
 ---
 
