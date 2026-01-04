@@ -32,6 +32,7 @@ Remaining work items. See FEATURES.md for what's already implemented.
 - [x] **BUG-025**: `dotted` border style - Fixed by adding `stroke-dasharray: 2,2` rendering in all elements
 - [x] **BUG-026**: Type styles not applied - Fixed by implementing `applyTypeStyle()` for participants, notes, and dividers
 - [x] **BUG-027**: Named style property mapping - Verified correct: messages map `fill->color`, `borderWidth->width`; notes/dividers use properties directly
+- [x] **BUG-028**: Colored arrow markers - Fixed by creating dynamic per-color markers and removing CSS stroke override
 
 ---
 
@@ -87,5 +88,5 @@ Ideas for future work (not committed):
 ## Notes
 
 - All syntax compatible with sequencediagram.org/instructions.html
-- 1419 tests passing across 37 test files
+- 1424 tests passing across 37 test files
 - 25 example files demonstrating features
