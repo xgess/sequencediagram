@@ -216,6 +216,13 @@ DB-->>Alice:OK`;
       // Shift-Tab de-indents
       'Shift-Tab': function(cm) {
         cm.indentSelection('subtract');
+      },
+      // Cmd/Ctrl+Shift+/ toggles comments
+      'Cmd-/': function(cm) {
+        toggleComment(cm);
+      },
+      'Ctrl-/': function(cm) {
+        toggleComment(cm);
       }
     }
   });
@@ -427,6 +434,69 @@ export function getText() {
  */
 export function getEditor() {
   return editor;
+}
+
+/**
+ * Toggle comments on the current line or selected lines
+ * @param {CodeMirror} cm - CodeMirror instance
+ */
+function toggleComment(cm) {
+  const selections = cm.listSelections();
+
+  // Collect all lines to toggle
+  const linesToToggle = new Set();
+  for (const selection of selections) {
+    const startLine = Math.min(selection.anchor.line, selection.head.line);
+    const endLine = Math.max(selection.anchor.line, selection.head.line);
+    for (let i = startLine; i <= endLine; i++) {
+      linesToToggle.add(i);
+    }
+  }
+
+  const lineNumbers = Array.from(linesToToggle).sort((a, b) => a - b);
+  if (lineNumbers.length === 0) return;
+
+  // Check if all lines are already commented
+  const allCommented = lineNumbers.every(lineNum => {
+    const lineText = cm.getLine(lineNum);
+    return lineText.trimStart().startsWith('//') || lineText.trimStart().startsWith('#');
+  });
+
+  // Batch all changes together for a single undo
+  cm.operation(() => {
+    for (const lineNum of lineNumbers) {
+      const lineText = cm.getLine(lineNum);
+
+      if (allCommented) {
+        // Uncomment: remove // or # prefix
+        const trimmedStart = lineText.length - lineText.trimStart().length;
+        const trimmed = lineText.trimStart();
+
+        let newText;
+        if (trimmed.startsWith('// ')) {
+          newText = lineText.substring(0, trimmedStart) + trimmed.substring(3);
+        } else if (trimmed.startsWith('//')) {
+          newText = lineText.substring(0, trimmedStart) + trimmed.substring(2);
+        } else if (trimmed.startsWith('# ')) {
+          newText = lineText.substring(0, trimmedStart) + trimmed.substring(2);
+        } else if (trimmed.startsWith('#')) {
+          newText = lineText.substring(0, trimmedStart) + trimmed.substring(1);
+        } else {
+          newText = lineText;
+        }
+
+        cm.replaceRange(newText, { line: lineNum, ch: 0 }, { line: lineNum, ch: lineText.length });
+      } else {
+        // Comment: add // prefix (preserving indentation)
+        const trimmedStart = lineText.length - lineText.trimStart().length;
+        const indent = lineText.substring(0, trimmedStart);
+        const content = lineText.substring(trimmedStart);
+        const newText = indent + '// ' + content;
+
+        cm.replaceRange(newText, { line: lineNum, ch: 0 }, { line: lineNum, ch: lineText.length });
+      }
+    }
+  });
 }
 
 /**
