@@ -144,7 +144,10 @@ export function setupAutoComplete(editor) {
   // - Shift-Ctrl-G / Shift-Cmd-G: Find previous
   // - Shift-Ctrl-F / Cmd-Option-F: Replace
   // - Shift-Ctrl-R / Shift-Cmd-Option-R: Replace all
+  // Merge with existing extraKeys to preserve bindings from main.js
+  const existingKeys = editor.getOption('extraKeys') || {};
   editor.setOption('extraKeys', {
+    ...existingKeys,
     'Ctrl-Space': function(cm) {
       cm.showHint({
         hint: CodeMirror.hint['sequence-diagram'],
