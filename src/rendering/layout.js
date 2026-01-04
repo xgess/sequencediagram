@@ -16,7 +16,10 @@ const MESSAGE_START_Y = 130; // Below participants
 const DEFAULT_MESSAGE_SPACING = 50;
 const BLANKLINE_SPACING = 20;
 const ERROR_HEIGHT = 40;
-const FRAGMENT_PADDING = 30;
+const FRAGMENT_PADDING = 20;
+const FRAGMENT_MARGIN = 20; // Space between adjacent fragments
+const FRAGMENT_HEADER_HEIGHT = 45; // Height of label box + gap for content
+const ELSE_LABEL_HEIGHT = 35; // Space for else divider line + label
 const NOTE_HEIGHT = 28; // Reduced for tighter fit
 const NOTE_WIDTH = 50; // Reduced for tighter fit
 const NOTE_PADDING_H = 8; // Horizontal padding around text
@@ -150,6 +153,9 @@ export function calculateLayout(ast) {
   let parallelStartY = null; // Y position where parallel section starts
   let parallelMaxHeight = 0; // Track max height in parallel section
 
+  // Track the Y position of the last message for activate/deactivate alignment
+  let lastMessageY = currentY;
+
   for (const node of ast) {
     // Skip participants (already handled)
     if (node.type === 'participant') continue;
@@ -209,12 +215,13 @@ export function calculateLayout(ast) {
     }
 
     // Handle activate/deactivate directives - record Y position
+    // Use lastMessageY so activation aligns with the previous message
     if (node.type === 'directive' &&
         (node.directiveType === 'activate' ||
          node.directiveType === 'deactivate' ||
          node.directiveType === 'deactivateafter')) {
       layout.set(node.id, {
-        y: currentY,
+        y: lastMessageY,
         type: node.directiveType
       });
       // deactivateafter adds extra space
@@ -316,6 +323,9 @@ export function calculateLayout(ast) {
         unknownTo
       });
 
+      // Track last message Y for activate/deactivate alignment
+      lastMessageY = messageY;
+
       if (parallelMode) {
         // Track the max height in the parallel section
         parallelMaxHeight = Math.max(parallelMaxHeight, totalHeight);
@@ -347,7 +357,7 @@ export function calculateLayout(ast) {
       currentY += DIVIDER_HEIGHT + NOTE_MARGIN;
     } else if (node.type === 'fragment') {
       const fragmentStart = currentY;
-      currentY += FRAGMENT_PADDING; // Top padding
+      currentY += FRAGMENT_HEADER_HEIGHT; // Space for label box
 
       // For collapsed expandable fragments, only show header
       if (node.fragmentType === 'expandable' && node.collapsed) {
@@ -363,6 +373,7 @@ export function calculateLayout(ast) {
         for (const elseClause of node.elseClauses) {
           // Store else clause divider position
           elseClause.dividerY = currentY;
+          currentY += ELSE_LABEL_HEIGHT; // Space for divider line and [else] label
 
           for (const entryId of elseClause.entries) {
             currentY = layoutEntry(entryId, nodeById, participantLayout, layout, currentY, messageSpacing);
@@ -383,6 +394,9 @@ export function calculateLayout(ast) {
         type: 'fragment',
         collapsed: node.collapsed || false
       });
+
+      // Add margin after fragment for spacing between adjacent fragments
+      currentY += FRAGMENT_MARGIN;
     }
   }
 
@@ -504,7 +518,7 @@ function layoutEntry(entryId, nodeById, participantLayout, layout, currentY, mes
   if (entry.type === 'fragment') {
     // Nested fragment
     const fragmentStart = currentY;
-    currentY += FRAGMENT_PADDING;
+    currentY += FRAGMENT_HEADER_HEIGHT; // Space for label box
 
     for (const nestedEntryId of entry.entries) {
       currentY = layoutEntry(nestedEntryId, nodeById, participantLayout, layout, currentY, messageSpacing);
@@ -512,6 +526,7 @@ function layoutEntry(entryId, nodeById, participantLayout, layout, currentY, mes
 
     for (const elseClause of entry.elseClauses) {
       elseClause.dividerY = currentY;
+      currentY += ELSE_LABEL_HEIGHT; // Space for divider line and [else] label
       for (const nestedEntryId of elseClause.entries) {
         currentY = layoutEntry(nestedEntryId, nodeById, participantLayout, layout, currentY, messageSpacing);
       }
@@ -528,6 +543,9 @@ function layoutEntry(entryId, nodeById, participantLayout, layout, currentY, mes
       width: bounds.maxX - bounds.minX,
       type: 'fragment'
     });
+
+    // Add margin after nested fragment
+    currentY += FRAGMENT_MARGIN;
   }
 
   return currentY;
