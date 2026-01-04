@@ -6,15 +6,19 @@ import { resolveColor } from './colors.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
+// Cache for dynamically created colored markers
+const coloredMarkers = new Map();
+
 /**
  * Render a message node to SVG
  * @param {Object} node - Message AST node
  * @param {Object} layoutInfo - Position info {y, fromX, toX, delay}
  * @param {number|null} messageNumber - Autonumber value or null
  * @param {Object|null} resolvedStyle - Resolved style (named style looked up)
+ * @param {SVGDefsElement|null} defs - The SVG defs element for adding markers
  * @returns {SVGGElement} Rendered message group
  */
-export function renderMessage(node, layoutInfo, messageNumber = null, resolvedStyle = null) {
+export function renderMessage(node, layoutInfo, messageNumber = null, resolvedStyle = null, defs = null) {
   const { y, fromX, toX, delay } = layoutInfo;
   const arrowType = node.arrowType;
 
@@ -50,22 +54,28 @@ export function renderMessage(node, layoutInfo, messageNumber = null, resolvedSt
 
   // Apply styling (color and width) - use resolved style if provided
   const style = resolvedStyle || node.style || {};
-  line.setAttribute('stroke', resolveColor(style.color) || 'black');
+  const strokeColor = resolveColor(style.color) || 'black';
+  line.setAttribute('stroke', strokeColor);
   line.setAttribute('stroke-width', style.width !== undefined ? style.width : 1);
 
   // Apply arrow marker based on arrow type
+  // For colored arrows, create/use color-specific markers for browser compatibility
   if (isLost) {
     // Lost messages end with X
-    line.setAttribute('marker-end', 'url(#arrowhead-x)');
+    const markerId = getOrCreateColoredMarker('x', strokeColor, defs);
+    line.setAttribute('marker-end', `url(#${markerId})`);
   } else if (isBidirectional) {
     // Bidirectional arrows have markers on both ends
-    const endMarkerId = getEndMarkerId(arrowType);
-    const startMarkerId = getStartMarkerId(arrowType);
+    const endType = arrowType.endsWith('>>') ? 'open' : 'solid';
+    const startType = arrowType === '<->>' ? 'open' : 'solid';
+    const endMarkerId = getOrCreateColoredMarker(endType, strokeColor, defs);
+    const startMarkerId = getOrCreateColoredMarker(startType + '-start', strokeColor, defs);
     line.setAttribute('marker-end', `url(#${endMarkerId})`);
     line.setAttribute('marker-start', `url(#${startMarkerId})`);
   } else {
     // Normal or reversed arrows
-    const markerId = getEndMarkerId(arrowType);
+    const markerType = arrowType.endsWith('>>') ? 'open' : 'solid';
+    const markerId = getOrCreateColoredMarker(markerType, strokeColor, defs);
     line.setAttribute('marker-end', `url(#${markerId})`);
   }
 
@@ -112,29 +122,91 @@ export function renderMessage(node, layoutInfo, messageNumber = null, resolvedSt
 }
 
 /**
- * Get the end marker ID based on arrow type
- * @param {string} arrowType - Arrow type
- * @returns {string} Marker ID
+ * Get or create a colored marker for the given type and color
+ * Creates markers dynamically to support colored arrows in browsers
+ * that don't support context-stroke (like Brave)
+ * @param {string} type - Marker type: 'solid', 'open', 'solid-start', 'open-start', 'x'
+ * @param {string} color - The color for the marker
+ * @param {SVGDefsElement} defs - The SVG defs element to add markers to
+ * @returns {string} The marker ID to use
  */
-function getEndMarkerId(arrowType) {
-  // >> arrows use open arrowhead
-  if (arrowType.endsWith('>>')) {
-    return 'arrowhead-open';
+function getOrCreateColoredMarker(type, color, defs) {
+  // For black, use the default markers (they use context-stroke which works in most browsers)
+  if (color === 'black') {
+    if (type === 'solid') return 'arrowhead-solid';
+    if (type === 'open') return 'arrowhead-open';
+    if (type === 'solid-start') return 'arrowhead-solid-start';
+    if (type === 'open-start') return 'arrowhead-open-start';
+    if (type === 'x') return 'arrowhead-x';
   }
-  // > arrows use solid arrowhead
-  return 'arrowhead-solid';
+
+  // Create a unique ID for this color/type combination
+  const markerId = `arrowhead-${type}-${color.replace(/[^a-zA-Z0-9]/g, '')}`;
+
+  // Check if we already created this marker
+  if (coloredMarkers.has(markerId)) {
+    return markerId;
+  }
+
+  // If no defs provided, fall back to default marker
+  if (!defs) {
+    if (type === 'solid') return 'arrowhead-solid';
+    if (type === 'open') return 'arrowhead-open';
+    if (type === 'solid-start') return 'arrowhead-solid-start';
+    if (type === 'open-start') return 'arrowhead-open-start';
+    if (type === 'x') return 'arrowhead-x';
+  }
+
+  // Create the marker based on type
+  const marker = document.createElementNS(SVG_NS, 'marker');
+  marker.setAttribute('id', markerId);
+  marker.setAttribute('markerWidth', '10');
+  marker.setAttribute('markerHeight', type === 'x' ? '10' : '7');
+  marker.setAttribute('refX', type.includes('start') ? '1' : (type === 'x' ? '5' : '9'));
+  marker.setAttribute('refY', type === 'x' ? '5' : '3.5');
+  marker.setAttribute('orient', 'auto');
+
+  if (type === 'solid') {
+    const path = document.createElementNS(SVG_NS, 'polygon');
+    path.setAttribute('points', '0 0, 10 3.5, 0 7');
+    path.setAttribute('fill', color);
+    marker.appendChild(path);
+  } else if (type === 'open') {
+    const path = document.createElementNS(SVG_NS, 'polyline');
+    path.setAttribute('points', '0 0, 10 3.5, 0 7');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width', '1');
+    marker.appendChild(path);
+  } else if (type === 'solid-start') {
+    const path = document.createElementNS(SVG_NS, 'polygon');
+    path.setAttribute('points', '10 0, 0 3.5, 10 7');
+    path.setAttribute('fill', color);
+    marker.appendChild(path);
+  } else if (type === 'open-start') {
+    const path = document.createElementNS(SVG_NS, 'polyline');
+    path.setAttribute('points', '10 0, 0 3.5, 10 7');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width', '1');
+    marker.appendChild(path);
+  } else if (type === 'x') {
+    const path = document.createElementNS(SVG_NS, 'path');
+    path.setAttribute('d', 'M 0 0 L 10 10 M 10 0 L 0 10');
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width', '2');
+    marker.appendChild(path);
+  }
+
+  defs.appendChild(marker);
+  coloredMarkers.set(markerId, true);
+
+  return markerId;
 }
 
 /**
- * Get the start marker ID for bidirectional arrows
- * @param {string} arrowType - Arrow type
- * @returns {string} Marker ID
+ * Clear the colored markers cache (call when re-rendering)
  */
-function getStartMarkerId(arrowType) {
-  // <->> uses open arrowhead on both ends
-  if (arrowType === '<->>') {
-    return 'arrowhead-open-start';
-  }
-  // <-> uses solid arrowhead on both ends
-  return 'arrowhead-solid-start';
+export function clearColoredMarkersCache() {
+  coloredMarkers.clear();
 }

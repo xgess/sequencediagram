@@ -238,4 +238,43 @@ Model->DB:fetch`;
       expect(svg.querySelectorAll('.message').length).toBe(3);
     });
   });
+
+  describe('Participant styling with named colors', () => {
+    it('should apply named color to participant fill', () => {
+      const ast = parse('participant Alice #lightblue\nAlice->Alice:test');
+      const svg = render(ast);
+      const rect = svg.querySelector('.participant rect');
+      // Named colors are resolved without the # prefix
+      expect(rect.getAttribute('fill')).toBe('lightblue');
+    });
+
+    it('should apply named color to participant border', () => {
+      const ast = parse('participant Alice #white #darkblue\nAlice->Alice:test');
+      const svg = render(ast);
+      const rect = svg.querySelector('.participant rect');
+      expect(rect.getAttribute('fill')).toBe('white');
+      expect(rect.getAttribute('stroke')).toBe('darkblue');
+    });
+
+    it('should apply hex color to participant fill', () => {
+      const ast = parse('participant Alice #ff0000\nAlice->Alice:test');
+      const svg = render(ast);
+      const rect = svg.querySelector('.participant rect');
+      expect(rect.getAttribute('fill')).toBe('#ff0000');
+    });
+
+    it('should apply named color to actor', () => {
+      const ast = parse('actor User #lightgreen\nUser->User:test');
+      const svg = render(ast);
+      const circle = svg.querySelector('.participant circle');
+      expect(circle.getAttribute('fill')).toBe('lightgreen');
+    });
+
+    it('should apply named color to database', () => {
+      const ast = parse('database DB #lightyellow\nDB->DB:test');
+      const svg = render(ast);
+      const ellipse = svg.querySelector('.participant ellipse');
+      expect(ellipse.getAttribute('fill')).toBe('lightyellow');
+    });
+  });
 });

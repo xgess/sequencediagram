@@ -2,7 +2,7 @@
 // See DESIGN.md for SVG structure and rendering strategy
 
 import { renderParticipant } from './participants.js';
-import { renderMessage } from './messages.js';
+import { renderMessage, clearColoredMarkersCache } from './messages.js';
 import { renderFragment } from './fragments.js';
 import { renderNote, renderDivider } from './notes.js';
 import { renderError } from './errors.js';
@@ -21,6 +21,9 @@ const MARGIN = 50;
 export function render(ast) {
   const svg = document.createElementNS(SVG_NS, 'svg');
   svg.setAttribute('id', 'diagram');
+
+  // Clear cached colored markers since we're creating a new SVG
+  clearColoredMarkersCache();
 
   // Calculate layout for all elements
   const { layout, totalHeight, participantLayout } = calculateLayout(ast);
@@ -242,7 +245,7 @@ export function render(ast) {
           if (typeStyle.textMarkup) resolvedStyle.textMarkup = typeStyle.textMarkup;
         }
       }
-      const messageEl = renderMessage(message, layoutInfo, messageNumber, resolvedStyle);
+      const messageEl = renderMessage(message, layoutInfo, messageNumber, resolvedStyle, defs);
       messagesGroup.appendChild(messageEl);
     }
   });
@@ -1046,7 +1049,7 @@ function createDefs() {
 
   const solidPath = document.createElementNS(SVG_NS, 'polygon');
   solidPath.setAttribute('points', '0 0, 10 3.5, 0 7');
-  solidPath.setAttribute('fill', 'black');
+  solidPath.setAttribute('fill', 'context-stroke');
   solidArrow.appendChild(solidPath);
   defs.appendChild(solidArrow);
 
@@ -1062,7 +1065,7 @@ function createDefs() {
   const openPath = document.createElementNS(SVG_NS, 'polyline');
   openPath.setAttribute('points', '0 0, 10 3.5, 0 7');
   openPath.setAttribute('fill', 'none');
-  openPath.setAttribute('stroke', 'black');
+  openPath.setAttribute('stroke', 'context-stroke');
   openPath.setAttribute('stroke-width', '1');
   openArrow.appendChild(openPath);
   defs.appendChild(openArrow);
@@ -1078,7 +1081,7 @@ function createDefs() {
 
   const solidStartPath = document.createElementNS(SVG_NS, 'polygon');
   solidStartPath.setAttribute('points', '10 0, 0 3.5, 10 7');
-  solidStartPath.setAttribute('fill', 'black');
+  solidStartPath.setAttribute('fill', 'context-stroke');
   solidArrowStart.appendChild(solidStartPath);
   defs.appendChild(solidArrowStart);
 
@@ -1094,7 +1097,7 @@ function createDefs() {
   const openStartPath = document.createElementNS(SVG_NS, 'polyline');
   openStartPath.setAttribute('points', '10 0, 0 3.5, 10 7');
   openStartPath.setAttribute('fill', 'none');
-  openStartPath.setAttribute('stroke', 'black');
+  openStartPath.setAttribute('stroke', 'context-stroke');
   openStartPath.setAttribute('stroke-width', '1');
   openArrowStart.appendChild(openStartPath);
   defs.appendChild(openArrowStart);
@@ -1110,7 +1113,7 @@ function createDefs() {
 
   const xPath = document.createElementNS(SVG_NS, 'path');
   xPath.setAttribute('d', 'M 0 0 L 10 10 M 10 0 L 0 10');
-  xPath.setAttribute('stroke', 'black');
+  xPath.setAttribute('stroke', 'context-stroke');
   xPath.setAttribute('stroke-width', '2');
   xMarker.appendChild(xPath);
   defs.appendChild(xMarker);

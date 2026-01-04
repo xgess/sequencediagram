@@ -252,8 +252,7 @@ body {
 }
 
 .message line {
-  stroke: black;
-  stroke-width: 1;
+  /* stroke and stroke-width are set via SVG attributes to support colored arrows */
 }
 
 .message text {
