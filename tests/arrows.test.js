@@ -290,7 +290,8 @@ describe('Message Styling (BACKLOG-123)', () => {
       const ast = parse('participant A\nparticipant B\nA-[#red]>B:test');
       const svg = render(ast);
       const line = svg.querySelector('.message line');
-      expect(line.getAttribute('stroke')).toBe('#red');
+      // Named colors are rendered without the # prefix for SVG
+      expect(line.getAttribute('stroke')).toBe('red');
     });
 
     it('should render message with custom width', () => {
@@ -304,7 +305,8 @@ describe('Message Styling (BACKLOG-123)', () => {
       const ast = parse('participant A\nparticipant B\nA-[#green;3]>B:test');
       const svg = render(ast);
       const line = svg.querySelector('.message line');
-      expect(line.getAttribute('stroke')).toBe('#green');
+      // Named colors are rendered without the # prefix for SVG
+      expect(line.getAttribute('stroke')).toBe('green');
       expect(line.getAttribute('stroke-width')).toBe('3');
     });
   });

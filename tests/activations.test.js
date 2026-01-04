@@ -162,7 +162,8 @@ deactivate B`;
 
       const activationBar = svg.querySelector('.activation-bar');
       expect(activationBar).not.toBeNull();
-      expect(activationBar.getAttribute('fill')).toBe('#lightblue');
+      // Named colors are rendered without the # prefix for SVG
+      expect(activationBar.getAttribute('fill')).toBe('lightblue');
     });
 
     it('should use activecolor directive for default color', () => {
@@ -177,7 +178,8 @@ deactivate B`;
 
       const activationBar = svg.querySelector('.activation-bar');
       expect(activationBar).not.toBeNull();
-      expect(activationBar.getAttribute('fill')).toBe('#yellow');
+      // Named colors are rendered without the # prefix for SVG
+      expect(activationBar.getAttribute('fill')).toBe('yellow');
     });
 
     it('should use per-participant activecolor', () => {
@@ -193,7 +195,8 @@ deactivate B`;
 
       const activationBar = svg.querySelector('.activation-bar[data-participant="B"]');
       expect(activationBar).not.toBeNull();
-      expect(activationBar.getAttribute('fill')).toBe('#green');
+      // Named colors are rendered without the # prefix for SVG
+      expect(activationBar.getAttribute('fill')).toBe('green');
     });
 
     it('should render multiple activation bars', () => {
@@ -321,9 +324,10 @@ deactivate API`;
       expect(dbBars.length).toBe(1);
 
       // API bar should use its specified color
-      expect(apiBars[0].getAttribute('fill')).toBe('#lightblue');
+      // Named colors are rendered without the # prefix for SVG
+      expect(apiBars[0].getAttribute('fill')).toBe('lightblue');
       // DB bar should use the global activecolor
-      expect(dbBars[0].getAttribute('fill')).toBe('#lightyellow');
+      expect(dbBars[0].getAttribute('fill')).toBe('lightyellow');
     });
   });
 

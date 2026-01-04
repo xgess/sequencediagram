@@ -219,7 +219,8 @@ describe('Renderer', () => {
       const svg = render(ast);
 
       const rect = svg.querySelector('.participant rect');
-      expect(rect.getAttribute('fill')).toBe('#lightblue');
+      // Named colors are resolved without the # prefix for SVG
+      expect(rect.getAttribute('fill')).toBe('lightblue');
     });
 
     it('should apply border color to participant rect', () => {
@@ -227,7 +228,8 @@ describe('Renderer', () => {
       const svg = render(ast);
 
       const rect = svg.querySelector('.participant rect');
-      expect(rect.getAttribute('stroke')).toBe('#red');
+      // Named colors are resolved without the # prefix for SVG
+      expect(rect.getAttribute('stroke')).toBe('red');
     });
 
     it('should apply border width to participant rect', () => {
@@ -336,8 +338,9 @@ describe('Renderer', () => {
       const svg = render(ast);
 
       const circle = svg.querySelector('.participant circle');
-      expect(circle.getAttribute('fill')).toBe('#lightblue');
-      expect(circle.getAttribute('stroke')).toBe('#red');
+      // Named colors are resolved without the # prefix for SVG
+      expect(circle.getAttribute('fill')).toBe('lightblue');
+      expect(circle.getAttribute('stroke')).toBe('red');
     });
   });
 
@@ -368,8 +371,9 @@ describe('Renderer', () => {
       const svg = render(ast);
 
       const ellipse = svg.querySelector('.participant ellipse');
-      expect(ellipse.getAttribute('fill')).toBe('#yellow');
-      expect(ellipse.getAttribute('stroke')).toBe('#blue');
+      // Named colors are resolved without the # prefix for SVG
+      expect(ellipse.getAttribute('fill')).toBe('yellow');
+      expect(ellipse.getAttribute('stroke')).toBe('blue');
     });
   });
 

@@ -147,7 +147,8 @@ A->A:msg`;
 
       const group = svg.querySelector('.participant-group');
       const rect = group.querySelector('rect');
-      expect(rect.getAttribute('fill')).toBe('#lightblue');
+      // Named colors are rendered without the # prefix for SVG
+      expect(rect.getAttribute('fill')).toBe('lightblue');
     });
 
     it('should render empty group (no rect)', () => {

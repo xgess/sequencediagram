@@ -1,6 +1,8 @@
 // Render participant boxes (participant, actor, database)
 // See DESIGN.md for participant rendering details
 
+import { resolveColor } from './colors.js';
+
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 /**
@@ -64,13 +66,15 @@ function renderBox(group, node, layoutInfo) {
   rect.setAttribute('height', height);
 
   // Apply styling with defaults
-  rect.setAttribute('fill', style.fill || 'white');
-  rect.setAttribute('stroke', style.border || 'black');
+  rect.setAttribute('fill', resolveColor(style.fill) || 'white');
+  rect.setAttribute('stroke', resolveColor(style.border) || 'black');
   rect.setAttribute('stroke-width', style.borderWidth !== undefined ? style.borderWidth : 1);
 
-  // Apply dashed border style if specified
+  // Apply border style if specified
   if (style.borderStyle === 'dashed') {
     rect.setAttribute('stroke-dasharray', '5,5');
+  } else if (style.borderStyle === 'dotted') {
+    rect.setAttribute('stroke-dasharray', '2,2');
   }
 
   group.appendChild(rect);
@@ -96,13 +100,15 @@ function renderRoundedBox(group, node, layoutInfo) {
   rect.setAttribute('ry', 10);
 
   // Apply styling with defaults
-  rect.setAttribute('fill', style.fill || 'white');
-  rect.setAttribute('stroke', style.border || 'black');
+  rect.setAttribute('fill', resolveColor(style.fill) || 'white');
+  rect.setAttribute('stroke', resolveColor(style.border) || 'black');
   rect.setAttribute('stroke-width', style.borderWidth !== undefined ? style.borderWidth : 1);
 
-  // Apply dashed border style if specified
+  // Apply border style if specified
   if (style.borderStyle === 'dashed') {
     rect.setAttribute('stroke-dasharray', '5,5');
+  } else if (style.borderStyle === 'dotted') {
+    rect.setAttribute('stroke-dasharray', '2,2');
   }
 
   group.appendChild(rect);
@@ -118,8 +124,8 @@ function renderRoundedBox(group, node, layoutInfo) {
 function renderBoundary(group, node, layoutInfo) {
   const { x, y, width, height } = layoutInfo;
   const style = node.style || {};
-  const fill = style.fill || 'white';
-  const stroke = style.border || 'black';
+  const fill = resolveColor(style.fill) || 'white';
+  const stroke = resolveColor(style.border) || 'black';
   const strokeWidth = style.borderWidth !== undefined ? style.borderWidth : 1;
 
   const centerX = x + width / 2;
@@ -174,8 +180,8 @@ function renderBoundary(group, node, layoutInfo) {
 function renderControl(group, node, layoutInfo) {
   const { x, y, width, height } = layoutInfo;
   const style = node.style || {};
-  const fill = style.fill || 'white';
-  const stroke = style.border || 'black';
+  const fill = resolveColor(style.fill) || 'white';
+  const stroke = resolveColor(style.border) || 'black';
   const strokeWidth = style.borderWidth !== undefined ? style.borderWidth : 1;
 
   const centerX = x + width / 2;
@@ -218,8 +224,8 @@ function renderControl(group, node, layoutInfo) {
 function renderEntity(group, node, layoutInfo) {
   const { x, y, width, height } = layoutInfo;
   const style = node.style || {};
-  const fill = style.fill || 'white';
-  const stroke = style.border || 'black';
+  const fill = resolveColor(style.fill) || 'white';
+  const stroke = resolveColor(style.border) || 'black';
   const strokeWidth = style.borderWidth !== undefined ? style.borderWidth : 1;
 
   const centerX = x + width / 2;
@@ -263,7 +269,7 @@ function renderEntity(group, node, layoutInfo) {
 function renderActor(group, node, layoutInfo) {
   const { x, y, width, height } = layoutInfo;
   const style = node.style || {};
-  const stroke = style.border || 'black';
+  const stroke = resolveColor(style.border) || 'black';
   const strokeWidth = style.borderWidth !== undefined ? style.borderWidth : 1;
 
   const centerX = x + width / 2;
@@ -276,7 +282,7 @@ function renderActor(group, node, layoutInfo) {
   head.setAttribute('cx', centerX);
   head.setAttribute('cy', y + headRadius + 2);
   head.setAttribute('r', headRadius);
-  head.setAttribute('fill', style.fill || 'white');
+  head.setAttribute('fill', resolveColor(style.fill) || 'white');
   head.setAttribute('stroke', stroke);
   head.setAttribute('stroke-width', strokeWidth);
   group.appendChild(head);
@@ -338,8 +344,8 @@ function renderActor(group, node, layoutInfo) {
 function renderDatabase(group, node, layoutInfo) {
   const { x, y, width, height } = layoutInfo;
   const style = node.style || {};
-  const fill = style.fill || 'white';
-  const stroke = style.border || 'black';
+  const fill = resolveColor(style.fill) || 'white';
+  const stroke = resolveColor(style.border) || 'black';
   const strokeWidth = style.borderWidth !== undefined ? style.borderWidth : 1;
 
   const ellipseRx = width / 2;
@@ -478,7 +484,7 @@ function renderFontAwesomeIcon(group, node, layoutInfo) {
   icon.setAttribute('font-family', fontFamily);
   icon.setAttribute('font-weight', fontWeight);
   icon.setAttribute('font-size', iconSize);
-  icon.setAttribute('fill', style.fill || 'black');
+  icon.setAttribute('fill', resolveColor(style.fill) || 'black');
   icon.textContent = iconChar;
   group.appendChild(icon);
 
@@ -516,7 +522,7 @@ function renderMaterialDesignIcon(group, node, layoutInfo) {
   icon.setAttribute('font-family', 'Material Design Icons');
   icon.setAttribute('font-weight', 'normal');
   icon.setAttribute('font-size', iconSize);
-  icon.setAttribute('fill', style.fill || 'black');
+  icon.setAttribute('fill', resolveColor(style.fill) || 'black');
   icon.textContent = iconChar;
   group.appendChild(icon);
 

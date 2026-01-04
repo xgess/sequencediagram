@@ -1,6 +1,8 @@
 // Render fragment boxes (alt, loop, opt, etc.)
 // See DESIGN.md for fragment rendering details
 
+import { resolveColor } from './colors.js';
+
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 /**
@@ -24,11 +26,13 @@ export function renderFragment(node, layoutInfo) {
   rect.setAttribute('y', y);
   rect.setAttribute('width', width);
   rect.setAttribute('height', height);
-  rect.setAttribute('fill', style.fill || '#f8f8f8');
-  rect.setAttribute('stroke', style.border || '#333');
+  rect.setAttribute('fill', resolveColor(style.fill) || '#f8f8f8');
+  rect.setAttribute('stroke', resolveColor(style.border) || '#333');
   rect.setAttribute('stroke-width', style.borderWidth !== undefined ? style.borderWidth : 1);
   if (style.borderStyle === 'dashed') {
     rect.setAttribute('stroke-dasharray', '5,5');
+  } else if (style.borderStyle === 'dotted') {
+    rect.setAttribute('stroke-dasharray', '2,2');
   }
   group.appendChild(rect);
 
@@ -41,16 +45,16 @@ export function renderFragment(node, layoutInfo) {
   labelBox.setAttribute('y', y);
   labelBox.setAttribute('width', labelBoxWidth);
   labelBox.setAttribute('height', labelBoxHeight);
-  labelBox.setAttribute('fill', style.operatorColor || '#e8e8e8');
-  labelBox.setAttribute('stroke', style.border || '#333');
+  labelBox.setAttribute('fill', resolveColor(style.operatorColor) || '#e8e8e8');
+  labelBox.setAttribute('stroke', resolveColor(style.border) || '#333');
   labelBox.setAttribute('stroke-width', style.borderWidth !== undefined ? style.borderWidth : 1);
   group.appendChild(labelBox);
 
   // Draw diagonal corner on label box
   const cornerPath = document.createElementNS(SVG_NS, 'path');
   cornerPath.setAttribute('d', `M ${x + labelBoxWidth} ${y} L ${x + labelBoxWidth} ${y + labelBoxHeight - 8} L ${x + labelBoxWidth - 8} ${y + labelBoxHeight} L ${x + labelBoxWidth} ${y + labelBoxHeight}`);
-  cornerPath.setAttribute('fill', style.operatorColor || '#e8e8e8');
-  cornerPath.setAttribute('stroke', style.border || '#333');
+  cornerPath.setAttribute('fill', resolveColor(style.operatorColor) || '#e8e8e8');
+  cornerPath.setAttribute('stroke', resolveColor(style.border) || '#333');
   cornerPath.setAttribute('stroke-width', style.borderWidth !== undefined ? style.borderWidth : 1);
   group.appendChild(cornerPath);
 
@@ -123,7 +127,7 @@ export function renderFragment(node, layoutInfo) {
       divider.setAttribute('y1', elseClause.dividerY);
       divider.setAttribute('x2', x + width);
       divider.setAttribute('y2', elseClause.dividerY);
-      divider.setAttribute('stroke', style.border || '#333');
+      divider.setAttribute('stroke', resolveColor(style.border) || '#333');
       divider.setAttribute('stroke-width', style.borderWidth !== undefined ? style.borderWidth : 1);
       divider.setAttribute('stroke-dasharray', '5,5');
       group.appendChild(divider);

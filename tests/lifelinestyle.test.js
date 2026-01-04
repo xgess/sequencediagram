@@ -94,7 +94,8 @@ A->A:self`;
 
       const lifeline = svg.querySelector('.lifeline[data-participant="A"]');
       expect(lifeline).toBeDefined();
-      expect(lifeline.getAttribute('stroke')).toBe('#red');
+      // Named colors are rendered without the # prefix for SVG
+      expect(lifeline.getAttribute('stroke')).toBe('red');
     });
 
     it('should render lifeline with custom width', () => {
@@ -153,7 +154,8 @@ A->B:msg`;
       const lifelineA = svg.querySelector('.lifeline[data-participant="A"]');
       const lifelineB = svg.querySelector('.lifeline[data-participant="B"]');
 
-      expect(lifelineA.getAttribute('stroke')).toBe('#red');
+      // Named colors are rendered without the # prefix for SVG
+      expect(lifelineA.getAttribute('stroke')).toBe('red');
       expect(lifelineA.getAttribute('stroke-width')).toBe('2');
 
       // B should have default styling
@@ -173,8 +175,9 @@ A->B:msg`;
       const lifelineA = svg.querySelector('.lifeline[data-participant="A"]');
       const lifelineB = svg.querySelector('.lifeline[data-participant="B"]');
 
-      expect(lifelineA.getAttribute('stroke')).toBe('#red');
-      expect(lifelineB.getAttribute('stroke')).toBe('#blue');
+      // Named colors are rendered without the # prefix for SVG
+      expect(lifelineA.getAttribute('stroke')).toBe('red');
+      expect(lifelineB.getAttribute('stroke')).toBe('blue');
     });
 
     it('should use default styling without lifelinestyle directive', () => {

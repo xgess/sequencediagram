@@ -495,7 +495,8 @@ describe('Note and Box Styling (BACKLOG-127)', () => {
       const ast = parse('participant A\n==Break==#lightgreen');
       const svg = render(ast);
       const dividerBox = svg.querySelector('.divider rect');
-      expect(dividerBox.getAttribute('fill')).toBe('#lightgreen');
+      // Named colors are rendered without the # prefix for SVG
+      expect(dividerBox.getAttribute('fill')).toBe('lightgreen');
     });
   });
 

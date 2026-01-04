@@ -7,6 +7,7 @@ import { renderFragment } from './fragments.js';
 import { renderNote, renderDivider } from './notes.js';
 import { renderError } from './errors.js';
 import { calculateLayout } from './layout.js';
+import { resolveColor } from './colors.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -368,8 +369,8 @@ function renderFrame(directive, width, height) {
   rect.setAttribute('y', FRAME_PADDING);
   rect.setAttribute('width', width - FRAME_PADDING * 2);
   rect.setAttribute('height', height - FRAME_PADDING * 2);
-  rect.setAttribute('fill', style.fill || 'none');
-  rect.setAttribute('stroke', style.border || '#333');
+  rect.setAttribute('fill', resolveColor(style.fill) || 'none');
+  rect.setAttribute('stroke', resolveColor(style.border) || '#333');
   rect.setAttribute('stroke-width', style.borderWidth || 2);
 
   if (style.borderStyle === 'dashed') {
@@ -387,8 +388,8 @@ function renderFrame(directive, width, height) {
     labelBg.setAttribute('y', FRAME_PADDING);
     labelBg.setAttribute('width', directive.value.length * 8 + LABEL_PADDING * 2);
     labelBg.setAttribute('height', LABEL_HEIGHT);
-    labelBg.setAttribute('fill', style.operatorColor || '#eee');
-    labelBg.setAttribute('stroke', style.border || '#333');
+    labelBg.setAttribute('fill', resolveColor(style.operatorColor) || '#eee');
+    labelBg.setAttribute('stroke', resolveColor(style.border) || '#333');
     labelBg.setAttribute('stroke-width', style.borderWidth || 2);
     group.appendChild(labelBg);
 
@@ -448,9 +449,9 @@ function renderParticipantGroup(group, participantLayout, height) {
   rect.setAttribute('y', minY - PADDING - (group.label ? LABEL_HEIGHT : 0));
   rect.setAttribute('width', maxX - minX + PADDING * 2);
   rect.setAttribute('height', height - minY + PADDING + (group.label ? LABEL_HEIGHT : 0));
-  rect.setAttribute('fill', group.color || '#f5f5f5');
+  rect.setAttribute('fill', resolveColor(group.color) || '#f5f5f5');
   rect.setAttribute('fill-opacity', '0.5');
-  rect.setAttribute('stroke', group.color || '#ddd');
+  rect.setAttribute('stroke', resolveColor(group.color) || '#ddd');
   rect.setAttribute('stroke-width', '1');
   rect.setAttribute('rx', '5');
   rect.setAttribute('ry', '5');
@@ -491,7 +492,7 @@ function renderLifeline(participant, layoutInfo, endY, style = {}) {
   line.setAttribute('y2', endY);
 
   // Apply styling (with defaults)
-  line.setAttribute('stroke', style.color || '#ccc');
+  line.setAttribute('stroke', resolveColor(style.color) || '#ccc');
   line.setAttribute('stroke-width', style.width || 1);
 
   // Apply line style (solid, dashed, dotted)
@@ -524,7 +525,7 @@ function renderActivationBar(barInfo, centerX) {
   rect.setAttribute('y', barInfo.startY);
   rect.setAttribute('width', ACTIVATION_WIDTH);
   rect.setAttribute('height', Math.max(barInfo.endY - barInfo.startY, 5)); // Minimum height 5px
-  rect.setAttribute('fill', barInfo.color);
+  rect.setAttribute('fill', resolveColor(barInfo.color) || '#ffffff');
   rect.setAttribute('stroke', '#333');
   rect.setAttribute('stroke-width', '1');
 

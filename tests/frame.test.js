@@ -156,7 +156,8 @@ A->A:self`;
 
       const frame = svg.querySelector('.diagram-frame');
       const rect = frame.querySelector('rect');
-      expect(rect.getAttribute('stroke')).toBe('#blue');
+      // Named colors are rendered without the # prefix for SVG
+      expect(rect.getAttribute('stroke')).toBe('blue');
       expect(rect.getAttribute('stroke-width')).toBe('3');
       expect(rect.getAttribute('stroke-dasharray')).toBe('5,5');
     });

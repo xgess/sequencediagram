@@ -2,6 +2,7 @@
 // See DESIGN.md for message rendering details
 
 import { renderMarkupText, getLineCount } from '../markup/renderer.js';
+import { resolveColor } from './colors.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -49,7 +50,7 @@ export function renderMessage(node, layoutInfo, messageNumber = null, resolvedSt
 
   // Apply styling (color and width) - use resolved style if provided
   const style = resolvedStyle || node.style || {};
-  line.setAttribute('stroke', style.color || 'black');
+  line.setAttribute('stroke', resolveColor(style.color) || 'black');
   line.setAttribute('stroke-width', style.width !== undefined ? style.width : 1);
 
   // Apply arrow marker based on arrow type

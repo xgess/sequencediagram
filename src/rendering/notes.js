@@ -1,6 +1,8 @@
 // Render notes, boxes, and dividers (BACKLOG-126)
 // See DESIGN.md for note rendering details
 
+import { resolveColor } from './colors.js';
+
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 // Constants for note dimensions
@@ -31,7 +33,7 @@ export function renderNote(node, layoutInfo) {
     connector.setAttribute('y1', connectorY);
     connector.setAttribute('x2', noteEdgeX);
     connector.setAttribute('y2', connectorY);
-    connector.setAttribute('stroke', style.border || '#333');
+    connector.setAttribute('stroke', resolveColor(style.border) || '#333');
     connector.setAttribute('stroke-width', '1');
     connector.setAttribute('class', 'note-connector');
     group.appendChild(connector);
@@ -112,11 +114,13 @@ function renderNoteShape(group, x, y, width, height, style) {
              L ${x + width} ${y + height}
              L ${x} ${y + height} Z`;
   path.setAttribute('d', d);
-  path.setAttribute('fill', style.fill || '#ffffc0');
-  path.setAttribute('stroke', style.border || '#333');
+  path.setAttribute('fill', resolveColor(style.fill) || '#ffffc0');
+  path.setAttribute('stroke', resolveColor(style.border) || '#333');
   path.setAttribute('stroke-width', style.borderWidth || 1);
   if (style.borderStyle === 'dashed') {
     path.setAttribute('stroke-dasharray', '5,5');
+  } else if (style.borderStyle === 'dotted') {
+    path.setAttribute('stroke-dasharray', '2,2');
   }
   group.appendChild(path);
 
@@ -126,7 +130,7 @@ function renderNoteShape(group, x, y, width, height, style) {
                             L ${x + width - cornerSize} ${y + cornerSize}
                             L ${x + width} ${y + cornerSize}`);
   corner.setAttribute('fill', 'none');
-  corner.setAttribute('stroke', style.border || '#333');
+  corner.setAttribute('stroke', resolveColor(style.border) || '#333');
   corner.setAttribute('stroke-width', style.borderWidth || 1);
   group.appendChild(corner);
 }
@@ -140,11 +144,13 @@ function renderBoxShape(group, x, y, width, height, style) {
   rect.setAttribute('y', y);
   rect.setAttribute('width', width);
   rect.setAttribute('height', height);
-  rect.setAttribute('fill', style.fill || '#f8f8f8');
-  rect.setAttribute('stroke', style.border || '#333');
+  rect.setAttribute('fill', resolveColor(style.fill) || '#f8f8f8');
+  rect.setAttribute('stroke', resolveColor(style.border) || '#333');
   rect.setAttribute('stroke-width', style.borderWidth || 1);
   if (style.borderStyle === 'dashed') {
     rect.setAttribute('stroke-dasharray', '5,5');
+  } else if (style.borderStyle === 'dotted') {
+    rect.setAttribute('stroke-dasharray', '2,2');
   }
   group.appendChild(rect);
 }
@@ -162,11 +168,13 @@ function renderAboxShape(group, x, y, width, height, style) {
              L ${x + inset} ${y + height}
              L ${x} ${y + height / 2} Z`;
   path.setAttribute('d', d);
-  path.setAttribute('fill', style.fill || '#f8f8f8');
-  path.setAttribute('stroke', style.border || '#333');
+  path.setAttribute('fill', resolveColor(style.fill) || '#f8f8f8');
+  path.setAttribute('stroke', resolveColor(style.border) || '#333');
   path.setAttribute('stroke-width', style.borderWidth || 1);
   if (style.borderStyle === 'dashed') {
     path.setAttribute('stroke-dasharray', '5,5');
+  } else if (style.borderStyle === 'dotted') {
+    path.setAttribute('stroke-dasharray', '2,2');
   }
   group.appendChild(path);
 }
@@ -182,11 +190,13 @@ function renderRboxShape(group, x, y, width, height, style) {
   rect.setAttribute('height', height);
   rect.setAttribute('rx', 8);
   rect.setAttribute('ry', 8);
-  rect.setAttribute('fill', style.fill || '#f8f8f8');
-  rect.setAttribute('stroke', style.border || '#333');
+  rect.setAttribute('fill', resolveColor(style.fill) || '#f8f8f8');
+  rect.setAttribute('stroke', resolveColor(style.border) || '#333');
   rect.setAttribute('stroke-width', style.borderWidth || 1);
   if (style.borderStyle === 'dashed') {
     rect.setAttribute('stroke-dasharray', '5,5');
+  } else if (style.borderStyle === 'dotted') {
+    rect.setAttribute('stroke-dasharray', '2,2');
   }
   group.appendChild(rect);
 }
@@ -201,8 +211,8 @@ function renderRefShape(group, x, y, width, height, style) {
   rect.setAttribute('y', y);
   rect.setAttribute('width', width);
   rect.setAttribute('height', height);
-  rect.setAttribute('fill', style.fill || '#f0f0f0');
-  rect.setAttribute('stroke', style.border || '#333');
+  rect.setAttribute('fill', resolveColor(style.fill) || '#f0f0f0');
+  rect.setAttribute('stroke', resolveColor(style.border) || '#333');
   rect.setAttribute('stroke-width', style.borderWidth || 1);
   group.appendChild(rect);
 
@@ -212,8 +222,8 @@ function renderRefShape(group, x, y, width, height, style) {
   labelBox.setAttribute('y', y);
   labelBox.setAttribute('width', 25);
   labelBox.setAttribute('height', 16);
-  labelBox.setAttribute('fill', style.fill || '#e8e8e8');
-  labelBox.setAttribute('stroke', style.border || '#333');
+  labelBox.setAttribute('fill', resolveColor(style.fill) || '#e8e8e8');
+  labelBox.setAttribute('stroke', resolveColor(style.border) || '#333');
   group.appendChild(labelBox);
 
   const label = document.createElementNS(SVG_NS, 'text');
@@ -237,11 +247,13 @@ function renderStateShape(group, x, y, width, height, style) {
   rect.setAttribute('height', height);
   rect.setAttribute('rx', 6);
   rect.setAttribute('ry', 6);
-  rect.setAttribute('fill', style.fill || '#e8f4e8');
-  rect.setAttribute('stroke', style.border || '#333');
+  rect.setAttribute('fill', resolveColor(style.fill) || '#e8f4e8');
+  rect.setAttribute('stroke', resolveColor(style.border) || '#333');
   rect.setAttribute('stroke-width', style.borderWidth || 1);
   if (style.borderStyle === 'dashed') {
     rect.setAttribute('stroke-dasharray', '5,5');
+  } else if (style.borderStyle === 'dotted') {
+    rect.setAttribute('stroke-dasharray', '2,2');
   }
   group.appendChild(rect);
 }
@@ -269,7 +281,7 @@ export function renderDivider(node, layoutInfo) {
   leftLine.setAttribute('y1', lineY);
   leftLine.setAttribute('x2', x + width / 2 - 40);
   leftLine.setAttribute('y2', lineY);
-  leftLine.setAttribute('stroke', style.border || '#666');
+  leftLine.setAttribute('stroke', resolveColor(style.border) || '#666');
   leftLine.setAttribute('stroke-width', style.borderWidth || 1);
   leftLine.setAttribute('stroke-dasharray', '4,4');
   group.appendChild(leftLine);
@@ -280,7 +292,7 @@ export function renderDivider(node, layoutInfo) {
   rightLine.setAttribute('y1', lineY);
   rightLine.setAttribute('x2', x + width);
   rightLine.setAttribute('y2', lineY);
-  rightLine.setAttribute('stroke', style.border || '#666');
+  rightLine.setAttribute('stroke', resolveColor(style.border) || '#666');
   rightLine.setAttribute('stroke-width', style.borderWidth || 1);
   rightLine.setAttribute('stroke-dasharray', '4,4');
   group.appendChild(rightLine);
@@ -291,8 +303,8 @@ export function renderDivider(node, layoutInfo) {
   textBox.setAttribute('y', y + 2);
   textBox.setAttribute('width', 76);
   textBox.setAttribute('height', DIVIDER_HEIGHT - 4);
-  textBox.setAttribute('fill', style.fill || '#f8f8f8');
-  textBox.setAttribute('stroke', style.border || '#666');
+  textBox.setAttribute('fill', resolveColor(style.fill) || '#f8f8f8');
+  textBox.setAttribute('stroke', resolveColor(style.border) || '#666');
   textBox.setAttribute('rx', 3);
   textBox.setAttribute('ry', 3);
   group.appendChild(textBox);

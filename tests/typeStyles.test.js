@@ -158,7 +158,8 @@ describe('Type-Based Styles System (BACKLOG-141)', () => {
       const svg = render(ast);
       const messageLine = svg.querySelector('.message line');
       expect(messageLine).toBeDefined();
-      expect(messageLine.getAttribute('stroke')).toBe('#red');
+      // Named colors are rendered without the # prefix for SVG
+      expect(messageLine.getAttribute('stroke')).toBe('red');
     });
 
     it('should apply messagestyle with line width', () => {
@@ -166,7 +167,8 @@ describe('Type-Based Styles System (BACKLOG-141)', () => {
       const svg = render(ast);
       const messageLine = svg.querySelector('.message line');
       expect(messageLine).toBeDefined();
-      expect(messageLine.getAttribute('stroke')).toBe('#blue');
+      // Named colors are rendered without the # prefix for SVG
+      expect(messageLine.getAttribute('stroke')).toBe('blue');
       expect(messageLine.getAttribute('stroke-width')).toBe('3');
     });
 
@@ -176,7 +178,8 @@ describe('Type-Based Styles System (BACKLOG-141)', () => {
       const messageLine = svg.querySelector('.message line');
       expect(messageLine).toBeDefined();
       // Explicit #green should override messagestyle #blue
-      expect(messageLine.getAttribute('stroke')).toBe('#green');
+      // Named colors are rendered without the # prefix for SVG
+      expect(messageLine.getAttribute('stroke')).toBe('green');
     });
 
     it('should apply type styles to multiple messages', () => {
@@ -188,8 +191,9 @@ B->A:Second`);
       const svg = render(ast);
       const messageLines = svg.querySelectorAll('.message line');
       expect(messageLines.length).toBe(2);
-      expect(messageLines[0].getAttribute('stroke')).toBe('#red');
-      expect(messageLines[1].getAttribute('stroke')).toBe('#red');
+      // Named colors are rendered without the # prefix for SVG
+      expect(messageLines[0].getAttribute('stroke')).toBe('red');
+      expect(messageLines[1].getAttribute('stroke')).toBe('red');
     });
   });
 
@@ -205,9 +209,10 @@ A-[##warning]->B:Warning message`);
       const messageLines = svg.querySelectorAll('.message line');
       expect(messageLines.length).toBe(2);
       // First message should use type style
-      expect(messageLines[0].getAttribute('stroke')).toBe('#blue');
+      // Named colors are rendered without the # prefix for SVG
+      expect(messageLines[0].getAttribute('stroke')).toBe('blue');
       // Second message should use named style
-      expect(messageLines[1].getAttribute('stroke')).toBe('#red');
+      expect(messageLines[1].getAttribute('stroke')).toBe('red');
     });
   });
 
