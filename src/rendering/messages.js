@@ -106,7 +106,7 @@ export function renderMessage(node, layoutInfo, messageNumber = null, resolvedSt
     // Each line is 16px (LINE_HEIGHT), and we want bottom of text clearly above arrow
     const lineCount = getLineCount(labelText);
     const lineHeight = 16;
-    const baseOffset = 12; // Distance from arrow to bottom line of text
+    const baseOffset = 4; // Distance from arrow to bottom line of text
     // Position first line, then subsequent lines go down with dy
     // Total text height = (lineCount - 1) * lineHeight
     // We want the LAST line's baseline to be baseOffset above the arrow
