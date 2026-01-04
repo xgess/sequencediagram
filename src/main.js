@@ -217,7 +217,7 @@ DB-->>Alice:OK`;
       'Shift-Tab': function(cm) {
         cm.indentSelection('subtract');
       },
-      // Cmd/Ctrl+Shift+/ toggles comments
+      // Comment toggle - using Cmd-/ and Ctrl-/ directly
       'Cmd-/': function(cm) {
         toggleComment(cm);
       },
