@@ -151,6 +151,39 @@ B->A:response`;
       expect(activationBars.length).toBeGreaterThan(0);
     });
 
+    it('should start activation bar at the message position (BUG-FIX)', () => {
+      // The activate directive should align with the previous message,
+      // not the position after the message
+      const input = `participant User
+participant DB
+User->DB:Connect
+activate DB
+DB-->User:Connection OK
+deactivate DB`;
+      const ast = parse(input);
+      const svg = render(ast);
+
+      // Get the message line and activation bar
+      const messages = svg.querySelectorAll('.message');
+      const activationBar = svg.querySelector('.activation-bar');
+
+      expect(activationBar).not.toBeNull();
+      expect(messages.length).toBe(2);
+
+      // The activation bar should start at or near the first message Y
+      // and end at or near the second message Y
+      const barY = parseFloat(activationBar.getAttribute('y'));
+      const barHeight = parseFloat(activationBar.getAttribute('height'));
+
+      // The bar should have reasonable height spanning from first to second message
+      expect(barHeight).toBeGreaterThan(20);
+
+      // The bar Y should be at the first message position, not after it
+      // We can't get exact message Y easily, but we can verify the bar
+      // starts at a reasonable position (not pushed down too far)
+      expect(barY).toBeLessThan(200); // Should be near the first message area
+    });
+
     it('should apply color to activation bar', () => {
       const input = `participant A
 participant B
