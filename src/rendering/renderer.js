@@ -182,7 +182,9 @@ export function render(ast) {
         }
       }
 
-      const participantEl = renderParticipant(participant, renderLayoutInfo);
+      // Apply type style if no explicit style
+      const participantWithStyle = applyTypeStyle(participant, 'participant', null, typeStyles);
+      const participantEl = renderParticipant(participantWithStyle, renderLayoutInfo);
       if (createMessageId) {
         participantEl.classList.add('created-participant');
       }
@@ -200,7 +202,9 @@ export function render(ast) {
           ...layoutInfo,
           y: height - layoutInfo.height - 10
         };
-        const participantEl = renderParticipant(participant, bottomLayoutInfo);
+        // Apply type style if no explicit style
+        const participantWithStyle = applyTypeStyle(participant, 'participant', null, typeStyles);
+        const participantEl = renderParticipant(participantWithStyle, bottomLayoutInfo);
         participantEl.classList.add('bottom-participant');
         participantsGroup.appendChild(participantEl);
       }
@@ -249,9 +253,11 @@ export function render(ast) {
     if (layoutInfo) {
       // Resolve named style if note has styleName reference
       const resolvedStyle = resolveNoteStyle(note.style, namedStyles);
-      const noteWithStyle = resolvedStyle !== note.style
+      let noteWithStyle = resolvedStyle !== note.style
         ? { ...note, style: resolvedStyle }
         : note;
+      // Apply type style if no explicit style
+      noteWithStyle = applyTypeStyle(noteWithStyle, 'note', note.noteType, typeStyles);
       const noteEl = renderNote(noteWithStyle, layoutInfo);
       notesGroup.appendChild(noteEl);
     }
@@ -263,9 +269,11 @@ export function render(ast) {
     if (layoutInfo) {
       // Resolve named style if divider has styleName reference
       const resolvedStyle = resolveNoteStyle(divider.style, namedStyles);
-      const dividerWithStyle = resolvedStyle !== divider.style
+      let dividerWithStyle = resolvedStyle !== divider.style
         ? { ...divider, style: resolvedStyle }
         : divider;
+      // Apply type style if no explicit style
+      dividerWithStyle = applyTypeStyle(dividerWithStyle, 'divider', null, typeStyles);
       const dividerEl = renderDivider(dividerWithStyle, layoutInfo);
       notesGroup.appendChild(dividerEl);
     }
@@ -677,6 +685,29 @@ function getTypeStyle(elementType, subType, typeStyles) {
   }
 
   return typeStyles.get(styleKey) || null;
+}
+
+/**
+ * Apply type style to an element if it has no explicit style
+ * @param {Object} element - The AST element (participant, note, divider)
+ * @param {string} elementType - The element type ('participant', 'note', 'divider')
+ * @param {string|null} subType - Optional sub-type (e.g., 'box', 'abox' for notes)
+ * @param {Map} typeStyles - Map of type styles
+ * @returns {Object} Element with style applied (or original if already styled)
+ */
+function applyTypeStyle(element, elementType, subType, typeStyles) {
+  // If element already has explicit style, don't override
+  if (element.style && Object.keys(element.style).length > 0) {
+    return element;
+  }
+
+  const typeStyle = getTypeStyle(elementType, subType, typeStyles);
+  if (!typeStyle) {
+    return element;
+  }
+
+  // Apply type style as the element's style
+  return { ...element, style: { ...typeStyle } };
 }
 
 /**

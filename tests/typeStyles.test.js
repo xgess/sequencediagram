@@ -234,4 +234,118 @@ Server->User:Response
       expect(messages.length).toBe(2);
     });
   });
+
+  describe('Type styles for participants (BUG-026)', () => {
+    it('should apply participantstyle fill to participants without explicit style', () => {
+      const ast = parse(`participantstyle #lightgreen
+participant A
+participant B
+A->B:msg`);
+      const svg = render(ast);
+      const participantRects = svg.querySelectorAll('.participant rect');
+      expect(participantRects.length).toBeGreaterThanOrEqual(2);
+      // Named colors are rendered without the # prefix for SVG
+      expect(participantRects[0].getAttribute('fill')).toBe('lightgreen');
+      expect(participantRects[1].getAttribute('fill')).toBe('lightgreen');
+    });
+
+    it('should apply participantstyle border to participants', () => {
+      const ast = parse(`participantstyle #white #blue;2
+participant A
+participant B
+A->B:msg`);
+      const svg = render(ast);
+      const participantRects = svg.querySelectorAll('.participant rect');
+      expect(participantRects.length).toBeGreaterThanOrEqual(2);
+      expect(participantRects[0].getAttribute('stroke')).toBe('blue');
+      expect(participantRects[0].getAttribute('stroke-width')).toBe('2');
+    });
+
+    it('should not override explicit participant style with type style', () => {
+      const ast = parse(`participantstyle #lightgreen
+participant A #red
+participant B
+A->B:msg`);
+      const svg = render(ast);
+      const participantRects = svg.querySelectorAll('.participant rect');
+      // First participant has explicit style, second uses type style
+      expect(participantRects[0].getAttribute('fill')).toBe('red');
+      expect(participantRects[1].getAttribute('fill')).toBe('lightgreen');
+    });
+  });
+
+  describe('Type styles for notes (BUG-026)', () => {
+    it('should apply notestyle fill to notes without explicit style', () => {
+      const ast = parse(`notestyle #lightyellow
+participant A
+A->A:msg
+note over A:Test note`);
+      const svg = render(ast);
+      const notePath = svg.querySelector('.note path');
+      expect(notePath).toBeDefined();
+      // Named colors are rendered without the # prefix for SVG
+      expect(notePath.getAttribute('fill')).toBe('lightyellow');
+    });
+
+    it('should apply notestyle border to notes', () => {
+      const ast = parse(`notestyle #white #red;3
+participant A
+A->A:msg
+note over A:Test note`);
+      const svg = render(ast);
+      const notePath = svg.querySelector('.note path');
+      expect(notePath).toBeDefined();
+      expect(notePath.getAttribute('stroke')).toBe('red');
+      expect(notePath.getAttribute('stroke-width')).toBe('3');
+    });
+
+    it('should apply boxstyle to box notes', () => {
+      const ast = parse(`boxstyle #lightblue
+participant A
+A->A:msg
+box over A:Box note`);
+      const svg = render(ast);
+      const boxRect = svg.querySelector('.note-box rect');
+      expect(boxRect).toBeDefined();
+      expect(boxRect.getAttribute('fill')).toBe('lightblue');
+    });
+
+    it('should not override explicit note style with type style', () => {
+      const ast = parse(`notestyle #lightyellow
+participant A
+A->A:msg
+note over A #red:Styled note`);
+      const svg = render(ast);
+      const notePath = svg.querySelector('.note path');
+      expect(notePath).toBeDefined();
+      // Explicit style should override type style
+      expect(notePath.getAttribute('fill')).toBe('red');
+    });
+  });
+
+  describe('Type styles for dividers (BUG-026)', () => {
+    it('should apply dividerstyle fill to dividers without explicit style', () => {
+      const ast = parse(`dividerstyle #lightgray
+participant A
+A->A:msg
+==Divider==`);
+      const svg = render(ast);
+      const dividerRect = svg.querySelector('.divider rect');
+      expect(dividerRect).toBeDefined();
+      expect(dividerRect.getAttribute('fill')).toBe('lightgray');
+    });
+
+    it('should apply dividerstyle border to dividers', () => {
+      const ast = parse(`dividerstyle #white #blue
+participant A
+A->A:msg
+==Divider==`);
+      const svg = render(ast);
+      const dividerRect = svg.querySelector('.divider rect');
+      const dividerLine = svg.querySelector('.divider line');
+      expect(dividerRect).toBeDefined();
+      expect(dividerRect.getAttribute('stroke')).toBe('blue');
+      expect(dividerLine.getAttribute('stroke')).toBe('blue');
+    });
+  });
 });

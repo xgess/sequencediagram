@@ -197,4 +197,89 @@ Server-[##success]->User:Success response`);
       expect(messages.length).toBe(2);
     });
   });
+
+  describe('Style property mapping consistency (BUG-027)', () => {
+    it('should map fill to stroke color for messages', () => {
+      const ast = parse(`style red #ff0000
+participant A
+participant B
+A-[##red]->B:Colored`);
+      const svg = render(ast);
+      const messageLine = svg.querySelector('.message line');
+      expect(messageLine.getAttribute('stroke')).toBe('#ff0000');
+    });
+
+    it('should map border to stroke color for messages when no fill', () => {
+      const ast = parse(`style bordered #ffffff #0000ff
+participant A
+participant B
+A-[##bordered]->B:Bordered`);
+      const svg = render(ast);
+      const messageLine = svg.querySelector('.message line');
+      // When both fill and border are present, fill is used for message color
+      expect(messageLine.getAttribute('stroke')).toBe('#ffffff');
+    });
+
+    it('should map borderWidth to stroke-width for messages', () => {
+      const ast = parse(`style thick #red;3
+participant A
+participant B
+A-[##thick]->B:Thick`);
+      const svg = render(ast);
+      const messageLine = svg.querySelector('.message line');
+      // borderWidth from named style should be mapped to stroke-width
+      expect(messageLine.getAttribute('stroke-width')).toBe('3');
+    });
+
+    it('should use fill directly for notes', () => {
+      const ast = parse(`style highlight #lightblue
+participant A
+A->A:msg
+note over A ##highlight:Highlighted`);
+      const svg = render(ast);
+      const notePath = svg.querySelector('.note path');
+      expect(notePath.getAttribute('fill')).toBe('lightblue');
+    });
+
+    it('should use border directly for notes', () => {
+      const ast = parse(`style bordered #white #red
+participant A
+A->A:msg
+note over A ##bordered:Bordered`);
+      const svg = render(ast);
+      const notePath = svg.querySelector('.note path');
+      expect(notePath.getAttribute('stroke')).toBe('red');
+    });
+
+    it('should use borderWidth directly for notes', () => {
+      const ast = parse(`style thick #white #blue;3
+participant A
+A->A:msg
+note over A ##thick:Thick border`);
+      const svg = render(ast);
+      const notePath = svg.querySelector('.note path');
+      expect(notePath.getAttribute('stroke-width')).toBe('3');
+    });
+
+    it('should use borderStyle directly for notes', () => {
+      const ast = parse(`style dashed #white #blue;1;dashed
+participant A
+A->A:msg
+note over A ##dashed:Dashed border`);
+      const svg = render(ast);
+      const notePath = svg.querySelector('.note path');
+      expect(notePath.getAttribute('stroke-dasharray')).toBe('5,5');
+    });
+
+    it('should apply named style to dividers', () => {
+      const ast = parse(`style dividerStyle #lightgray #blue;2
+participant A
+A->A:msg
+==My Divider==##dividerStyle`);
+      const svg = render(ast);
+      const dividerRect = svg.querySelector('.divider rect');
+      expect(dividerRect.getAttribute('fill')).toBe('lightgray');
+      expect(dividerRect.getAttribute('stroke')).toBe('blue');
+    });
+  });
 });

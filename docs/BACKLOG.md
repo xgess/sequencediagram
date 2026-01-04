@@ -19,8 +19,19 @@ Remaining work items. See FEATURES.md for what's already implemented.
 
 ### Pending
 - [ ] BUG-021: Note box should expand to fit long text
-- [ ] BUG-022: Textarea resize should expand width, not just height 
+- [ ] BUG-022: Textarea resize should expand width, not just height
 
+---
+
+## Color & Style System Issues (All Fixed)
+
+### Fixed
+
+- [x] **BUG-023**: Named CSS colors (e.g., `#lightblue`) - Fixed by creating `src/rendering/colors.js` with 140+ named colors and `resolveColor()` utility
+- [x] **BUG-024**: `##styleName` on notes/dividers - Fixed by updating parser to detect `##` prefix
+- [x] **BUG-025**: `dotted` border style - Fixed by adding `stroke-dasharray: 2,2` rendering in all elements
+- [x] **BUG-026**: Type styles not applied - Fixed by implementing `applyTypeStyle()` for participants, notes, and dividers
+- [x] **BUG-027**: Named style property mapping - Verified correct: messages map `fill->color`, `borderWidth->width`; notes/dividers use properties directly
 
 ---
 
@@ -76,5 +87,5 @@ Ideas for future work (not committed):
 ## Notes
 
 - All syntax compatible with sequencediagram.org/instructions.html
-- 1377 tests passing across 37 test files
+- 1419 tests passing across 37 test files
 - 25 example files demonstrating features
