@@ -118,6 +118,11 @@ function indentStr(level) {
 function serializeParticipant(node) {
   let output = node.participantType;
 
+  // Image participants need the image data URL
+  if (node.imageData) {
+    output += ` ${node.imageData}`;
+  }
+
   // Font Awesome icon types need the icon code
   if (node.iconCode) {
     output += ` ${node.iconCode}`;

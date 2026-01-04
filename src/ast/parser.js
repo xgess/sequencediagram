@@ -956,6 +956,47 @@ function parseFragment(lines, startLine, ast) {
  * @returns {Object|null} Participant AST node or null
  */
 function parseParticipant(line, lineNumber) {
+  // Try image participant with quoted display name:
+  // image data:image/png;base64,... "Display Name" as Alias [styling]
+  const imageQuotedMatch = line.match(/^image\s+(data:image\/[^;]+;base64,[A-Za-z0-9+/=]+)\s+"((?:[^"\\]|\\.)*)"\s+as\s+([^\s#]+)(.*)$/);
+  if (imageQuotedMatch) {
+    const [, imageData, displayNameRaw, alias, styleStr] = imageQuotedMatch;
+    const displayName = unescapeString(displayNameRaw);
+    const style = parseParticipantStyle(styleStr.trim());
+
+    return {
+      id: generateId('participant'),
+      type: 'participant',
+      participantType: 'image',
+      imageData,
+      alias,
+      displayName,
+      style,
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
+  }
+
+  // Try image participant simple syntax:
+  // image data:image/png;base64,... Name [styling]
+  const imageMatch = line.match(/^image\s+(data:image\/[^;]+;base64,[A-Za-z0-9+/=]+)\s+([^\s#]+)(.*)$/);
+  if (imageMatch) {
+    const [, imageData, name, styleStr] = imageMatch;
+    const style = parseParticipantStyle(styleStr.trim());
+
+    return {
+      id: generateId('participant'),
+      type: 'participant',
+      participantType: 'image',
+      imageData,
+      alias: name,
+      displayName: name,
+      style,
+      sourceLineStart: lineNumber,
+      sourceLineEnd: lineNumber
+    };
+  }
+
   // Try icon participant types with quoted display name:
   // fontawesome6solid f48e "Display Name" as Alias [styling]
   // materialdesignicons F01C9 "Display Name" as Alias [styling]

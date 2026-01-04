@@ -44,6 +44,9 @@ export function renderParticipant(node, layoutInfo) {
     case 'materialdesignicons':
       renderMaterialDesignIcon(group, node, layoutInfo);
       break;
+    case 'image':
+      renderImageParticipant(group, node, layoutInfo);
+      break;
     default:
       renderBox(group, node, layoutInfo);
   }
@@ -566,4 +569,40 @@ function renderMaterialDesignIcon(group, node, layoutInfo) {
   mdiLabel.setAttribute('font-size', '12');
   mdiLabel.textContent = node.displayName;
   group.appendChild(mdiLabel);
+}
+
+/**
+ * Render an image participant
+ * Uses a data URL (base64 encoded PNG/JPG/etc.)
+ */
+function renderImageParticipant(group, node, layoutInfo) {
+  const { x, y, width, height } = layoutInfo;
+
+  const centerX = x + width / 2;
+  const imageY = y + 4;
+  // Calculate image size to fit within participant height (leave room for label)
+  const maxImageHeight = height - 20; // 20px for label below
+  const maxImageWidth = width - 8;
+  // Use the smaller dimension to maintain aspect ratio
+  const imageSize = Math.min(maxImageHeight, maxImageWidth, 40);
+
+  // Render the image
+  const image = document.createElementNS(SVG_NS, 'image');
+  image.setAttribute('x', centerX - imageSize / 2);
+  image.setAttribute('y', imageY);
+  image.setAttribute('width', imageSize);
+  image.setAttribute('height', imageSize);
+  image.setAttributeNS('http://www.w3.org/1999/xlink', 'href', node.imageData);
+  image.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  group.appendChild(image);
+
+  // Add text label below image
+  const text = document.createElementNS(SVG_NS, 'text');
+  text.setAttribute('x', centerX);
+  text.setAttribute('y', y + height - 4);
+  text.setAttribute('text-anchor', 'middle');
+  text.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, sans-serif');
+  text.setAttribute('font-size', '12');
+  text.textContent = node.displayName;
+  group.appendChild(text);
 }

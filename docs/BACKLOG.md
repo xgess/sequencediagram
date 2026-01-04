@@ -19,27 +19,11 @@ Remaining work items. See FEATURES.md for what's already implemented.
 - [x] BUG-029: Database participant styling issues - Fixed all 4 issues (dashed borders, fill, compact icon, label below)
 - [x] BUG-031: Selection highlighting is ugly - Fixed by using addLineClass for full-line background
 - [x] BUG-032: Messages to/from unknown participants go off-screen - Fixed by showing error indicator
+- [x] FEATURE-001: Image participants - Added `image data:image/...;base64,... Name` syntax
 
 ### Pending
 - [ ] BUG-021: Note box should expand to fit long text
 - [ ] BUG-022: Textarea resize should expand width, not just height
-
----
-
-## FEATURE-001: Image Participants
-
-Support for custom PNG images as participant icons:
-
-```
-image data:image/png;base64,... Name
-```
-
-Per sequencediagram.org:
-- Maximum data URL size is 50KB
-- Rendered size is calculated based on maximum participant height
-- Add padding in the top of the image to decrease rendered width and total size
-
-**Note**: Icon participants (`fontawesome6solid`, `fontawesome6regular`, `fontawesome6brands`, `materialdesignicons`) are already implemented.
 
 ---
 
