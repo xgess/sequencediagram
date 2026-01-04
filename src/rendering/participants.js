@@ -348,64 +348,95 @@ function renderDatabase(group, node, layoutInfo) {
   const stroke = resolveColor(style.border) || 'black';
   const strokeWidth = style.borderWidth !== undefined ? style.borderWidth : 1;
 
-  const ellipseRx = width / 2;
-  const ellipseRy = 8;
-  const centerX = x + width / 2;
-  const bodyHeight = height - ellipseRy * 2;
+  // Build stroke-dasharray for dashed/dotted borders
+  let strokeDasharray = null;
+  if (style.borderStyle === 'dashed') {
+    strokeDasharray = '5,5';
+  } else if (style.borderStyle === 'dotted') {
+    strokeDasharray = '2,2';
+  }
 
-  // Background rectangle (body of cylinder)
+  // Make database icon more compact - use fixed width, not full participant width
+  const dbWidth = 40;
+  const ellipseRx = dbWidth / 2;
+  const ellipseRy = 6;
+  const centerX = x + width / 2;
+  const dbHeight = 30; // Fixed height for the cylinder body
+  const dbY = y + 8; // Start position for the database icon
+
+  // Background rectangle (body of cylinder) - with fill
   const body = document.createElementNS(SVG_NS, 'rect');
-  body.setAttribute('x', x);
-  body.setAttribute('y', y + ellipseRy);
-  body.setAttribute('width', width);
-  body.setAttribute('height', bodyHeight);
+  body.setAttribute('x', centerX - ellipseRx);
+  body.setAttribute('y', dbY + ellipseRy);
+  body.setAttribute('width', dbWidth);
+  body.setAttribute('height', dbHeight);
   body.setAttribute('fill', fill);
   body.setAttribute('stroke', 'none');
   group.appendChild(body);
 
   // Left edge
   const leftEdge = document.createElementNS(SVG_NS, 'line');
-  leftEdge.setAttribute('x1', x);
-  leftEdge.setAttribute('y1', y + ellipseRy);
-  leftEdge.setAttribute('x2', x);
-  leftEdge.setAttribute('y2', y + ellipseRy + bodyHeight);
+  leftEdge.setAttribute('x1', centerX - ellipseRx);
+  leftEdge.setAttribute('y1', dbY + ellipseRy);
+  leftEdge.setAttribute('x2', centerX - ellipseRx);
+  leftEdge.setAttribute('y2', dbY + ellipseRy + dbHeight);
   leftEdge.setAttribute('stroke', stroke);
   leftEdge.setAttribute('stroke-width', strokeWidth);
+  if (strokeDasharray) leftEdge.setAttribute('stroke-dasharray', strokeDasharray);
   group.appendChild(leftEdge);
 
   // Right edge
   const rightEdge = document.createElementNS(SVG_NS, 'line');
-  rightEdge.setAttribute('x1', x + width);
-  rightEdge.setAttribute('y1', y + ellipseRy);
-  rightEdge.setAttribute('x2', x + width);
-  rightEdge.setAttribute('y2', y + ellipseRy + bodyHeight);
+  rightEdge.setAttribute('x1', centerX + ellipseRx);
+  rightEdge.setAttribute('y1', dbY + ellipseRy);
+  rightEdge.setAttribute('x2', centerX + ellipseRx);
+  rightEdge.setAttribute('y2', dbY + ellipseRy + dbHeight);
   rightEdge.setAttribute('stroke', stroke);
   rightEdge.setAttribute('stroke-width', strokeWidth);
+  if (strokeDasharray) rightEdge.setAttribute('stroke-dasharray', strokeDasharray);
   group.appendChild(rightEdge);
 
-  // Top ellipse
+  // Bottom ellipse - full ellipse with fill (drawn first, behind the arc stroke)
+  const bottomEllipseFill = document.createElementNS(SVG_NS, 'ellipse');
+  const bottomY = dbY + ellipseRy + dbHeight;
+  bottomEllipseFill.setAttribute('cx', centerX);
+  bottomEllipseFill.setAttribute('cy', bottomY);
+  bottomEllipseFill.setAttribute('rx', ellipseRx);
+  bottomEllipseFill.setAttribute('ry', ellipseRy);
+  bottomEllipseFill.setAttribute('fill', fill);
+  bottomEllipseFill.setAttribute('stroke', 'none');
+  group.appendChild(bottomEllipseFill);
+
+  // Bottom ellipse - visible arc (bottom half only)
+  const bottomEllipse = document.createElementNS(SVG_NS, 'path');
+  bottomEllipse.setAttribute('d', `M ${centerX - ellipseRx} ${bottomY} A ${ellipseRx} ${ellipseRy} 0 0 0 ${centerX + ellipseRx} ${bottomY}`);
+  bottomEllipse.setAttribute('fill', 'none');
+  bottomEllipse.setAttribute('stroke', stroke);
+  bottomEllipse.setAttribute('stroke-width', strokeWidth);
+  if (strokeDasharray) bottomEllipse.setAttribute('stroke-dasharray', strokeDasharray);
+  group.appendChild(bottomEllipse);
+
+  // Top ellipse (drawn last so it's on top)
   const topEllipse = document.createElementNS(SVG_NS, 'ellipse');
   topEllipse.setAttribute('cx', centerX);
-  topEllipse.setAttribute('cy', y + ellipseRy);
+  topEllipse.setAttribute('cy', dbY + ellipseRy);
   topEllipse.setAttribute('rx', ellipseRx);
   topEllipse.setAttribute('ry', ellipseRy);
   topEllipse.setAttribute('fill', fill);
   topEllipse.setAttribute('stroke', stroke);
   topEllipse.setAttribute('stroke-width', strokeWidth);
+  if (strokeDasharray) topEllipse.setAttribute('stroke-dasharray', strokeDasharray);
   group.appendChild(topEllipse);
 
-  // Bottom ellipse (half visible)
-  const bottomEllipse = document.createElementNS(SVG_NS, 'path');
-  const bottomY = y + height - ellipseRy;
-  // Draw only the bottom half of the ellipse
-  bottomEllipse.setAttribute('d', `M ${x} ${bottomY} A ${ellipseRx} ${ellipseRy} 0 0 0 ${x + width} ${bottomY}`);
-  bottomEllipse.setAttribute('fill', 'none');
-  bottomEllipse.setAttribute('stroke', stroke);
-  bottomEllipse.setAttribute('stroke-width', strokeWidth);
-  group.appendChild(bottomEllipse);
-
-  // Add text label in center
-  addTextLabel(group, node.displayName, centerX, y, height);
+  // Add text label BELOW the icon (not centered inside)
+  const text = document.createElementNS(SVG_NS, 'text');
+  text.setAttribute('x', centerX);
+  text.setAttribute('y', y + height - 4);
+  text.setAttribute('text-anchor', 'middle');
+  text.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, sans-serif');
+  text.setAttribute('font-size', '12');
+  text.textContent = node.displayName;
+  group.appendChild(text);
 }
 
 /**

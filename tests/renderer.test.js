@@ -370,10 +370,104 @@ describe('Renderer', () => {
       const ast = parse('database DB #yellow #blue');
       const svg = render(ast);
 
-      const ellipse = svg.querySelector('.participant ellipse');
+      // Get all ellipses - there's a bottom fill ellipse and a top styled ellipse
+      const ellipses = svg.querySelectorAll('.participant ellipse');
+      // The top ellipse (last one) should have the stroke
+      const topEllipse = ellipses[ellipses.length - 1];
       // Named colors are resolved without the # prefix for SVG
-      expect(ellipse.getAttribute('fill')).toBe('yellow');
-      expect(ellipse.getAttribute('stroke')).toBe('blue');
+      expect(topEllipse.getAttribute('fill')).toBe('yellow');
+      expect(topEllipse.getAttribute('stroke')).toBe('blue');
+    });
+
+    it('should render database with dashed border style', () => {
+      const ast = parse('database DB #white #black;2;dashed');
+      const svg = render(ast);
+
+      // Check that the top ellipse has dashed stroke
+      const ellipses = svg.querySelectorAll('.participant ellipse');
+      const topEllipse = ellipses[ellipses.length - 1];
+      expect(topEllipse.getAttribute('stroke-dasharray')).toBe('5,5');
+
+      // Check that edge lines also have dashed stroke
+      const lines = svg.querySelectorAll('.participant line');
+      expect(lines.length).toBeGreaterThan(0);
+      expect(lines[0].getAttribute('stroke-dasharray')).toBe('5,5');
+    });
+
+    it('should render database with label below icon', () => {
+      const ast = parse('database MyDB');
+      const svg = render(ast);
+
+      const participant = svg.querySelector('.participant');
+      const text = participant.querySelector('text');
+      const topEllipse = participant.querySelectorAll('ellipse')[1]; // top ellipse
+
+      // Label Y should be below the database icon
+      const textY = parseFloat(text.getAttribute('y'));
+      const ellipseY = parseFloat(topEllipse.getAttribute('cy'));
+      expect(textY).toBeGreaterThan(ellipseY);
+    });
+
+    it('should render compact database icon', () => {
+      const ast = parse('database DB');
+      const svg = render(ast);
+
+      const topEllipse = svg.querySelectorAll('.participant ellipse')[1];
+      const rx = parseFloat(topEllipse.getAttribute('rx'));
+      // Database should be compact (rx = 20, not 50 which was half of 100px width)
+      expect(rx).toBeLessThanOrEqual(25);
+    });
+  });
+
+  describe('unknown participant errors (BUG-032)', () => {
+    it('should render error indicator for unknown source participant', () => {
+      const ast = parse('participant Alice\nUnknown->Alice:Hello');
+      const svg = render(ast);
+
+      // Should have message-error class
+      const errorMessage = svg.querySelector('.message-error');
+      expect(errorMessage).not.toBeNull();
+
+      // Should contain error text mentioning the unknown participant
+      const text = errorMessage.querySelector('text');
+      expect(text).not.toBeNull();
+      expect(text.textContent).toContain('Unknown');
+    });
+
+    it('should render error indicator for unknown target participant', () => {
+      const ast = parse('participant Alice\nAlice->Unknown:Hello');
+      const svg = render(ast);
+
+      const errorMessage = svg.querySelector('.message-error');
+      expect(errorMessage).not.toBeNull();
+
+      const text = errorMessage.querySelector('text');
+      expect(text.textContent).toContain('Unknown');
+    });
+
+    it('should render error indicator for both unknown participants', () => {
+      const ast = parse('participant Alice\nUnknownA->UnknownB:Hello');
+      const svg = render(ast);
+
+      const errorMessage = svg.querySelector('.message-error');
+      expect(errorMessage).not.toBeNull();
+
+      const text = errorMessage.querySelector('text');
+      expect(text.textContent).toContain('UnknownA');
+      expect(text.textContent).toContain('UnknownB');
+    });
+
+    it('should render normal message when participants exist', () => {
+      const ast = parse('participant Alice\nparticipant Bob\nAlice->Bob:Hello');
+      const svg = render(ast);
+
+      // Should not have message-error class
+      const errorMessage = svg.querySelector('.message-error');
+      expect(errorMessage).toBeNull();
+
+      // Should have normal message
+      const message = svg.querySelector('.message');
+      expect(message).not.toBeNull();
     });
   });
 
