@@ -523,6 +523,47 @@ describe('Note and Box Styling (BACKLOG-127)', () => {
     });
   });
 
+  describe('Named style references (##styleName)', () => {
+    it('should parse note with named style reference', () => {
+      const ast = parse('style warning #yellow #red\nparticipant A\nnote over A ##warning:Alert!');
+      const note = ast.find(n => n.type === 'note');
+      expect(note.style).toBeDefined();
+      expect(note.style.styleName).toBe('warning');
+      expect(note.style.fill).toBeUndefined();
+    });
+
+    it('should parse divider with named style reference', () => {
+      const ast = parse('style warning #yellow #red\nparticipant A\n==Break==##warning');
+      const divider = ast.find(n => n.type === 'divider');
+      expect(divider.style).toBeDefined();
+      expect(divider.style.styleName).toBe('warning');
+    });
+
+    it('should render note with resolved named style', () => {
+      const ast = parse('style highlight #ff0000 #0000ff\nparticipant A\nnote over A ##highlight:Important');
+      const svg = render(ast);
+      const noteShape = svg.querySelector('.note path');
+      // Named style should resolve to the defined colors
+      expect(noteShape.getAttribute('fill')).toBe('#ff0000');
+      expect(noteShape.getAttribute('stroke')).toBe('#0000ff');
+    });
+
+    it('should render divider with resolved named style', () => {
+      const ast = parse('style info #00ff00\nparticipant A\n==Info==##info');
+      const svg = render(ast);
+      const dividerBox = svg.querySelector('.divider rect');
+      expect(dividerBox.getAttribute('fill')).toBe('#00ff00');
+    });
+
+    it('should use defaults when named style not found', () => {
+      const ast = parse('participant A\nnote over A ##nonexistent:Test');
+      const svg = render(ast);
+      const noteShape = svg.querySelector('.note path');
+      // Should fall back to default note styling
+      expect(noteShape.getAttribute('fill')).toBe('#ffffc0');
+    });
+  });
+
   describe('Note positioning edge cases', () => {
     it('should expand viewBox for note left of leftmost participant', () => {
       const ast = parse('participant Alice\nnote left of Alice:This is a note that should be visible');

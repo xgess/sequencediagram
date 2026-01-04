@@ -247,7 +247,12 @@ export function render(ast) {
   notes.forEach(note => {
     const layoutInfo = layout.get(note.id);
     if (layoutInfo) {
-      const noteEl = renderNote(note, layoutInfo);
+      // Resolve named style if note has styleName reference
+      const resolvedStyle = resolveNoteStyle(note.style, namedStyles);
+      const noteWithStyle = resolvedStyle !== note.style
+        ? { ...note, style: resolvedStyle }
+        : note;
+      const noteEl = renderNote(noteWithStyle, layoutInfo);
       notesGroup.appendChild(noteEl);
     }
   });
@@ -256,7 +261,12 @@ export function render(ast) {
   dividers.forEach(divider => {
     const layoutInfo = layout.get(divider.id);
     if (layoutInfo) {
-      const dividerEl = renderDivider(divider, layoutInfo);
+      // Resolve named style if divider has styleName reference
+      const resolvedStyle = resolveNoteStyle(divider.style, namedStyles);
+      const dividerWithStyle = resolvedStyle !== divider.style
+        ? { ...divider, style: resolvedStyle }
+        : divider;
+      const dividerEl = renderDivider(dividerWithStyle, layoutInfo);
       notesGroup.appendChild(dividerEl);
     }
   });
@@ -713,6 +723,35 @@ function resolveStyle(style, namedStyles) {
     }
     // If named style not found, return original style without styleName
     return { ...style, styleName: undefined };
+  }
+
+  return style;
+}
+
+/**
+ * Resolve a named style reference for notes/dividers
+ * Unlike messages, notes use fill/border directly
+ * @param {Object} style - Style object (may have styleName)
+ * @param {Map} namedStyles - Map of named styles
+ * @returns {Object} Resolved style object
+ */
+function resolveNoteStyle(style, namedStyles) {
+  if (!style) return null;
+
+  // If there's a styleName reference, look it up
+  if (style.styleName) {
+    const namedStyle = namedStyles.get(style.styleName);
+    if (namedStyle) {
+      // For notes, use fill/border directly from named style
+      const resolved = {};
+      if (namedStyle.fill) resolved.fill = namedStyle.fill;
+      if (namedStyle.border) resolved.border = namedStyle.border;
+      if (namedStyle.borderWidth !== undefined) resolved.borderWidth = namedStyle.borderWidth;
+      if (namedStyle.borderStyle) resolved.borderStyle = namedStyle.borderStyle;
+      return resolved;
+    }
+    // If named style not found, return null (use defaults)
+    return null;
   }
 
   return style;

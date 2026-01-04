@@ -1413,7 +1413,7 @@ function parseNote(line, lineNumber) {
 
 /**
  * Parse note/divider styling string
- * Syntax: #fill #border;width;style
+ * Syntax: ##styleName | #fill #border;width;style
  * @param {string} styleStr - Style string
  * @returns {Object|null} Style object or null
  */
@@ -1421,6 +1421,13 @@ function parseNoteStyle(styleStr) {
   if (!styleStr) return null;
 
   const style = {};
+
+  // Check for named style reference (##styleName)
+  const namedStyleMatch = styleStr.match(/^##([^\s#;]+)/);
+  if (namedStyleMatch) {
+    style.styleName = namedStyleMatch[1];
+    return style;
+  }
 
   // Match fill color
   const fillMatch = styleStr.match(/(#[^\s#;]+)/);
