@@ -1,0 +1,67 @@
+// E-Commerce Checkout Flow
+// Demonstrates activations, fragments, notes, and styling
+
+title E-Commerce Checkout
+
+// Participant styling
+participantstyle #f0f8ff #336699;2
+notestyle #fffacd #cc9900
+
+// Define participants
+actor Customer #e6ffe6 #228b22
+participant "Web App" as App
+participant "Cart Service" as Cart
+database "Orders DB" as DB #ffe4e1 #cd5c5c;2
+
+// Shopping flow begins
+Customer->App: View cart
+activate App
+App->Cart: getCartItems(userId)
+activate Cart #lightblue
+Cart-->App: items[]
+deactivate Cart
+App-->Customer: Display cart
+deactivate App
+
+space 1
+
+// Checkout process
+Customer->App: Proceed to checkout
+activate App #lightyellow
+
+note right of App: Validate cart before payment
+
+App->Cart: validateCart()
+activate Cart #lightblue
+Cart->DB: checkInventory()
+activate DB
+DB-->Cart: inventoryStatus
+deactivate DB
+Cart-->App: validationResult
+deactivate Cart
+
+alt Valid Cart
+  App-->Customer: Show payment form
+  Customer->App: Submit payment
+  App->Cart: processOrder()
+  Cart->DB: createOrder()
+  DB-->Cart: orderId
+  Cart-->App: orderConfirmation
+  App-->Customer: Order confirmed!
+else Invalid Cart
+  App-[#red]->Customer: Error: Items unavailable
+else Payment Failed
+  App-[#orange]->Customer: Payment declined
+  Customer->App: Try different card
+end
+
+deactivate App
+
+== Order Complete ==
+
+note over Customer: Check email for receipt
+
+// Post-order background task
+loop Every 30 minutes
+  Cart->DB: syncInventory()
+end
