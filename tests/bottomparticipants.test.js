@@ -77,26 +77,24 @@ A->A:msg`;
       expect(lifelineY2).toBeGreaterThan(0);
     });
 
-    it('should render lifelines shorter with bottom participants', () => {
-      const input1 = `participant A
-A->A:msg`;
-      const input2 = `bottomparticipants
+    it('should render lifelines that end above the bottom participant boxes', () => {
+      const input = `bottomparticipants
 participant A
 A->A:msg`;
 
-      const ast1 = parse(input1);
-      const ast2 = parse(input2);
-      const svg1 = render(ast1);
-      const svg2 = render(ast2);
+      const ast = parse(input);
+      const svg = render(ast);
 
-      const lifeline1 = svg1.querySelector('.lifeline');
-      const lifeline2 = svg2.querySelector('.lifeline');
+      // Get lifeline end Y position
+      const lifeline = svg.querySelector('.lifeline');
+      const lifelineY2 = parseFloat(lifeline.getAttribute('y2'));
 
-      const y2_1 = parseFloat(lifeline1.getAttribute('y2'));
-      const y2_2 = parseFloat(lifeline2.getAttribute('y2'));
+      // Get bottom participant Y position
+      const bottomParticipant = svg.querySelector('.bottom-participant rect');
+      const bottomParticipantY = parseFloat(bottomParticipant.getAttribute('y'));
 
-      // Bottom participants version should have shorter lifelines
-      expect(y2_2).toBeLessThan(y2_1);
+      // Lifeline should end above the bottom participant (with some margin)
+      expect(lifelineY2).toBeLessThan(bottomParticipantY);
     });
   });
 

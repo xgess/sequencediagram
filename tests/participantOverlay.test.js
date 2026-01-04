@@ -50,10 +50,10 @@ describe('Participant Overlay on Scroll (BACKLOG-113)', () => {
       expect(overlay.style.display).toBe('none');
     });
 
-    it('should be enabled by default', () => {
+    it('should be disabled by default (feature has bugs)', () => {
       initParticipantOverlay(diagramPane);
 
-      expect(getOverlayEnabled()).toBe(true);
+      expect(getOverlayEnabled()).toBe(false);
     });
   });
 

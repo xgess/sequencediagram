@@ -125,7 +125,8 @@ export function render(ast) {
   });
 
   // Calculate lifeline end position based on bottomparticipants directive
-  const lifelineEndY = bottomParticipantsDirective ? height - 70 : height - 20;
+  // With bottomparticipants, lifelines end above the bottom participant boxes (which are 60px tall + 10px margin)
+  const lifelineEndY = bottomParticipantsDirective ? height - 80 : height - 20;
 
   // Render lifelines (behind messages but above fragments)
   participants.forEach(participant => {

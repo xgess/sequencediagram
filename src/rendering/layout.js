@@ -400,8 +400,12 @@ export function calculateLayout(ast) {
     }
   }
 
+  // Check for bottomparticipants directive - need extra height for bottom participant boxes
+  const bottomParticipantsDirective = ast.find(n => n.type === 'directive' && n.directiveType === 'bottomparticipants');
+  const bottomParticipantsHeight = bottomParticipantsDirective ? PARTICIPANT_HEIGHT + 10 : 0;
+
   // Calculate total height
-  const totalHeight = currentY + MARGIN;
+  const totalHeight = currentY + MARGIN + bottomParticipantsHeight;
 
   return {
     layout,

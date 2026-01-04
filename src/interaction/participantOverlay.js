@@ -4,7 +4,7 @@
 let diagramPane = null;
 let overlayContainer = null;
 let isOverlayVisible = false;
-let isOverlayEnabled = true;
+let isOverlayEnabled = false; // Disabled by default - feature has bugs with non-rect participants
 let participantData = []; // Array of {alias, displayName, x, width}
 
 /**
