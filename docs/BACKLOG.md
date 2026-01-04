@@ -11,6 +11,16 @@ Remaining work items. See FEATURES.md for what's already implemented.
 
 
 ### Fixed
+- [x] BUG-033: Actor/database participant label overlaps icon - Fixed by adjusting text Y position
+- [x] BUG-034: First message text is positioned too high - Fixed by reducing baseOffset from 12 to 6
+- [x] BUG-035: Activate aligns to next element instead of previous message - Fixed by tracking lastMessageY
+- [x] BUG-036: Deactivate ends too late - Fixed by using lastMessageY for deactivate positioning
+- [x] BUG-037: Fragment header overlaps message text - Fixed by increasing FRAGMENT_HEADER_HEIGHT and ELSE_LABEL_HEIGHT
+- [x] BUG-038: Adjacent fragments have no spacing - Fixed by adding FRAGMENT_MARGIN after fragments
+- [x] BUG-039: Cmd+/ comment toggle not working - Fixed by using event.code in addition to event.key
+- [x] BUG-040: FontAwesome icons don't render - Fixed by updating font family to "Font Awesome 7"
+
+### Previously Fixed
 - [x] BUG-016: Zooming moves diagram off to the right/out of screen - Fixed by wrapping SVG in scrollable container
 - [x] BUG-017: "note right of alice" attaches to wrong participant - Fixed by positioning relative to lifeline (centerX)
 - [x] BUG-018: Double-click edit should be multiline - Already fixed by BUG-012
