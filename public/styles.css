@@ -92,8 +92,7 @@ body {
 
 /* Selection highlight for diagram-to-editor sync */
 .cm-selection-highlight {
-  background-color: rgba(74, 144, 217, 0.2);
-  border-left: 3px solid #4a90d9;
+  background-color: rgba(74, 144, 217, 0.2) !important;
 }
 
 /* Syntax Highlighting Colors */

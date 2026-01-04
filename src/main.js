@@ -568,8 +568,8 @@ export function clearCommandHistory() {
   commandHistory.clear();
 }
 
-// Line highlight marker in CodeMirror
-let lineHighlightMarker = null;
+// Highlighted line numbers in CodeMirror (0-indexed)
+let highlightedLines = [];
 
 /**
  * Handle selection change callback
@@ -607,12 +607,11 @@ function highlightSourceLines(startLine, endLine) {
   const start = startLine - 1;
   const end = endLine - 1;
 
-  // Mark the lines
-  lineHighlightMarker = editor.markText(
-    { line: start, ch: 0 },
-    { line: end, ch: editor.getLine(end)?.length || 0 },
-    { className: 'cm-selection-highlight' }
-  );
+  // Use addLineClass for full-line background highlighting
+  for (let i = start; i <= end; i++) {
+    editor.addLineClass(i, 'background', 'cm-selection-highlight');
+    highlightedLines.push(i);
+  }
 
   // Scroll the start line into view
   editor.scrollIntoView({ line: start, ch: 0 }, 100);
@@ -622,10 +621,10 @@ function highlightSourceLines(startLine, endLine) {
  * Clear line highlight in CodeMirror
  */
 function clearLineHighlight() {
-  if (lineHighlightMarker) {
-    lineHighlightMarker.clear();
-    lineHighlightMarker = null;
+  for (const lineNum of highlightedLines) {
+    editor.removeLineClass(lineNum, 'background', 'cm-selection-highlight');
   }
+  highlightedLines = [];
 }
 
 /**
