@@ -2,6 +2,8 @@
 // See DESIGN.md for participant rendering details
 
 import { resolveColor } from './colors.js';
+import { renderMarkupText } from '../markup/renderer.js';
+import { hasMarkup } from '../markup/parser.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -444,8 +446,24 @@ function renderDatabase(group, node, layoutInfo) {
 
 /**
  * Add text label to participant group
+ * Supports markup like ""monospace"", **bold**, etc.
  */
 function addTextLabel(group, displayName, centerX, y, height) {
+  // Use markup renderer if text contains markup
+  if (hasMarkup(displayName)) {
+    const textEl = renderMarkupText(displayName, {
+      x: centerX,
+      y: y + height / 2,
+      textAnchor: 'middle',
+      fontSize: '12'
+    });
+    // Set dominant-baseline for vertical centering
+    textEl.setAttribute('dominant-baseline', 'middle');
+    group.appendChild(textEl);
+    return;
+  }
+
+  // Simple text rendering (no markup)
   const text = document.createElementNS(SVG_NS, 'text');
   text.setAttribute('x', centerX);
   text.setAttribute('text-anchor', 'middle');

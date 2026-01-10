@@ -277,4 +277,31 @@ Model->DB:fetch`;
       expect(ellipse.getAttribute('fill')).toBe('lightyellow');
     });
   });
+
+  describe('Participant display name with markup', () => {
+    it('should render monospace text with ""mono"" markup', () => {
+      // Use escaped quotes: \"\" represents "" in the display name
+      const ast = parse('participant "Server \\"\\"API\\"\\""  as API\nAPI->API:test');
+      const svg = render(ast);
+      // Find the tspan with monospace font (there may be multiple tspans)
+      const tspans = svg.querySelectorAll('.participant tspan');
+      const monoTspan = Array.from(tspans).find(t => t.getAttribute('font-family') === 'monospace');
+      expect(monoTspan).toBeDefined();
+      expect(monoTspan.textContent).toBe('API');
+    });
+
+    it('should render bold text with **bold** markup', () => {
+      const ast = parse('participant "**Important**" as A\nA->A:test');
+      const svg = render(ast);
+      const tspan = svg.querySelector('.participant tspan');
+      expect(tspan.getAttribute('font-weight')).toBe('bold');
+    });
+
+    it('should render colored text with <color:#red>text</color> markup', () => {
+      const ast = parse('participant "<color:#ff0000>Red</color>" as R\nR->R:test');
+      const svg = render(ast);
+      const tspan = svg.querySelector('.participant tspan');
+      expect(tspan.getAttribute('fill')).toBe('#ff0000');
+    });
+  });
 });
