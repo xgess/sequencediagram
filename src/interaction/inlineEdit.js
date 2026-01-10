@@ -56,6 +56,10 @@ export function showInlineEdit(svgElement, nodeId, currentValue, onComplete) {
   okBtn.addEventListener('click', handleOk);
   cancelBtn.addEventListener('click', handleCancel);
   input.addEventListener('keydown', handleKeydown);
+  input.addEventListener('input', autoResizeTextarea);
+
+  // Initial auto-resize to fit content
+  autoResizeTextarea({ target: input });
 
   // Focus and select input
   input.focus();
@@ -194,6 +198,27 @@ function handleCancel() {
 
   hideInlineEdit();
   callback(nodeId, null);
+}
+
+/**
+ * Auto-resize textarea to fit content
+ * @param {Event} event - Input event
+ */
+function autoResizeTextarea(event) {
+  const textarea = event.target;
+  if (textarea.tagName !== 'TEXTAREA') return;
+
+  // Calculate width based on longest line
+  const lines = textarea.value.split('\n');
+  const maxLineLength = Math.max(...lines.map(l => l.length), 20);
+  const charWidth = 8; // Approximate character width for 14px font
+  const newWidth = Math.max(200, Math.min(500, maxLineLength * charWidth + 24));
+  textarea.style.width = `${newWidth}px`;
+
+  // Calculate height based on number of lines
+  const lineHeight = 20; // Approximate line height
+  const newHeight = Math.max(60, Math.min(300, lines.length * lineHeight + 16));
+  textarea.style.height = `${newHeight}px`;
 }
 
 /**

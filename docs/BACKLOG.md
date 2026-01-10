@@ -32,8 +32,11 @@ Remaining work items. See FEATURES.md for what's already implemented.
 - [x] FEATURE-001: Image participants - Added `image data:image/...;base64,... Name` syntax
 
 ### Pending
-- [ ] BUG-021: Note box should expand to fit long text
-- [ ] BUG-022: Textarea resize should expand width, not just height
+(none)
+
+### Fixed (UI)
+- [x] BUG-021: Note box should expand to fit long text - Fixed by increasing CHAR_WIDTH from 5.5 to 7 for proportional fonts
+- [x] BUG-022: Textarea resize should expand width, not just height - Fixed by adding auto-resize on input that expands both dimensions
 
 ### Fixed (Recent)
 - [x] BUG-041: Participant overlay on scroll - Fixed by using sticky positioning in diagram pane, listening to scroll on correct element (diagram-pane), extracting position data from all participant types (actors, databases, icons), centering overlay boxes over lifelines, and adding translucent backdrop

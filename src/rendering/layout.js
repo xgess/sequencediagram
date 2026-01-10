@@ -5,7 +5,7 @@ import { getLineCount } from '../markup/renderer.js';
 
 // Layout constants
 const LINE_HEIGHT = 16; // Height per line of text
-const CHAR_WIDTH = 5.5; // Approximate width per character for note sizing (11px font)
+const CHAR_WIDTH = 7; // Approximate width per character for note sizing (11px proportional font)
 const PARTICIPANT_WIDTH = 100;
 const PARTICIPANT_HEIGHT = 60;
 const PARTICIPANT_SPACING = 150;
