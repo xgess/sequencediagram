@@ -769,4 +769,150 @@ describe('Advanced Text Markup (BACKLOG-139)', () => {
       expect(tspan.getAttribute('font-style')).toBe('italic');
     });
   });
+
+  describe('Escape sequences', () => {
+    it('should parse \\\\+ as literal +', () => {
+      const result = parseMarkup('c\\+\\+');
+      expect(result).toEqual([
+        { type: 'text', content: 'c' },
+        { type: 'text', content: '+' },
+        { type: 'text', content: '+' }
+      ]);
+    });
+
+    it('should parse \\\\/ as literal /', () => {
+      const result = parseMarkup('http:\\/\\/example.org');
+      expect(result).toEqual([
+        { type: 'text', content: 'http:' },
+        { type: 'text', content: '/' },
+        { type: 'text', content: '/' },
+        { type: 'text', content: 'example.org' }
+      ]);
+    });
+
+    it('should parse \\\\* as literal *', () => {
+      const result = parseMarkup('\\*\\*not bold\\*\\*');
+      expect(result).toEqual([
+        { type: 'text', content: '*' },
+        { type: 'text', content: '*' },
+        { type: 'text', content: 'not bold' },
+        { type: 'text', content: '*' },
+        { type: 'text', content: '*' }
+      ]);
+    });
+
+    it('should parse \\\\- as literal -', () => {
+      const result = parseMarkup('\\-\\-not small\\-\\-');
+      expect(result).toEqual([
+        { type: 'text', content: '-' },
+        { type: 'text', content: '-' },
+        { type: 'text', content: 'not small' },
+        { type: 'text', content: '-' },
+        { type: 'text', content: '-' }
+      ]);
+    });
+
+    it('should parse \\\\~ as literal ~', () => {
+      const result = parseMarkup('\\~\\~not strike\\~\\~');
+      expect(result).toEqual([
+        { type: 'text', content: '~' },
+        { type: 'text', content: '~' },
+        { type: 'text', content: 'not strike' },
+        { type: 'text', content: '~' },
+        { type: 'text', content: '~' }
+      ]);
+    });
+
+    it('should detect escape sequences with hasMarkup', () => {
+      expect(hasMarkup('c\\+\\+')).toBe(true);
+      expect(hasMarkup('http:\\/\\/')).toBe(true);
+      expect(hasMarkup('\\*')).toBe(true);
+    });
+  });
+
+  describe('Parse <align:...>...</align>', () => {
+    it('should parse align left', () => {
+      const result = parseMarkup('<align:left>text</align>');
+      expect(result).toEqual([{ type: 'align', value: 'left', content: 'text', children: null }]);
+    });
+
+    it('should parse align center', () => {
+      const result = parseMarkup('<align:center>text</align>');
+      expect(result).toEqual([{ type: 'align', value: 'center', content: 'text', children: null }]);
+    });
+
+    it('should parse align right', () => {
+      const result = parseMarkup('<align:right>text</align>');
+      expect(result).toEqual([{ type: 'align', value: 'right', content: 'text', children: null }]);
+    });
+
+    it('should serialize align', () => {
+      const result = serializeMarkup([{ type: 'align', value: 'center', content: 'text' }]);
+      expect(result).toBe('<align:center>text</align>');
+    });
+
+    it('should round-trip align', () => {
+      const input = '<align:center>centered text</align>';
+      expect(serializeMarkup(parseMarkup(input))).toBe(input);
+    });
+
+    it('should detect align with hasMarkup', () => {
+      expect(hasMarkup('<align:center>text</align>')).toBe(true);
+    });
+
+    it('should render align with text-anchor', () => {
+      const el = renderMarkupText('<align:center>text</align>', { x: 0, y: 0 });
+      const tspan = el.querySelector('tspan');
+      expect(tspan.getAttribute('text-anchor')).toBe('middle');
+    });
+
+    it('should render align:left as start', () => {
+      const el = renderMarkupText('<align:left>text</align>', { x: 0, y: 0 });
+      const tspan = el.querySelector('tspan');
+      expect(tspan.getAttribute('text-anchor')).toBe('start');
+    });
+
+    it('should render align:right as end', () => {
+      const el = renderMarkupText('<align:right>text</align>', { x: 0, y: 0 });
+      const tspan = el.querySelector('tspan');
+      expect(tspan.getAttribute('text-anchor')).toBe('end');
+    });
+  });
+
+  describe('Parse <position:...>...</position>', () => {
+    it('should parse position left', () => {
+      const result = parseMarkup('<position:left>text</position>');
+      expect(result).toEqual([{ type: 'position', value: 'left', content: 'text', children: null }]);
+    });
+
+    it('should parse position center', () => {
+      const result = parseMarkup('<position:center>text</position>');
+      expect(result).toEqual([{ type: 'position', value: 'center', content: 'text', children: null }]);
+    });
+
+    it('should parse position right', () => {
+      const result = parseMarkup('<position:right>text</position>');
+      expect(result).toEqual([{ type: 'position', value: 'right', content: 'text', children: null }]);
+    });
+
+    it('should serialize position', () => {
+      const result = serializeMarkup([{ type: 'position', value: 'left', content: 'text' }]);
+      expect(result).toBe('<position:left>text</position>');
+    });
+
+    it('should round-trip position', () => {
+      const input = '<position:left>left positioned</position>';
+      expect(serializeMarkup(parseMarkup(input))).toBe(input);
+    });
+
+    it('should detect position with hasMarkup', () => {
+      expect(hasMarkup('<position:left>text</position>')).toBe(true);
+    });
+
+    it('should render position with data-position', () => {
+      const el = renderMarkupText('<position:left>text</position>', { x: 0, y: 0 });
+      const tspan = el.querySelector('tspan');
+      expect(tspan.getAttribute('data-position')).toBe('left');
+    });
+  });
 });

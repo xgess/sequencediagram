@@ -34,6 +34,15 @@ export function parseMarkup(text) {
       continue;
     }
 
+    // Check for escape sequences: \* \/ \- \+ \~ \\ \" \< \>
+    // These should become literal characters
+    const escapeMatch = remaining.match(/^\\([*\/\-+~\\"<>])/);
+    if (escapeMatch) {
+      segments.push({ type: 'text', content: escapeMatch[1] });
+      remaining = remaining.substring(2);
+      continue;
+    }
+
     // Check for **bold**
     const boldMatch = remaining.match(/^\*\*(.*?)\*\*/);
     if (boldMatch) {
@@ -194,8 +203,28 @@ export function parseMarkup(text) {
       continue;
     }
 
-    // Plain text until next markup
-    const nextMarkup = remaining.search(/(\*\*|\/\/|__|--|\+\+|""|~~|\\n|<color:|<size:|<sub>|<sup>|<link:|<stroke:|<background:)/);
+    // Check for <align:left|center|right>text</align>
+    const alignMatch = remaining.match(/^<align:(left|center|right)>(.*?)<\/align>/);
+    if (alignMatch) {
+      const innerContent = alignMatch[2];
+      const children = hasMarkup(innerContent) ? parseMarkup(innerContent) : null;
+      segments.push({ type: 'align', value: alignMatch[1], content: innerContent, children });
+      remaining = remaining.substring(alignMatch[0].length);
+      continue;
+    }
+
+    // Check for <position:left|center|right>text</position>
+    const positionMatch = remaining.match(/^<position:(left|center|right)>(.*?)<\/position>/);
+    if (positionMatch) {
+      const innerContent = positionMatch[2];
+      const children = hasMarkup(innerContent) ? parseMarkup(innerContent) : null;
+      segments.push({ type: 'position', value: positionMatch[1], content: innerContent, children });
+      remaining = remaining.substring(positionMatch[0].length);
+      continue;
+    }
+
+    // Plain text until next markup (including escape sequences)
+    const nextMarkup = remaining.search(/(\*\*|\/\/|__|--|\+\+|""|~~|\\n|\\[*\/\-+~\\"<>]|<color:|<size:|<sub>|<sup>|<link:|<stroke:|<background:|<align:|<position:)/);
     if (nextMarkup === -1) {
       segments.push({ type: 'text', content: remaining });
       break;
@@ -255,6 +284,10 @@ export function serializeMarkup(segments) {
         return `<stroke:${seg.strokeWidth}:${seg.strokeColor}>${seg.content || ''}</stroke>`;
       case 'background':
         return `<background:${seg.value}>${seg.content || ''}</background>`;
+      case 'align':
+        return `<align:${seg.value}>${seg.content || ''}</align>`;
+      case 'position':
+        return `<position:${seg.value}>${seg.content || ''}</position>`;
       case 'linebreak':
         return '\\n';
       default:
@@ -270,6 +303,6 @@ export function serializeMarkup(segments) {
  */
 export function hasMarkup(text) {
   if (!text) return false;
-  // Check for all supported markup patterns
-  return /(\*\*.*?\*\*|\/\/.*?\/\/|__.*?__|--.*?--|\+\+.*?\+\+|"".*?""|~~.*?~~|<color:|<size:|<sub>|<sup>|<link:|<stroke:|<background:|\\n)/.test(text);
+  // Check for all supported markup patterns (including escape sequences)
+  return /(\*\*.*?\*\*|\/\/.*?\/\/|__.*?__|--.*?--|\+\+.*?\+\+|"".*?""|~~.*?~~|<color:|<size:|<sub>|<sup>|<link:|<stroke:|<background:|<align:|<position:|\\n|\\[*\/\-+~\\"<>])/.test(text);
 }

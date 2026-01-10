@@ -204,6 +204,15 @@ function applySegmentStyle(styles, segment, baseFontSize) {
     case 'background':
       styles.dataBackground = segment.value;
       break;
+    case 'align':
+      // Map align values to SVG text-anchor
+      const alignMap = { left: 'start', center: 'middle', right: 'end' };
+      styles.textAnchor = alignMap[segment.value] || 'start';
+      break;
+    case 'position':
+      // Position affects where the text block is placed
+      styles.dataPosition = segment.value;
+      break;
   }
 }
 
@@ -224,6 +233,8 @@ function applyStylesToElement(el, styles) {
   if (styles.strokeWidth) el.setAttribute('stroke-width', styles.strokeWidth);
   if (styles.paintOrder) el.setAttribute('paint-order', styles.paintOrder);
   if (styles.dataBackground) el.setAttribute('data-background', styles.dataBackground);
+  if (styles.textAnchor) el.setAttribute('text-anchor', styles.textAnchor);
+  if (styles.dataPosition) el.setAttribute('data-position', styles.dataPosition);
 }
 
 /**
