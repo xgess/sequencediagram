@@ -288,7 +288,8 @@ function parseDirective(line, lineNumber) {
 
   // Match lifelinestyle directive
   // Syntax: lifelinestyle #color;width;style (global) OR lifelinestyle Participant #color;width;style (per-participant)
-  const lifelinestyleMatch = line.match(/^lifelinestyle(?:\s+([^\s#][^\s]*))?(?:\s+)?(#[^\s;]+)?(?:;(\d+))?(?:;(solid|dashed|dotted))?$/);
+  // Also: lifelinestyle ;width;style (global width/style without color)
+  const lifelinestyleMatch = line.match(/^lifelinestyle(?:\s+([^\s#;][^\s]*))?(?:\s+)?(#[^\s;]+)?(?:;(\d+))?(?:;(solid|dashed|dotted))?$/);
   if (lifelinestyleMatch) {
     const participant = lifelinestyleMatch[1] || null;
     const color = lifelinestyleMatch[2] || null;

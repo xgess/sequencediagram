@@ -56,6 +56,24 @@ describe('Lifeline Styling (BACKLOG-132)', () => {
       const directive = ast.find(n => n.type === 'directive');
       expect(directive.style.lineStyle).toBe('dotted');
     });
+
+    it('should parse lifelinestyle with width only (no color)', () => {
+      const ast = parse('lifelinestyle ;4');
+      const directive = ast.find(n => n.type === 'directive');
+      expect(directive.participant).toBeNull();
+      expect(directive.style.color).toBeNull();
+      expect(directive.style.width).toBe(4);
+      expect(directive.style.lineStyle).toBeNull();
+    });
+
+    it('should parse lifelinestyle with width and style (no color)', () => {
+      const ast = parse('lifelinestyle ;2;solid');
+      const directive = ast.find(n => n.type === 'directive');
+      expect(directive.participant).toBeNull();
+      expect(directive.style.color).toBeNull();
+      expect(directive.style.width).toBe(2);
+      expect(directive.style.lineStyle).toBe('solid');
+    });
   });
 
   describe('Serialization', () => {
