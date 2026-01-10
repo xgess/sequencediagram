@@ -281,12 +281,8 @@ body {
   fill: #cc0000;
 }
 
-/* Lifelines */
-.lifeline {
-  stroke: #ccc;
-  stroke-width: 1;
-  stroke-dasharray: 5, 5;
-}
+/* Lifelines - styles set via SVG attributes by renderer based on lifelinestyle directive */
+/* Default: stroke=#ccc, stroke-width=1, stroke-dasharray=5,5 (dashed) */
 
 /* Presentation Mode (BACKLOG-111) */
 .presentation-mode #editor-pane,
