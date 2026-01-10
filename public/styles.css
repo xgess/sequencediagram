@@ -229,8 +229,8 @@ body {
   background: white;
   border: 1px solid #ccc;
   border-radius: 4px;
-  overflow: auto;
-  max-height: calc(100vh - 120px);
+  /* No overflow:auto here - let diagram-pane handle scrolling */
+  /* This removes the nested scroll context */
 }
 
 #diagram {
