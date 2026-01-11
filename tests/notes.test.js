@@ -591,4 +591,43 @@ describe('Note and Box Styling (BACKLOG-127)', () => {
       expect(viewBoxX).toBeLessThanOrEqual(0);
     });
   });
+
+  describe('Note text markup', () => {
+    it('should render monospace text with "" markup', () => {
+      const ast = parse('participant A\nnote over A:Processing ""order""');
+      const note = ast.find(n => n.type === 'note');
+      // Verify the note text is preserved correctly
+      expect(note.text).toBe('Processing ""order""');
+      const svg = render(ast);
+      // Find all tspans and check for one with monospace
+      const tspans = svg.querySelectorAll('.note-text tspan');
+      const monoTspan = Array.from(tspans).find(t => t.getAttribute('font-family') === 'monospace');
+      expect(monoTspan).toBeDefined();
+      expect(monoTspan.textContent).toBe('order');
+    });
+
+    it('should render bold text with ** markup', () => {
+      const ast = parse('participant A\nnote over A:**Important**');
+      const svg = render(ast);
+      const tspan = svg.querySelector('.note-text tspan');
+      expect(tspan.getAttribute('font-weight')).toBe('bold');
+    });
+
+    it('should render colored text with <color> markup', () => {
+      const ast = parse('participant A\nnote over A:<color:#ff0000>Red text</color>');
+      const svg = render(ast);
+      const tspan = svg.querySelector('.note-text tspan');
+      expect(tspan.getAttribute('fill')).toBe('#ff0000');
+    });
+
+    it('should render markup in multiline notes', () => {
+      const ast = parse('participant A\nnote over A:Line 1\\n""code""');
+      const svg = render(ast);
+      // Find the tspan with monospace font (second line has markup)
+      const tspans = svg.querySelectorAll('.note-text tspan');
+      const monoTspan = Array.from(tspans).find(t => t.getAttribute('font-family') === 'monospace');
+      expect(monoTspan).toBeDefined();
+      expect(monoTspan.textContent).toBe('code');
+    });
+  });
 });

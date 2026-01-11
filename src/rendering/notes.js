@@ -2,6 +2,8 @@
 // See DESIGN.md for note rendering details
 
 import { resolveColor } from './colors.js';
+import { renderMarkupText } from '../markup/renderer.js';
+import { hasMarkup } from '../markup/parser.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -63,40 +65,89 @@ export function renderNote(node, layoutInfo) {
       renderNoteShape(group, x, y, width, height, style);
   }
 
-  // Add text (handle multiline with \n)
-  const text = document.createElementNS(SVG_NS, 'text');
-  text.setAttribute('class', 'note-text');
-  text.setAttribute('x', x + width / 2);
-  text.setAttribute('text-anchor', 'middle');
-  text.setAttribute('font-size', '11');
-
+  // Add text (handle multiline with \n and markup)
   const textContent = node.text || '';
   const lines = textContent.split('\\n');
   const lineHeight = 16;
 
+  // Check if any line has markup
+  const anyMarkup = lines.some(line => hasMarkup(line));
+
   if (lines.length === 1) {
-    // Single line - center vertically
-    text.setAttribute('y', y + height / 2);
-    text.setAttribute('dominant-baseline', 'middle');
-    text.textContent = textContent;
+    // Single line
+    if (hasMarkup(textContent)) {
+      const textEl = renderMarkupText(textContent, {
+        x: x + width / 2,
+        y: y + height / 2,
+        textAnchor: 'middle',
+        fontSize: '11'
+      });
+      textEl.setAttribute('class', 'note-text');
+      textEl.setAttribute('dominant-baseline', 'middle');
+      group.appendChild(textEl);
+    } else {
+      const text = document.createElementNS(SVG_NS, 'text');
+      text.setAttribute('class', 'note-text');
+      text.setAttribute('x', x + width / 2);
+      text.setAttribute('y', y + height / 2);
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('font-size', '11');
+      text.setAttribute('dominant-baseline', 'middle');
+      text.textContent = textContent;
+      group.appendChild(text);
+    }
   } else {
-    // Multiple lines - position each line
+    // Multiple lines
     const totalTextHeight = lines.length * lineHeight;
     const startY = y + (height - totalTextHeight) / 2 + lineHeight / 2;
 
-    lines.forEach((line, i) => {
-      const tspan = document.createElementNS(SVG_NS, 'tspan');
-      tspan.setAttribute('x', x + width / 2);
-      tspan.setAttribute('dy', i === 0 ? 0 : lineHeight);
-      tspan.textContent = line;
-      text.appendChild(tspan);
-    });
+    if (anyMarkup) {
+      // Render each line as a separate text element with markup support
+      lines.forEach((line, i) => {
+        const lineY = startY + i * lineHeight;
+        if (hasMarkup(line)) {
+          const textEl = renderMarkupText(line, {
+            x: x + width / 2,
+            y: lineY,
+            textAnchor: 'middle',
+            fontSize: '11'
+          });
+          textEl.setAttribute('class', 'note-text');
+          textEl.setAttribute('dominant-baseline', 'middle');
+          group.appendChild(textEl);
+        } else {
+          const text = document.createElementNS(SVG_NS, 'text');
+          text.setAttribute('class', 'note-text');
+          text.setAttribute('x', x + width / 2);
+          text.setAttribute('y', lineY);
+          text.setAttribute('text-anchor', 'middle');
+          text.setAttribute('font-size', '11');
+          text.setAttribute('dominant-baseline', 'middle');
+          text.textContent = line;
+          group.appendChild(text);
+        }
+      });
+    } else {
+      // No markup - use tspans for efficiency
+      const text = document.createElementNS(SVG_NS, 'text');
+      text.setAttribute('class', 'note-text');
+      text.setAttribute('x', x + width / 2);
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('font-size', '11');
+      text.setAttribute('y', startY);
+      text.setAttribute('dominant-baseline', 'middle');
 
-    text.setAttribute('y', startY);
-    text.setAttribute('dominant-baseline', 'middle');
+      lines.forEach((line, i) => {
+        const tspan = document.createElementNS(SVG_NS, 'tspan');
+        tspan.setAttribute('x', x + width / 2);
+        tspan.setAttribute('dy', i === 0 ? 0 : lineHeight);
+        tspan.textContent = line;
+        text.appendChild(tspan);
+      });
+
+      group.appendChild(text);
+    }
   }
-
-  group.appendChild(text);
 
   return group;
 }
