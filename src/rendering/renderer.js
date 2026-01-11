@@ -32,6 +32,10 @@ export function render(ast) {
   const defs = createDefs();
   svg.appendChild(defs);
 
+  // Note: Icon fonts (FA/MDI) are defined in styles.css with SVG-specific names
+  // (FA7-Solid-SVG, FA7-Regular-SVG, FA7-Brands-SVG, MDI-SVG)
+  // No need to embed @font-face in SVG since page CSS applies to inline SVG
+
   // Create container groups (order matters for z-index)
   // Frame goes first (behind everything)
   const frameGroup = document.createElementNS(SVG_NS, 'g');
@@ -136,12 +140,18 @@ export function render(ast) {
 
       // Check if this participant is created by a message
       const createMessageId = createInfo.get(participant.alias);
-      let lifelineStartY = layoutInfo.y + layoutInfo.height;
+      // Actors, databases, and icon participants have text labels below the icon, need more offset
+      const pType = participant.participantType;
+      const isIconType = pType === 'actor' || pType === 'database' ||
+        pType === 'fontawesome6solid' || pType === 'fontawesome6regular' ||
+        pType === 'fontawesome6brands' || pType === 'materialdesignicons';
+      const lifelineOffset = isIconType ? 25 : 5;
+      let lifelineStartY = layoutInfo.y + layoutInfo.height + lifelineOffset;
       if (createMessageId) {
         const createMessageLayout = layout.get(createMessageId);
         if (createMessageLayout) {
           // Lifeline starts at the create message Y position (below participant box)
-          lifelineStartY = createMessageLayout.y + layoutInfo.height;
+          lifelineStartY = createMessageLayout.y + layoutInfo.height + lifelineOffset;
         }
       }
 
@@ -1120,4 +1130,75 @@ function createDefs() {
   defs.appendChild(xMarker);
 
   return defs;
+}
+
+/**
+ * Add @font-face styles for icon fonts (Font Awesome, Material Design Icons)
+ * SVG text elements don't inherit @font-face from external CSS, so we embed them
+ * @param {SVGDefsElement} defs - The defs element to add styles to
+ * @param {Array} iconParticipants - Participants that use icon fonts
+ */
+function addIconFontStyles(defs, iconParticipants) {
+  const neededFonts = new Set();
+
+  iconParticipants.forEach(p => {
+    if (p.participantType === 'fontawesome6solid') {
+      neededFonts.add('fa-solid');
+    } else if (p.participantType === 'fontawesome6regular') {
+      neededFonts.add('fa-regular');
+    } else if (p.participantType === 'fontawesome6brands') {
+      neededFonts.add('fa-brands');
+    } else if (p.participantType === 'materialdesignicons') {
+      neededFonts.add('mdi');
+    }
+  });
+
+  if (neededFonts.size === 0) return;
+
+  let cssRules = '';
+
+  // Use unique font-family names for SVG to avoid conflicts with external CSS
+  if (neededFonts.has('fa-solid')) {
+    cssRules += `
+      @font-face {
+        font-family: "FA7-Solid-SVG";
+        font-weight: 900;
+        src: url("/lib/fontawesome/webfonts/fa-solid-900.woff2") format("woff2");
+      }
+    `;
+  }
+
+  if (neededFonts.has('fa-regular')) {
+    cssRules += `
+      @font-face {
+        font-family: "FA7-Regular-SVG";
+        font-weight: 400;
+        src: url("/lib/fontawesome/webfonts/fa-regular-400.woff2") format("woff2");
+      }
+    `;
+  }
+
+  if (neededFonts.has('fa-brands')) {
+    cssRules += `
+      @font-face {
+        font-family: "FA7-Brands-SVG";
+        font-weight: 400;
+        src: url("/lib/fontawesome/webfonts/fa-brands-400.woff2") format("woff2");
+      }
+    `;
+  }
+
+  if (neededFonts.has('mdi')) {
+    cssRules += `
+      @font-face {
+        font-family: "MDI-SVG";
+        font-weight: normal;
+        src: url("/lib/mdi/fonts/materialdesignicons-webfont.woff2") format("woff2");
+      }
+    `;
+  }
+
+  const style = document.createElementNS(SVG_NS, 'style');
+  style.textContent = cssRules;
+  defs.appendChild(style);
 }

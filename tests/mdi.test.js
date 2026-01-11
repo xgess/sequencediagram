@@ -139,6 +139,39 @@ Database->Client:query`;
       const participants = svg.querySelectorAll('.participant');
       expect(participants.length).toBeGreaterThanOrEqual(1);
     });
+
+    it('should render mdi icon with correct font-family', () => {
+      const input = `materialdesignicons F01C9 Testing
+Testing->Testing:msg`;
+      const ast = parse(input);
+      const svg = render(ast);
+
+      // Find the icon text element with MDI font (uses SVG-specific font name)
+      const textElements = svg.querySelectorAll('.participant text');
+      const mdiText = Array.from(textElements).find(
+        t => t.getAttribute('font-family') === 'MDI-SVG'
+      );
+      expect(mdiText).toBeDefined();
+      // Verify the icon character is set (F01C9 = \uDB40\uDDC9 in UTF-16)
+      expect(mdiText.textContent.length).toBeGreaterThan(0);
+    });
+
+    it('should normalize 4-char codepoint starting with F', () => {
+      // F1FF should become F01FF (escalator icon)
+      const input = `materialdesignicons F1FF Escalator
+Escalator->Escalator:msg`;
+      const ast = parse(input);
+      const svg = render(ast);
+
+      const textElements = svg.querySelectorAll('.participant text');
+      const mdiText = Array.from(textElements).find(
+        t => t.getAttribute('font-family') === 'MDI-SVG'
+      );
+      expect(mdiText).toBeDefined();
+      // F01FF = 983551 in decimal, which is \uDB40\uDDFF in UTF-16
+      const expectedChar = String.fromCodePoint(0xF01FF);
+      expect(mdiText.textContent).toBe(expectedChar);
+    });
   });
 
   describe('Messages with mdi participants', () => {

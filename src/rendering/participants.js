@@ -446,52 +446,84 @@ function renderDatabase(group, node, layoutInfo) {
 
 /**
  * Add text label to participant group
- * Supports markup like ""monospace"", **bold**, etc.
+ * Supports markup like ""monospace"", **bold**, etc. and multiline with \n
  */
 function addTextLabel(group, displayName, centerX, y, height) {
-  // Use markup renderer if text contains markup
-  if (hasMarkup(displayName)) {
-    const textEl = renderMarkupText(displayName, {
-      x: centerX,
-      y: y + height / 2,
-      textAnchor: 'middle',
-      fontSize: '12'
-    });
-    // Set dominant-baseline for vertical centering
-    textEl.setAttribute('dominant-baseline', 'middle');
-    group.appendChild(textEl);
-    return;
-  }
-
-  // Simple text rendering (no markup)
-  const text = document.createElementNS(SVG_NS, 'text');
-  text.setAttribute('x', centerX);
-  text.setAttribute('text-anchor', 'middle');
-  text.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, sans-serif');
-  text.setAttribute('font-size', '12');
-
   const lines = displayName.split('\n');
   const lineHeight = 14;
   const totalTextHeight = lines.length * lineHeight;
   const startY = y + (height - totalTextHeight) / 2 + lineHeight / 2;
 
+  // Check if any line has markup
+  const anyMarkup = lines.some(line => hasMarkup(line));
+
   if (lines.length === 1) {
-    // Single line - use dominant-baseline for centering
-    text.setAttribute('y', y + height / 2);
-    text.setAttribute('dominant-baseline', 'middle');
-    text.textContent = displayName;
+    // Single line
+    if (hasMarkup(displayName)) {
+      const textEl = renderMarkupText(displayName, {
+        x: centerX,
+        y: y + height / 2,
+        textAnchor: 'middle',
+        fontSize: '12'
+      });
+      textEl.setAttribute('dominant-baseline', 'middle');
+      group.appendChild(textEl);
+    } else {
+      const text = document.createElementNS(SVG_NS, 'text');
+      text.setAttribute('x', centerX);
+      text.setAttribute('y', y + height / 2);
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, sans-serif');
+      text.setAttribute('font-size', '12');
+      text.setAttribute('dominant-baseline', 'middle');
+      text.textContent = displayName;
+      group.appendChild(text);
+    }
+  } else if (anyMarkup) {
+    // Multiple lines with markup - render each line separately
+    lines.forEach((line, index) => {
+      const lineY = startY + index * lineHeight;
+      if (hasMarkup(line)) {
+        const textEl = renderMarkupText(line, {
+          x: centerX,
+          y: lineY,
+          textAnchor: 'middle',
+          fontSize: '12'
+        });
+        textEl.setAttribute('dominant-baseline', 'middle');
+        group.appendChild(textEl);
+      } else {
+        const text = document.createElementNS(SVG_NS, 'text');
+        text.setAttribute('x', centerX);
+        text.setAttribute('y', lineY);
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, sans-serif');
+        text.setAttribute('font-size', '12');
+        text.setAttribute('dominant-baseline', 'middle');
+        text.textContent = line;
+        group.appendChild(text);
+      }
+    });
   } else {
-    // Multiple lines - use tspans
+    // Multiple lines without markup - use tspans for efficiency
+    const text = document.createElementNS(SVG_NS, 'text');
+    text.setAttribute('x', centerX);
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, sans-serif');
+    text.setAttribute('font-size', '12');
+    text.setAttribute('y', startY);
+    text.setAttribute('dominant-baseline', 'middle');
+
     lines.forEach((line, index) => {
       const tspan = document.createElementNS(SVG_NS, 'tspan');
       tspan.setAttribute('x', centerX);
-      tspan.setAttribute('y', startY + index * lineHeight);
+      tspan.setAttribute('dy', index === 0 ? 0 : lineHeight);
       tspan.textContent = line;
       text.appendChild(tspan);
     });
-  }
 
-  group.appendChild(text);
+    group.appendChild(text);
+  }
 }
 
 /**
@@ -503,24 +535,24 @@ function renderFontAwesomeIcon(group, node, layoutInfo) {
   const style = node.style || {};
 
   const centerX = x + width / 2;
-  const iconY = y + 10;
-  const iconSize = 30;
+  const iconY = y + 4;
+  const iconSize = 44;
 
   // Determine the font family based on the participant type
-  // Note: Using FA7 font names (installed lib is v7)
+  // Use SVG-specific font names that are embedded via @font-face in the SVG defs
   let fontFamily;
   switch (node.participantType) {
     case 'fontawesome6solid':
-      fontFamily = 'Font Awesome 7 Free';
+      fontFamily = 'FA7-Solid-SVG';
       break;
     case 'fontawesome6regular':
-      fontFamily = 'Font Awesome 7 Free';
+      fontFamily = 'FA7-Regular-SVG';
       break;
     case 'fontawesome6brands':
-      fontFamily = 'Font Awesome 7 Brands';
+      fontFamily = 'FA7-Brands-SVG';
       break;
     default:
-      fontFamily = 'Font Awesome 7 Free';
+      fontFamily = 'FA7-Solid-SVG';
   }
 
   // Determine font weight (solid = 900, regular = 400, brands = 400)
@@ -544,7 +576,7 @@ function renderFontAwesomeIcon(group, node, layoutInfo) {
   // Add text label below icon
   const text = document.createElementNS(SVG_NS, 'text');
   text.setAttribute('x', centerX);
-  text.setAttribute('y', y + height - 4);
+  text.setAttribute('y', y + height + 8);
   text.setAttribute('text-anchor', 'middle');
   text.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, sans-serif');
   text.setAttribute('font-size', '12');
@@ -561,18 +593,29 @@ function renderMaterialDesignIcon(group, node, layoutInfo) {
   const style = node.style || {};
 
   const centerX = x + width / 2;
-  const iconY = y + 10;
-  const iconSize = 30;
+  const iconY = y + 4;
+  const iconSize = 44;
 
-  // Convert hex codepoint to Unicode character
-  const iconChar = String.fromCodePoint(parseInt(node.iconCode, 16));
+  // MDI codepoints are 5 hex digits in the Private Use Area (F0XXX-F1XXX range)
+  // Normalize 4-character codes starting with F (e.g., F14D -> F014D, F1FF -> F01FF)
+  // This handles the common case where users drop the leading zero from the 4-digit ID
+  let normalizedCode = node.iconCode.toUpperCase();
+  if (normalizedCode.length === 4 && normalizedCode.startsWith('F')) {
+    // Insert a 0 after the F: F14D -> F014D
+    normalizedCode = 'F0' + normalizedCode.substring(1);
+  } else if (normalizedCode.length < 5) {
+    // For other short codes, pad with leading zeros
+    normalizedCode = normalizedCode.padStart(5, '0');
+  }
+  const iconChar = String.fromCodePoint(parseInt(normalizedCode, 16));
 
   // Render the icon using a text element with MDI font
+  // Use SVG-specific font name that is embedded via @font-face in the SVG defs
   const icon = document.createElementNS(SVG_NS, 'text');
   icon.setAttribute('x', centerX);
   icon.setAttribute('y', iconY + iconSize * 0.8);
   icon.setAttribute('text-anchor', 'middle');
-  icon.setAttribute('font-family', 'Material Design Icons');
+  icon.setAttribute('font-family', 'MDI-SVG');
   icon.setAttribute('font-weight', 'normal');
   icon.setAttribute('font-size', iconSize);
   icon.setAttribute('fill', resolveColor(style.fill) || 'black');
@@ -582,7 +625,7 @@ function renderMaterialDesignIcon(group, node, layoutInfo) {
   // Add text label below icon
   const mdiLabel = document.createElementNS(SVG_NS, 'text');
   mdiLabel.setAttribute('x', centerX);
-  mdiLabel.setAttribute('y', y + height - 4);
+  mdiLabel.setAttribute('y', y + height + 8);
   mdiLabel.setAttribute('text-anchor', 'middle');
   mdiLabel.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, sans-serif');
   mdiLabel.setAttribute('font-size', '12');

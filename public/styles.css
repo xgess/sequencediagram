@@ -1,5 +1,31 @@
 /* Sequence Diagram Tool - Phase 1 Styles */
 
+/* SVG-specific icon font faces for dynamically created SVGs */
+/* These use unique names to avoid conflicts with external FA/MDI CSS */
+@font-face {
+  font-family: "FA7-Solid-SVG";
+  font-weight: 900;
+  src: url("/lib/fontawesome/webfonts/fa-solid-900.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "FA7-Regular-SVG";
+  font-weight: 400;
+  src: url("/lib/fontawesome/webfonts/fa-regular-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "FA7-Brands-SVG";
+  font-weight: 400;
+  src: url("/lib/fontawesome/webfonts/fa-brands-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "MDI-SVG";
+  font-weight: normal;
+  src: url("/lib/mdi/fonts/materialdesignicons-webfont.woff2") format("woff2");
+}
+
 * {
   box-sizing: border-box;
 }
@@ -246,8 +272,7 @@ body {
 }
 
 .participant text {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 12px;
+  /* font-family and font-size are set via SVG attributes to allow icon fonts (FA/MDI) */
   text-anchor: middle;
 }
 

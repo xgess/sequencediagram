@@ -185,6 +185,51 @@ GitHub->Client:msg`;
       const participants = svg.querySelectorAll('.participant');
       expect(participants.length).toBeGreaterThanOrEqual(1);
     });
+
+    it('should render fontawesome6solid with correct font-family and weight', () => {
+      const input = `fontawesome6solid f48e Server
+Server->Server:msg`;
+      const ast = parse(input);
+      const svg = render(ast);
+
+      const textElements = svg.querySelectorAll('.participant text');
+      const faText = Array.from(textElements).find(
+        t => t.getAttribute('font-family') === 'FA7-Solid-SVG'
+      );
+      expect(faText).toBeDefined();
+      expect(faText.getAttribute('font-weight')).toBe('900'); // solid = 900
+      // Verify the icon character is set (f48e = server icon)
+      const expectedChar = String.fromCodePoint(0xf48e);
+      expect(faText.textContent).toBe(expectedChar);
+    });
+
+    it('should render fontawesome6regular with correct font-weight', () => {
+      const input = `fontawesome6regular f004 Heart
+Heart->Heart:msg`;
+      const ast = parse(input);
+      const svg = render(ast);
+
+      const textElements = svg.querySelectorAll('.participant text');
+      const faText = Array.from(textElements).find(
+        t => t.getAttribute('font-family') === 'FA7-Regular-SVG'
+      );
+      expect(faText).toBeDefined();
+      expect(faText.getAttribute('font-weight')).toBe('400'); // regular = 400
+    });
+
+    it('should render fontawesome6brands with correct font-family', () => {
+      const input = `fontawesome6brands f09b GitHub
+GitHub->GitHub:msg`;
+      const ast = parse(input);
+      const svg = render(ast);
+
+      const textElements = svg.querySelectorAll('.participant text');
+      const faText = Array.from(textElements).find(
+        t => t.getAttribute('font-family') === 'FA7-Brands-SVG'
+      );
+      expect(faText).toBeDefined();
+      expect(faText.getAttribute('font-weight')).toBe('400'); // brands = 400
+    });
   });
 
   describe('Messages with fontawesome participants', () => {
