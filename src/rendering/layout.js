@@ -6,7 +6,10 @@ import { getLineCount } from '../markup/renderer.js';
 // Layout constants
 const LINE_HEIGHT = 16; // Height per line of text
 const CHAR_WIDTH = 7; // Approximate width per character for note sizing (11px proportional font)
-const PARTICIPANT_WIDTH = 100;
+const PARTICIPANT_CHAR_WIDTH = 7.5; // Width per character for participant names (12px font)
+const PARTICIPANT_MIN_WIDTH = 80; // Minimum participant width
+const PARTICIPANT_PADDING = 20; // Horizontal padding for participant text
+const PARTICIPANT_WIDTH = 100; // Default width (used as fallback)
 const PARTICIPANT_HEIGHT = 60;
 const PARTICIPANT_SPACING = 150;
 const PARTICIPANT_START_X = 50;
@@ -29,6 +32,44 @@ const NOTE_CONNECTOR_GAP = 8; // Gap between note and lifeline connector
 const DIVIDER_HEIGHT = 24;
 const MARGIN = 50;
 const BOUNDARY_OFFSET = 30; // How far outside diagram bounds for boundary messages
+
+/**
+ * Strip markup from text to get plain text for width calculation
+ * @param {string} text - Text that may contain markup
+ * @returns {string} Plain text without markup delimiters
+ */
+function stripMarkup(text) {
+  if (!text) return '';
+  return text
+    .replace(/\*\*([^*]+)\*\*/g, '$1')  // **bold**
+    .replace(/\/\/([^/]+)\/\//g, '$1')   // //italic//
+    .replace(/""([^"]+)""/g, '$1')       // ""monospace""
+    .replace(/__([^_]+)__/g, '$1')       // __underline__
+    .replace(/~~([^~]+)~~/g, '$1')       // ~~strikethrough~~
+    .replace(/<color\s+[^>]+>([^<]*)<\/color>/g, '$1') // <color ...>text</color>
+    .replace(/<bgcolor\s+[^>]+>([^<]*)<\/bgcolor>/g, '$1'); // <bgcolor ...>text</bgcolor>
+}
+
+/**
+ * Calculate participant width based on display name
+ * @param {Object} participant - Participant node
+ * @returns {number} Calculated width
+ */
+function calculateParticipantWidth(participant) {
+  const displayName = participant.displayName || participant.alias || '';
+  const lines = displayName.split('\n');
+
+  // Find the longest line (after stripping markup)
+  let maxLength = 0;
+  for (const line of lines) {
+    const plainText = stripMarkup(line);
+    maxLength = Math.max(maxLength, plainText.length);
+  }
+
+  // Calculate width based on text length
+  const textWidth = maxLength * PARTICIPANT_CHAR_WIDTH + PARTICIPANT_PADDING;
+  return Math.max(PARTICIPANT_MIN_WIDTH, textWidth);
+}
 
 /**
  * Calculate positions for all AST nodes
@@ -103,22 +144,35 @@ export function calculateLayout(ast) {
     baseSpacing = PARTICIPANT_SPACING;
   }
 
+  // Calculate widths for all participants first
+  const participantWidths = new Map();
+  participants.forEach(p => {
+    participantWidths.set(p.alias, calculateParticipantWidth(p));
+  });
+
   // Position participants with adjusted spacing
+  // Spacing is the distance between X positions (left edges)
+  // We need to ensure spacing is large enough to prevent overlap
   let currentX = PARTICIPANT_START_X;
   participants.forEach((p, index) => {
-    // Add any extra spacing needed before this participant
+    const width = participantWidths.get(p.alias);
+
     if (index > 0) {
+      const prevWidth = participantWidths.get(participants[index - 1].alias);
       const extraSpace = extraSpacingNeeded.get(index) || 0;
-      const spacing = Math.max(baseSpacing, extraSpace);
+      const requestedSpacing = Math.max(baseSpacing, extraSpace);
+      // Minimum spacing needed to prevent overlap: prev width + small gap
+      const minSpacing = prevWidth + 20;
+      const spacing = Math.max(requestedSpacing, minSpacing);
       currentX += spacing;
     }
 
     participantLayout.set(p.alias, {
       x: currentX,
       y: PARTICIPANT_START_Y + titleOffset,
-      width: PARTICIPANT_WIDTH,
+      width: width,
       height: PARTICIPANT_HEIGHT,
-      centerX: currentX + PARTICIPANT_WIDTH / 2
+      centerX: currentX + width / 2
     });
     layout.set(p.id, participantLayout.get(p.alias));
   });
