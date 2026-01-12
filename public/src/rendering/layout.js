@@ -15,7 +15,7 @@ const PARTICIPANT_SPACING = 150;
 const PARTICIPANT_START_X = 50;
 const PARTICIPANT_START_Y = 50;
 const TITLE_HEIGHT = 30; // Extra space when title present
-const MESSAGE_START_Y = 130; // Below participants
+const MESSAGE_START_Y = 150; // Below participants (extra space for icon labels)
 const DEFAULT_MESSAGE_SPACING = 50;
 const BLANKLINE_SPACING = 20;
 const ERROR_HEIGHT = 40;
@@ -132,6 +132,52 @@ export function calculateLayout(ast) {
       const spaceNeeded = noteWidth + NOTE_CONNECTOR_GAP * 2;
       const current = extraSpacingNeeded.get(targetIndex + 1) || 0;
       extraSpacingNeeded.set(targetIndex + 1, Math.max(current, spaceNeeded));
+    }
+  }
+
+  // Pre-calculate message label widths to add extra spacing between participants
+  const SELF_MESSAGE_LOOP_WIDTH = 40; // From messages.js
+  const SELF_MESSAGE_LABEL_GAP = 5; // Gap between loop and label
+  const MESSAGE_LABEL_PADDING = 20; // Padding on each side of centered label
+  const messages = ast.filter(n => n.type === 'message');
+
+  for (const msg of messages) {
+    const fromIndex = participantOrder.indexOf(msg.from);
+    const toIndex = participantOrder.indexOf(msg.to);
+    if (fromIndex < 0 || toIndex < 0) continue;
+
+    // Calculate label width - use longest line for multiline labels
+    const label = msg.label || '';
+    const lines = label.split('\\n');
+    let maxLineLength = 0;
+    for (const line of lines) {
+      const plainLine = stripMarkup(line);
+      maxLineLength = Math.max(maxLineLength, plainLine.length);
+    }
+    const labelWidth = maxLineLength * CHAR_WIDTH;
+
+    if (msg.from === msg.to) {
+      // Self-message: loops to the right
+      if (fromIndex >= participantOrder.length - 1) continue;
+
+      // Total space needed to the right: loop width + gap + label width + small padding
+      const spaceNeeded = SELF_MESSAGE_LOOP_WIDTH + SELF_MESSAGE_LABEL_GAP + labelWidth + 10;
+
+      // This space is needed between this participant and the next
+      const current = extraSpacingNeeded.get(fromIndex + 1) || 0;
+      extraSpacingNeeded.set(fromIndex + 1, Math.max(current, spaceNeeded));
+    } else {
+      // Regular message: label is centered between participants
+      // The label needs space equal to its width plus padding
+      const minIndex = Math.min(fromIndex, toIndex);
+      const maxIndex = Math.max(fromIndex, toIndex);
+
+      // For adjacent participants, ensure enough space for the label
+      if (maxIndex === minIndex + 1) {
+        const spaceNeeded = labelWidth + MESSAGE_LABEL_PADDING;
+        const current = extraSpacingNeeded.get(maxIndex) || 0;
+        extraSpacingNeeded.set(maxIndex, Math.max(current, spaceNeeded));
+      }
     }
   }
 

@@ -1,4 +1,4 @@
-import { createShareURL, loadFromURL } from '../src/storage/url.js';
+import { createShareURL, loadFromURL } from '../public/src/storage/url.js';
 import { JSDOM } from 'jsdom';
 
 describe('url', () => {

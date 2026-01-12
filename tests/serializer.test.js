@@ -2,8 +2,8 @@
 // See DESIGN.md for serialization format
 
 import { describe, it, expect } from 'vitest';
-import { serialize } from '../src/ast/serializer.js';
-import { parse } from '../src/ast/parser.js';
+import { serialize } from '../public/src/ast/serializer.js';
+import { parse } from '../public/src/ast/parser.js';
 
 describe('Serializer', () => {
   describe('empty AST', () => {

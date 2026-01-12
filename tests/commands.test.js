@@ -1,26 +1,26 @@
 // Tests for Command pattern implementation (BACKLOG-066, BACKLOG-067, BACKLOG-071, BACKLOG-074, BACKLOG-075)
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { Command, CommandHistory } from '../src/commands/Command.js';
-import { ReplaceASTCommand } from '../src/commands/ReplaceASTCommand.js';
-import { RemoveNodeCommand } from '../src/commands/RemoveNodeCommand.js';
-import { ReorderNodeCommand } from '../src/commands/ReorderNodeCommand.js';
-import { MoveMessageTargetCommand } from '../src/commands/MoveMessageTargetCommand.js';
-import { MoveMessageSourceCommand } from '../src/commands/MoveMessageSourceCommand.js';
-import { EditMessageLabelCommand } from '../src/commands/EditMessageLabelCommand.js';
-import { AddMessageCommand } from '../src/commands/AddMessageCommand.js';
-import { ReorderParticipantCommand } from '../src/commands/ReorderParticipantCommand.js';
-import { EditParticipantCommand } from '../src/commands/EditParticipantCommand.js';
-import { AdjustFragmentBoundaryCommand } from '../src/commands/AdjustFragmentBoundaryCommand.js';
-import { MoveEntryBetweenClausesCommand } from '../src/commands/MoveEntryBetweenClausesCommand.js';
-import { EditFragmentConditionCommand } from '../src/commands/EditFragmentConditionCommand.js';
-import { EditElseConditionCommand } from '../src/commands/EditElseConditionCommand.js';
-import { ChangeEntrySpacingCommand } from '../src/commands/ChangeEntrySpacingCommand.js';
-import { AddParticipantCommand } from '../src/commands/AddParticipantCommand.js';
-import { AddFragmentCommand } from '../src/commands/AddFragmentCommand.js';
-import { EditNoteTextCommand } from '../src/commands/EditNoteTextCommand.js';
-import { ToggleExpandableCommand } from '../src/commands/ToggleExpandableCommand.js';
-import { MoveNoteToParticipantCommand } from '../src/commands/MoveNoteToParticipantCommand.js';
+import { Command, CommandHistory } from '../public/src/commands/Command.js';
+import { ReplaceASTCommand } from '../public/src/commands/ReplaceASTCommand.js';
+import { RemoveNodeCommand } from '../public/src/commands/RemoveNodeCommand.js';
+import { ReorderNodeCommand } from '../public/src/commands/ReorderNodeCommand.js';
+import { MoveMessageTargetCommand } from '../public/src/commands/MoveMessageTargetCommand.js';
+import { MoveMessageSourceCommand } from '../public/src/commands/MoveMessageSourceCommand.js';
+import { EditMessageLabelCommand } from '../public/src/commands/EditMessageLabelCommand.js';
+import { AddMessageCommand } from '../public/src/commands/AddMessageCommand.js';
+import { ReorderParticipantCommand } from '../public/src/commands/ReorderParticipantCommand.js';
+import { EditParticipantCommand } from '../public/src/commands/EditParticipantCommand.js';
+import { AdjustFragmentBoundaryCommand } from '../public/src/commands/AdjustFragmentBoundaryCommand.js';
+import { MoveEntryBetweenClausesCommand } from '../public/src/commands/MoveEntryBetweenClausesCommand.js';
+import { EditFragmentConditionCommand } from '../public/src/commands/EditFragmentConditionCommand.js';
+import { EditElseConditionCommand } from '../public/src/commands/EditElseConditionCommand.js';
+import { ChangeEntrySpacingCommand } from '../public/src/commands/ChangeEntrySpacingCommand.js';
+import { AddParticipantCommand } from '../public/src/commands/AddParticipantCommand.js';
+import { AddFragmentCommand } from '../public/src/commands/AddFragmentCommand.js';
+import { EditNoteTextCommand } from '../public/src/commands/EditNoteTextCommand.js';
+import { ToggleExpandableCommand } from '../public/src/commands/ToggleExpandableCommand.js';
+import { MoveNoteToParticipantCommand } from '../public/src/commands/MoveNoteToParticipantCommand.js';
 
 // Test command that adds an item to AST
 class AddItemCommand extends Command {

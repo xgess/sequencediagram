@@ -1,4 +1,4 @@
-import { startAutosave, stopAutosave, recoverAutosave } from '../src/storage/autosave.js';
+import { startAutosave, stopAutosave, recoverAutosave } from '../public/src/storage/autosave.js';
 import { vi } from 'vitest';
 
 describe('autosave', () => {

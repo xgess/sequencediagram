@@ -1,7 +1,7 @@
 // Tests for context menu (BACKLOG-088)
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { showContextMenu, hideContextMenu, isContextMenuVisible } from '../src/interaction/contextMenu.js';
+import { showContextMenu, hideContextMenu, isContextMenuVisible } from '../public/src/interaction/contextMenu.js';
 
 describe('Context Menu (BACKLOG-088)', () => {
   let actionCallback;

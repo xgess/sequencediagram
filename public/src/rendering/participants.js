@@ -17,6 +17,7 @@ export function renderParticipant(node, layoutInfo) {
   const group = document.createElementNS(SVG_NS, 'g');
   group.setAttribute('data-node-id', node.id);
   group.setAttribute('data-alias', node.alias);
+  group.setAttribute('data-type', node.participantType || 'default');
   group.setAttribute('class', 'participant');
 
   switch (node.participantType) {

@@ -2,7 +2,7 @@
 // See DESIGN.md for AST structure
 
 import { describe, it, expect } from 'vitest';
-import { parse } from '../src/ast/parser.js';
+import { parse } from '../public/src/ast/parser.js';
 
 describe('Parser', () => {
   describe('empty input', () => {

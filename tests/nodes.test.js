@@ -1,7 +1,7 @@
 // AST node utilities tests
 
 import { describe, it, expect } from 'vitest';
-import { generateId, NODE_TYPES } from '../src/ast/nodes.js';
+import { generateId, NODE_TYPES } from '../public/src/ast/nodes.js';
 
 describe('Node utilities', () => {
   describe('generateId', () => {

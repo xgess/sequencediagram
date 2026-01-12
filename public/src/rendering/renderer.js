@@ -1050,6 +1050,7 @@ function createDefs() {
   const defs = document.createElementNS(SVG_NS, 'defs');
 
   // Solid arrowhead (for -> and -->)
+  // Use explicit black color instead of context-stroke for browser compatibility
   const solidArrow = document.createElementNS(SVG_NS, 'marker');
   solidArrow.setAttribute('id', 'arrowhead-solid');
   solidArrow.setAttribute('markerWidth', '10');
@@ -1060,7 +1061,7 @@ function createDefs() {
 
   const solidPath = document.createElementNS(SVG_NS, 'polygon');
   solidPath.setAttribute('points', '0 0, 10 3.5, 0 7');
-  solidPath.setAttribute('fill', 'context-stroke');
+  solidPath.setAttribute('fill', 'black');
   solidArrow.appendChild(solidPath);
   defs.appendChild(solidArrow);
 
@@ -1076,7 +1077,7 @@ function createDefs() {
   const openPath = document.createElementNS(SVG_NS, 'polyline');
   openPath.setAttribute('points', '0 0, 10 3.5, 0 7');
   openPath.setAttribute('fill', 'none');
-  openPath.setAttribute('stroke', 'context-stroke');
+  openPath.setAttribute('stroke', 'black');
   openPath.setAttribute('stroke-width', '1');
   openArrow.appendChild(openPath);
   defs.appendChild(openArrow);
@@ -1092,7 +1093,7 @@ function createDefs() {
 
   const solidStartPath = document.createElementNS(SVG_NS, 'polygon');
   solidStartPath.setAttribute('points', '10 0, 0 3.5, 10 7');
-  solidStartPath.setAttribute('fill', 'context-stroke');
+  solidStartPath.setAttribute('fill', 'black');
   solidArrowStart.appendChild(solidStartPath);
   defs.appendChild(solidArrowStart);
 
@@ -1108,7 +1109,7 @@ function createDefs() {
   const openStartPath = document.createElementNS(SVG_NS, 'polyline');
   openStartPath.setAttribute('points', '10 0, 0 3.5, 10 7');
   openStartPath.setAttribute('fill', 'none');
-  openStartPath.setAttribute('stroke', 'context-stroke');
+  openStartPath.setAttribute('stroke', 'black');
   openStartPath.setAttribute('stroke-width', '1');
   openArrowStart.appendChild(openStartPath);
   defs.appendChild(openArrowStart);
@@ -1124,7 +1125,7 @@ function createDefs() {
 
   const xPath = document.createElementNS(SVG_NS, 'path');
   xPath.setAttribute('d', 'M 0 0 L 10 10 M 10 0 L 0 10');
-  xPath.setAttribute('stroke', 'context-stroke');
+  xPath.setAttribute('stroke', 'black');
   xPath.setAttribute('stroke-width', '2');
   xMarker.appendChild(xPath);
   defs.appendChild(xMarker);
@@ -1163,7 +1164,7 @@ function addIconFontStyles(defs, iconParticipants) {
       @font-face {
         font-family: "FA7-Solid-SVG";
         font-weight: 900;
-        src: url("/lib/fontawesome/webfonts/fa-solid-900.woff2") format("woff2");
+        src: url("lib/fontawesome/webfonts/fa-solid-900.woff2") format("woff2");
       }
     `;
   }
@@ -1173,7 +1174,7 @@ function addIconFontStyles(defs, iconParticipants) {
       @font-face {
         font-family: "FA7-Regular-SVG";
         font-weight: 400;
-        src: url("/lib/fontawesome/webfonts/fa-regular-400.woff2") format("woff2");
+        src: url("lib/fontawesome/webfonts/fa-regular-400.woff2") format("woff2");
       }
     `;
   }
@@ -1183,7 +1184,7 @@ function addIconFontStyles(defs, iconParticipants) {
       @font-face {
         font-family: "FA7-Brands-SVG";
         font-weight: 400;
-        src: url("/lib/fontawesome/webfonts/fa-brands-400.woff2") format("woff2");
+        src: url("lib/fontawesome/webfonts/fa-brands-400.woff2") format("woff2");
       }
     `;
   }
@@ -1193,7 +1194,7 @@ function addIconFontStyles(defs, iconParticipants) {
       @font-face {
         font-family: "MDI-SVG";
         font-weight: normal;
-        src: url("/lib/mdi/fonts/materialdesignicons-webfont.woff2") format("woff2");
+        src: url("lib/mdi/fonts/materialdesignicons-webfont.woff2") format("woff2");
       }
     `;
   }

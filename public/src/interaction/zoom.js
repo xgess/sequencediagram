@@ -6,6 +6,7 @@ const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 5;
 let zoomLevelEl;
 let diagramSelector;
+let zoomChangeCallbacks = [];
 
 /**
  * Get the current diagram element (queries fresh to handle re-renders)
@@ -129,6 +130,17 @@ export function updateZoom() {
   if (zoomLevelEl) {
     zoomLevelEl.textContent = `${Math.round(currentZoom * 100)}%`;
   }
+
+  // Notify listeners of zoom change
+  zoomChangeCallbacks.forEach(cb => cb(currentZoom));
+}
+
+/**
+ * Register a callback for zoom changes
+ * @param {Function} callback - Called with current zoom level when zoom changes
+ */
+export function onZoomChange(callback) {
+  zoomChangeCallbacks.push(callback);
 }
 
 /**

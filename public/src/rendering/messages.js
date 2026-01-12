@@ -36,11 +36,14 @@ export function renderMessage(node, layoutInfo, messageNumber = null, resolvedSt
   const isBidirectional = arrowType.startsWith('<->') || arrowType.startsWith('<->>');
   const isLost = arrowType.endsWith('x');
 
+  // Check if this is a self-message (from and to are the same participant)
+  const isSelfMessage = fromX === toX;
+
   // For reversed arrows, swap the coordinates visually
   // (the message is from A to B syntactically, but arrow points from B to A)
   let lineFromX = fromX;
   let lineToX = toX;
-  if (isReversed) {
+  if (isReversed && !isSelfMessage) {
     lineFromX = toX;
     lineToX = fromX;
   }
@@ -50,7 +53,67 @@ export function renderMessage(node, layoutInfo, messageNumber = null, resolvedSt
   const startY = y;
   const endY = y + delayOffset;
 
-  // Create the arrow line
+  // Self-messages render as a loopback arrow
+  if (isSelfMessage) {
+    const loopWidth = 40;
+    const loopHeight = 20 + delayOffset;
+
+    // Create path for loopback: right, down, left with arrow
+    const path = document.createElementNS(SVG_NS, 'path');
+    const d = `M ${fromX} ${startY}
+               L ${fromX + loopWidth} ${startY}
+               L ${fromX + loopWidth} ${startY + loopHeight}
+               L ${fromX} ${startY + loopHeight}`;
+    path.setAttribute('d', d);
+    path.setAttribute('fill', 'none');
+
+    // Apply styling
+    const style = resolvedStyle || node.style || {};
+    const strokeColor = resolveColor(style.color) || 'black';
+    path.setAttribute('stroke', strokeColor);
+    path.setAttribute('stroke-width', style.width !== undefined ? style.width : 1);
+
+    // Apply dashed style for return arrows
+    if (arrowType.includes('--')) {
+      path.setAttribute('stroke-dasharray', '5,5');
+    }
+
+    // Add arrowhead marker
+    const markerType = arrowType.endsWith('>>') ? 'open' : 'solid';
+    const markerId = getOrCreateColoredMarker(markerType, strokeColor, defs);
+    path.setAttribute('marker-end', `url(#${markerId})`);
+
+    group.appendChild(path);
+
+    // Create label text for self-message
+    if (node.label || messageNumber !== null) {
+      let labelText = '';
+      if (messageNumber !== null) {
+        labelText = `${messageNumber}. `;
+      }
+      labelText += node.label || '';
+
+      const lineCount = getLineCount(labelText);
+      const lineHeight = 16;
+      const baseOffset = 4;
+      // Position text to the right of the loop
+      const textX = fromX + loopWidth + 5;
+      const textY = startY + loopHeight / 2;
+
+      const textEl = renderMarkupText(labelText, {
+        x: textX,
+        y: textY,
+        textAnchor: 'start',
+        fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+        fontSize: '11'
+      });
+      group.appendChild(textEl);
+    }
+
+    return group;
+  }
+
+  // Create the arrow line (normal message)
   const line = document.createElementNS(SVG_NS, 'line');
   line.setAttribute('x1', lineFromX);
   line.setAttribute('y1', startY);

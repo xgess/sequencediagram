@@ -2,9 +2,9 @@
 // Verifies all examples in examples/ directory parse and render without errors
 
 import { describe, it, expect } from 'vitest';
-import { parse } from '../src/ast/parser.js';
-import { render } from '../src/rendering/renderer.js';
-import { serialize } from '../src/ast/serializer.js';
+import { parse } from '../public/src/ast/parser.js';
+import { render } from '../public/src/rendering/renderer.js';
+import { serialize } from '../public/src/ast/serializer.js';
 import fs from 'fs';
 import path from 'path';
 

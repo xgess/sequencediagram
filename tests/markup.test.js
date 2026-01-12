@@ -3,8 +3,8 @@
 // Tests for advanced text markup (BACKLOG-139)
 
 import { describe, it, expect } from 'vitest';
-import { parseMarkup, serializeMarkup, hasMarkup } from '../src/markup/parser.js';
-import { renderMarkupText, isMultiline, getLineCount } from '../src/markup/renderer.js';
+import { parseMarkup, serializeMarkup, hasMarkup } from '../public/src/markup/parser.js';
+import { renderMarkupText, isMultiline, getLineCount } from '../public/src/markup/renderer.js';
 
 describe('Markup Parser (BACKLOG-045)', () => {
   describe('parseMarkup', () => {

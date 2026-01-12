@@ -1,4 +1,4 @@
-import { saveDiagram, listDiagrams, deleteDiagram } from '../src/storage/localstorage.js';
+import { saveDiagram, listDiagrams, deleteDiagram } from '../public/src/storage/localstorage.js';
 
 describe('localStorage', () => {
   beforeEach(() => {

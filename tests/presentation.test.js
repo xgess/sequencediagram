@@ -12,7 +12,7 @@ import {
   exitReadOnlyMode,
   toggleReadOnlyMode,
   isInReadOnlyMode
-} from '../src/interaction/presentation.js';
+} from '../public/src/interaction/presentation.js';
 
 describe('Presentation Mode (BACKLOG-111)', () => {
   let exitCallbackCalled = false;

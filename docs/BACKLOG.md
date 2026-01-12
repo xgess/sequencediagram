@@ -91,6 +91,155 @@ These require external action:
 
 ---
 
+## Participant Overlay Polish (OVERLAY-001 to OVERLAY-008)
+
+Make the sticky participant overlay look professional and polished when scrolling long diagrams.
+
+### OVERLAY-001: Render actual participant visuals instead of text boxes
+
+**Current**: Shows plain text boxes with participant names
+**Goal**: Show the actual participant visual representation (actor stick figures, database cylinders, FontAwesome icons, MDI icons, images)
+
+Implementation:
+1. Clone the participant's SVG group from the main diagram
+2. Scale it appropriately for the overlay height (36-40px)
+3. Strip the text label if showing separately
+4. Position the visual centered in the overlay box
+5. For icon participants (FA6, MDI), render the actual icon character
+
+Files: `src/interaction/participantOverlay.js`
+
+### OVERLAY-002: Match participant styling in overlay
+
+**Current**: All overlay boxes are identical white boxes with black borders
+**Goal**: Preserve participant colors, borders, and style attributes
+
+Implementation:
+1. Extract style info from participant data-attributes or computed styles
+2. Apply background color (`fill` from rect)
+3. Apply border color (`stroke` from rect)
+4. Apply border style (dashed, dotted) if applicable
+5. For actors/databases/icons, use a subtle matching background
+
+Files: `src/interaction/participantOverlay.js`, `public/styles.css`
+
+### OVERLAY-003: Smooth fade-in/out transitions
+
+**Current**: Overlay appears/disappears instantly
+**Goal**: Subtle fade/slide animation when showing/hiding
+
+Implementation:
+1. Add CSS transitions for opacity and transform
+2. Fade from 0 to 1 opacity over 150-200ms
+3. Optional: slight slide down from -10px to 0
+4. Use `requestAnimationFrame` or CSS transitions (CSS preferred)
+5. Ensure no layout jank during transition
+
+CSS additions:
+```css
+#participant-overlay {
+  transition: opacity 150ms ease-out, transform 150ms ease-out;
+  opacity: 0;
+}
+#participant-overlay.visible {
+  opacity: 1;
+}
+```
+
+Files: `src/interaction/participantOverlay.js`, `public/styles.css`
+
+### OVERLAY-004: Handle multiline participant names elegantly
+
+**Current**: Displays full multiline text which may overflow
+**Goal**: Show truncated or wrapped text that fits within overlay height
+
+Implementation:
+1. Limit to first line if multiple lines exist
+2. Or use ellipsis truncation if single line is too long
+3. Show full name on hover via tooltip
+4. Ensure consistent height across all participants
+
+Files: `src/interaction/participantOverlay.js`, `public/styles.css`
+
+### OVERLAY-005: Proper sizing and spacing for icon participants
+
+**Current**: All overlay boxes use same width calculation
+**Goal**: Icon participants should show compact icon with appropriate spacing
+
+Implementation:
+1. Detect participant type (actor, database, icon)
+2. For icon types: render icon + abbreviated/truncated label
+3. Adjust box width based on content type
+4. Icons should be appropriately sized (24-28px) for overlay
+5. Ensure icons don't touch edges (proper padding)
+
+Files: `src/interaction/participantOverlay.js`
+
+### OVERLAY-006: Improved translucency and backdrop
+
+**Current**: Uses `backdrop-filter: blur(3px)` with 0.6 opacity background
+**Goal**: More polished glass-morphism effect
+
+Implementation:
+1. Fine-tune backdrop blur (try 4-8px)
+2. Adjust background opacity for better contrast
+3. Add subtle bottom border or shadow for definition
+4. Ensure text remains readable over any diagram content
+5. Test with various diagram backgrounds (colored fragments, notes)
+
+CSS updates:
+```css
+#participant-overlay {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+```
+
+Files: `public/styles.css`
+
+### OVERLAY-007: Sync overlay with zoom level
+
+**Current**: Basic scale multiplier applied to positions
+**Goal**: Overlay boxes should perfectly align with diagram participants at any zoom
+
+Implementation:
+1. Recalculate positions when zoom changes
+2. Listen to zoom events and re-render overlay
+3. Ensure overlay width matches zoomed participant width
+4. Test at zoom levels from 10% to 500%
+
+Files: `src/interaction/participantOverlay.js`, `src/interaction/zoom.js`
+
+### OVERLAY-008: Click-to-scroll navigation
+
+**Current**: Overlay boxes are non-interactive
+**Goal**: Clicking an overlay participant scrolls to that participant's first activity
+
+Implementation:
+1. Add click handlers to overlay boxes
+2. Find the participant's lifeline and first message/activation
+3. Smooth scroll to bring that section into view
+4. Optional: highlight the participant briefly after scroll
+5. Cursor should be pointer on hover
+
+Files: `src/interaction/participantOverlay.js`, `public/styles.css`
+
+### Priority Order
+
+1. OVERLAY-003 (transitions) - Quick win, big visual impact
+2. OVERLAY-006 (backdrop polish) - Quick win, CSS only
+3. OVERLAY-001 (actual visuals) - Core feature improvement
+4. OVERLAY-002 (styling match) - Enhances OVERLAY-001
+5. OVERLAY-007 (zoom sync) - Bug fix category
+6. OVERLAY-004 (multiline) - Edge case handling
+7. OVERLAY-005 (icon sizing) - Detail work
+8. OVERLAY-008 (click nav) - Nice-to-have enhancement
+
+---
+
 ## Future Enhancements
 
 Ideas for future work (not committed):

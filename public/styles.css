@@ -5,25 +5,25 @@
 @font-face {
   font-family: "FA7-Solid-SVG";
   font-weight: 900;
-  src: url("/lib/fontawesome/webfonts/fa-solid-900.woff2") format("woff2");
+  src: url("lib/fontawesome/webfonts/fa-solid-900.woff2") format("woff2");
 }
 
 @font-face {
   font-family: "FA7-Regular-SVG";
   font-weight: 400;
-  src: url("/lib/fontawesome/webfonts/fa-regular-400.woff2") format("woff2");
+  src: url("lib/fontawesome/webfonts/fa-regular-400.woff2") format("woff2");
 }
 
 @font-face {
   font-family: "FA7-Brands-SVG";
   font-weight: 400;
-  src: url("/lib/fontawesome/webfonts/fa-brands-400.woff2") format("woff2");
+  src: url("lib/fontawesome/webfonts/fa-brands-400.woff2") format("woff2");
 }
 
 @font-face {
   font-family: "MDI-SVG";
   font-weight: normal;
-  src: url("/lib/mdi/fonts/materialdesignicons-webfont.woff2") format("woff2");
+  src: url("lib/mdi/fonts/materialdesignicons-webfont.woff2") format("woff2");
 }
 
 * {
@@ -351,45 +351,42 @@ body {
   border-color: #3a7dbf;
 }
 
-/* Participant Overlay (BACKLOG-113) */
+/* Participant Overlay (BACKLOG-113, OVERLAY-001 to OVERLAY-007) */
 #participant-overlay {
   position: sticky;
-  top: 0;
-  left: 0;
-  right: 0;
-  background: rgba(250, 250, 250, 0.6);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  top: 16px;
   z-index: 100;
-  padding: 12px 16px;
-  margin: -16px -16px 0 -16px;
+  height: 0;
+  overflow: visible;
+  pointer-events: none;
+  /* Initially hidden */
+  display: none;
+  /* No background - just floating participants */
+  background: transparent;
 }
 
-.participant-overlay-boxes {
-  display: flex;
-  position: relative;
-  min-height: 40px;
-  transition: transform 0.05s ease-out;
+#participant-overlay.visible {
+  display: block;
 }
 
-.participant-overlay-box {
-  position: absolute;
-  height: 36px;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid #333;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  padding: 0 10px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transform: translateX(-50%);  /* Center the box over the position */
+.participant-overlay-svg-container {
+  padding: 0;
+  /* Move left to account for diagram-container border */
+  margin-left: -1px;
+}
+
+.participant-overlay-svg {
+  display: block;
+}
+
+/* Style the overlay participants with translucent glass effect */
+#participant-overlay .participant rect {
+  fill: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(4px);
+}
+
+#participant-overlay .participant {
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.1));
 }
 
 /* Hide overlay in presentation mode (use diagram's own scrolling) */
@@ -422,4 +419,87 @@ body {
 
 .read-only-mode #diagram-toolbar button {
   pointer-events: auto;
+}
+
+/* Share Dialog */
+.share-dialog-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.share-dialog-modal {
+  background: white;
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  min-width: 500px;
+  max-width: 90vw;
+}
+
+.share-dialog-modal h2 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.share-dialog-modal textarea {
+  width: 100%;
+  padding: 10px;
+  font-size: 13px;
+  font-family: monospace;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 60px;
+  max-height: 300px;
+  word-break: break-all;
+}
+
+.share-dialog-modal textarea:focus {
+  outline: none;
+  border-color: #4a90d9;
+  box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.2);
+}
+
+.share-dialog-modal button {
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 8px;
+}
+
+.share-dialog-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.share-dialog-buttons button:first-child {
+  background: #4a90d9;
+  color: white;
+  border: 1px solid #3a7dbf;
+}
+
+.share-dialog-buttons button:first-child:hover {
+  background: #3a7dbf;
+}
+
+.share-dialog-buttons button:last-child {
+  background: #f5f5f5;
+  border: 1px solid #ccc;
+}
+
+.share-dialog-buttons button:last-child:hover {
+  background: #e5e5e5;
 }

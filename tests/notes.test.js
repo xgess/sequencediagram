@@ -2,9 +2,9 @@
 // Tests for note and box styling (BACKLOG-127)
 
 import { describe, it, expect } from 'vitest';
-import { parse } from '../src/ast/parser.js';
-import { serialize } from '../src/ast/serializer.js';
-import { render } from '../src/rendering/renderer.js';
+import { parse } from '../public/src/ast/parser.js';
+import { serialize } from '../public/src/ast/serializer.js';
+import { render } from '../public/src/rendering/renderer.js';
 
 describe('Notes and Dividers (BACKLOG-126)', () => {
 

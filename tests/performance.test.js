@@ -2,9 +2,9 @@
 // Measures parse and render time for diagrams of varying sizes
 
 import { describe, it, expect } from 'vitest';
-import { parse } from '../src/ast/parser.js';
-import { render } from '../src/rendering/renderer.js';
-import { serialize } from '../src/ast/serializer.js';
+import { parse } from '../public/src/ast/parser.js';
+import { render } from '../public/src/rendering/renderer.js';
+import { serialize } from '../public/src/ast/serializer.js';
 
 /**
  * Generate a diagram with specified number of entries

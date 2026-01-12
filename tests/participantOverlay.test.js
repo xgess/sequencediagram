@@ -8,9 +8,9 @@ import {
   getOverlayEnabled,
   toggleOverlay,
   removeParticipantOverlay
-} from '../src/interaction/participantOverlay.js';
-import { parse } from '../src/ast/parser.js';
-import { render } from '../src/rendering/renderer.js';
+} from '../public/src/interaction/participantOverlay.js';
+import { parse } from '../public/src/ast/parser.js';
+import { render } from '../public/src/rendering/renderer.js';
 
 describe('Participant Overlay on Scroll (BACKLOG-113)', () => {
   let diagramPane;
@@ -53,7 +53,8 @@ describe('Participant Overlay on Scroll (BACKLOG-113)', () => {
       initParticipantOverlay(diagramPane);
 
       const overlay = document.getElementById('participant-overlay');
-      expect(overlay.style.display).toBe('none');
+      // Overlay uses CSS class for visibility (fade transitions)
+      expect(overlay.classList.contains('visible')).toBe(false);
     });
 
     it('should be enabled by default', () => {
@@ -193,7 +194,8 @@ participant Bob`;
       container.dispatchEvent(new Event('scroll'));
 
       const overlay = document.getElementById('participant-overlay');
-      expect(overlay.style.display).toBe('none');
+      // Overlay uses CSS class for visibility (fade transitions)
+      expect(overlay.classList.contains('visible')).toBe(false);
     });
   });
 

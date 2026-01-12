@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { parse } from '../src/ast/parser.js';
-import { render } from '../src/rendering/renderer.js';
-import { calculateLayout } from '../src/rendering/layout.js';
+import { parse } from '../public/src/ast/parser.js';
+import { render } from '../public/src/rendering/renderer.js';
+import { calculateLayout } from '../public/src/rendering/layout.js';
 
 describe('Activation positioning with notes (BUG-035, BUG-036)', () => {
   it('should start activation at message Y, not at note Y', () => {

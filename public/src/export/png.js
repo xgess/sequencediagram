@@ -1,6 +1,8 @@
 // PNG export functionality (BACKLOG-092)
 // Converts SVG to PNG using Canvas
 
+import { embedFontsInSVG } from './fonts.js';
+
 /**
  * Export SVG element to PNG blob
  * @param {SVGElement} svgElement - The SVG element to export
@@ -26,6 +28,9 @@ export async function exportPNG(svgElement, scale = 2) {
   background.setAttribute('height', '100%');
   background.setAttribute('fill', 'white');
   clonedSvg.insertBefore(background, clonedSvg.firstChild);
+
+  // Embed fonts as base64 data URLs for canvas rendering
+  await embedFontsInSVG(clonedSvg);
 
   // Inline all styles
   inlineStyles(clonedSvg);

@@ -1,7 +1,7 @@
 // Tests for selection handling (BACKLOG-069)
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { initSelection, removeSelection, selectElement, deselectAll, getSelectedId } from '../src/interaction/selection.js';
+import { initSelection, removeSelection, selectElement, deselectAll, getSelectedId } from '../public/src/interaction/selection.js';
 
 // Mock document for tests
 function createMockSvg() {

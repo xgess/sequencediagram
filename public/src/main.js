@@ -38,14 +38,15 @@ import { showAddFragmentDialog, hideAddFragmentDialog } from './interaction/addF
 import { AddParticipantCommand } from './commands/AddParticipantCommand.js';
 import { AddFragmentCommand } from './commands/AddFragmentCommand.js';
 import { downloadPNG, copyPNGToClipboard } from './export/png.js';
+import { embedFontsInSVG } from './export/fonts.js';
 import { showShareDialog } from './interaction/share.js';
 import { showDiagramManager } from './interaction/diagramManager.js';
 import { startAutosave, recoverAutosave } from './storage/autosave.js';
 import { loadFromURL } from './storage/url.js';
 import { initSplitter } from './interaction/splitter.js';
-import { initZoom, getZoomLevel, shrinkToFit as applyShrinkToFit, updateZoom } from './interaction/zoom.js';
+import { initZoom, getZoomLevel, shrinkToFit as applyShrinkToFit, updateZoom, onZoomChange } from './interaction/zoom.js';
 import { initPresentation, enterPresentationMode, exitPresentationMode, togglePresentationMode, isInPresentationMode, enterReadOnlyMode, exitReadOnlyMode, toggleReadOnlyMode, isInReadOnlyMode } from './interaction/presentation.js';
-import { initParticipantOverlay, updateParticipantData } from './interaction/participantOverlay.js';
+import { initParticipantOverlay, updateParticipantData, onZoomChange as overlayZoomChange } from './interaction/participantOverlay.js';
 
 // App state
 let currentAst = [];
@@ -113,6 +114,9 @@ export function init() {
 
   // Initialize participant overlay
   initParticipantOverlay(diagramPane);
+
+  // Sync overlay with zoom changes
+  onZoomChange(() => overlayZoomChange());
 
   // Initialize keyboard shortcuts for diagram
   initDiagramKeyboard();
@@ -1906,7 +1910,7 @@ async function handleCopyPNG() {
 /**
  * Handle Export SVG button click
  */
-function handleExportSVG() {
+async function handleExportSVG() {
   if (!currentSvg) return;
 
   // Clone the SVG
@@ -1925,6 +1929,9 @@ function handleExportSVG() {
   const desc = document.createElementNS('http://www.w3.org/2000/svg', 'desc');
   desc.textContent = serialize(currentAst);
   clonedSvg.insertBefore(desc, clonedSvg.firstChild);
+
+  // Embed fonts as base64 data URLs for standalone SVG
+  await embedFontsInSVG(clonedSvg);
 
   // Serialize
   const serializer = new XMLSerializer();

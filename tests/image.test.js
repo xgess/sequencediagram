@@ -3,9 +3,9 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { parse } from '../src/ast/parser.js';
-import { serialize } from '../src/ast/serializer.js';
-import { render } from '../src/rendering/renderer.js';
+import { parse } from '../public/src/ast/parser.js';
+import { serialize } from '../public/src/ast/serializer.js';
+import { render } from '../public/src/rendering/renderer.js';
 
 // Small 1x1 pixel red PNG as base64 for testing
 const TEST_IMAGE_DATA = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';

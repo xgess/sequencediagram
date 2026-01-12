@@ -1,7 +1,7 @@
 // Tests for zoom controls (BACKLOG-110)
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { initZoom, getZoomLevel, setZoomLevel, zoomIn, zoomOut, resetZoom, shrinkToFit } from '../src/interaction/zoom.js';
+import { initZoom, getZoomLevel, setZoomLevel, zoomIn, zoomOut, resetZoom, shrinkToFit } from '../public/src/interaction/zoom.js';
 
 describe('Zoom Controls (BACKLOG-110)', () => {
   let diagramEl;
