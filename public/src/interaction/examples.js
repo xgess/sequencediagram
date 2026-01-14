@@ -1,6 +1,6 @@
 /**
- * Examples dropdown menu
- * Shows a list of example diagrams that can be loaded into the editor
+ * Resources dropdown menu
+ * Shows example diagrams and reference links
  */
 
 // Example files (relative to public folder when served)
@@ -14,7 +14,7 @@ let dropdown = null;
 let loadCallback = null;
 
 /**
- * Initialize the examples dropdown
+ * Initialize the resources dropdown
  * @param {Function} onLoad - Callback to load text into editor: (text) => void
  */
 export function initExamplesDropdown(onLoad) {
@@ -27,7 +27,7 @@ export function initExamplesDropdown(onLoad) {
   const container = document.createElement('div');
   container.className = 'examples-dropdown';
   container.innerHTML = `
-    <span id="examples-btn" class="examples-link" title="Load example diagram">See An Example <span class="dropdown-arrow">▾</span></span>
+    <span id="examples-btn" class="examples-link" title="Resources and examples">Resources <span class="dropdown-arrow">▾</span></span>
     <div class="examples-menu"></div>
   `;
 
@@ -43,7 +43,13 @@ export function initExamplesDropdown(onLoad) {
   const menu = container.querySelector('.examples-menu');
   dropdown = menu;
 
-  // Populate menu items
+  // Add Examples section header
+  const examplesHeader = document.createElement('div');
+  examplesHeader.className = 'examples-menu-header';
+  examplesHeader.textContent = 'Examples';
+  menu.appendChild(examplesHeader);
+
+  // Populate example items
   for (const example of EXAMPLES) {
     const item = document.createElement('div');
     item.className = 'examples-menu-item';
@@ -52,6 +58,27 @@ export function initExamplesDropdown(onLoad) {
     item.addEventListener('click', () => loadExample(example.name, example.file));
     menu.appendChild(item);
   }
+
+  // Add divider
+  const divider = document.createElement('div');
+  divider.className = 'examples-menu-divider';
+  menu.appendChild(divider);
+
+  // Add Reference section header
+  const refHeader = document.createElement('div');
+  refHeader.className = 'examples-menu-header';
+  refHeader.textContent = 'Reference';
+  menu.appendChild(refHeader);
+
+  // Add Icon Reference link
+  const iconRef = document.createElement('div');
+  iconRef.className = 'examples-menu-item';
+  iconRef.innerHTML = 'Icon Reference <span class="external-icon">↗</span>';
+  iconRef.addEventListener('click', () => {
+    window.open('icons.html', '_blank');
+    dropdown?.classList.remove('open');
+  });
+  menu.appendChild(iconRef);
 
   // Toggle menu on button click
   btn.addEventListener('click', (e) => {
@@ -139,16 +166,32 @@ function addStyles() {
       border-radius: 4px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.15);
       z-index: 1000;
-      min-width: 150px;
+      min-width: 160px;
       margin-top: 4px;
+      padding: 4px 0;
     }
 
     .examples-menu.open {
       display: block;
     }
 
+    .examples-menu-header {
+      padding: 6px 12px 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .examples-menu-divider {
+      height: 1px;
+      background: #e0e0e0;
+      margin: 6px 0;
+    }
+
     .examples-menu-item {
-      padding: 8px 12px;
+      padding: 6px 12px;
       cursor: pointer;
       white-space: nowrap;
       font-size: 13px;
@@ -158,12 +201,10 @@ function addStyles() {
       background: #f0f0f0;
     }
 
-    .examples-menu-item:first-child {
-      border-radius: 4px 4px 0 0;
-    }
-
-    .examples-menu-item:last-child {
-      border-radius: 0 0 4px 4px;
+    .external-icon {
+      font-size: 10px;
+      margin-left: 4px;
+      opacity: 0.6;
     }
   `;
   document.head.appendChild(style);

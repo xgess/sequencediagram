@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Icon Reference - Sequence Diagram</title>
+  <link rel="stylesheet" href="lib/fontawesome/css/all.min.css">
+  <link rel="stylesheet" href="lib/mdi/css/materialdesignicons.min.css">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+      color: #333;
+    }
+
+    h1 {
+      margin: 0 0 10px 0;
+      font-size: 24px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    .search-container {
+      position: sticky;
+      top: 0;
+      background: #f5f5f5;
+      padding: 10px 0 20px;
+      z-index: 100;
+    }
+
+    .search-box {
+      width: 100%;
+      max-width: 400px;
+      padding: 10px 14px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      outline: none;
+    }
+
+    .search-box:focus {
+      border-color: #0066cc;
+      box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+    }
+
+    .stats {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #666;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 20px;
+    }
+
+    .tab {
+      padding: 8px 16px;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .tab:hover {
+      background: #f0f0f0;
+    }
+
+    .tab.active {
+      background: #0066cc;
+      color: white;
+      border-color: #0066cc;
+    }
+
+    .icon-section {
+      display: none;
+    }
+
+    .icon-section.active {
+      display: block;
+    }
+
+    .section-header {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 30px 0 15px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #ddd;
+    }
+
+    .section-header:first-child {
+      margin-top: 0;
+    }
+
+    .icon-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+    }
+
+    .icon-card {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .icon-card:hover {
+      border-color: #0066cc;
+      box-shadow: 0 2px 8px rgba(0, 102, 204, 0.15);
+    }
+
+    .icon-card.copied {
+      background: #e8f5e9;
+      border-color: #4caf50;
+    }
+
+    .icon-preview {
+      font-size: 24px;
+      width: 32px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .icon-info {
+      overflow: hidden;
+    }
+
+    .icon-name {
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .icon-usage {
+      font-size: 10px;
+      color: #888;
+      font-family: 'SF Mono', Monaco, Consolas, monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .copy-hint {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 13px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+
+    .copy-hint.show {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <h1>Icon Reference</h1>
+  <p class="subtitle">Click an icon to copy its usage syntax to your clipboard</p>
+
+  <div class="search-container">
+    <input type="text" class="search-box" placeholder="Search icons..." id="search">
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="fontawesome">FontAwesome</div>
+    <div class="tab" data-tab="mdi">Material Design</div>
+  </div>
+
+  <div id="fontawesome-section" class="icon-section active">
+    <div class="loading">Loading FontAwesome icons...</div>
+  </div>
+
+  <div id="mdi-section" class="icon-section">
+    <div class="loading">Loading Material Design icons...</div>
+  </div>
+
+  <div class="copy-hint" id="copy-hint">Copied to clipboard!</div>
+
+  <script>
+    // State
+    let faIcons = { solid: [], regular: [], brands: [] };
+    let mdiIcons = [];
+    let currentTab = 'fontawesome';
+
+    // DOM elements
+    const searchInput = document.getElementById('search');
+    const statsEl = document.getElementById('stats');
+    const faSectionEl = document.getElementById('fontawesome-section');
+    const mdiSectionEl = document.getElementById('mdi-section');
+    const copyHintEl = document.getElementById('copy-hint');
+    const tabs = document.querySelectorAll('.tab');
+
+    // Tab switching
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentTab = tab.dataset.tab;
+
+        document.querySelectorAll('.icon-section').forEach(s => s.classList.remove('active'));
+        document.getElementById(`${currentTab}-section`).classList.add('active');
+
+        updateStats();
+      });
+    });
+
+    // Search
+    searchInput.addEventListener('input', () => {
+      renderIcons();
+    });
+
+    // Copy to clipboard
+    function copyToClipboard(text, cardEl) {
+      navigator.clipboard.writeText(text).then(() => {
+        cardEl.classList.add('copied');
+        copyHintEl.classList.add('show');
+        setTimeout(() => {
+          cardEl.classList.remove('copied');
+          copyHintEl.classList.remove('show');
+        }, 1500);
+      });
+    }
+
+    // Create icon card
+    function createIconCard(iconClass, name, usage) {
+      const card = document.createElement('div');
+      card.className = 'icon-card';
+      card.innerHTML = `
+        <div class="icon-preview"><i class="${iconClass}"></i></div>
+        <div class="icon-info">
+          <div class="icon-name">${name}</div>
+          <div class="icon-usage">${usage}</div>
+        </div>
+      `;
+      card.addEventListener('click', () => copyToClipboard(usage, card));
+      return card;
+    }
+
+    // Render FontAwesome icons
+    function renderFontAwesome(filter = '') {
+      const filterLower = filter.toLowerCase();
+      let html = '';
+      let count = 0;
+
+      // Solid icons
+      const solidFiltered = faIcons.solid.filter(name => name.includes(filterLower));
+      if (solidFiltered.length > 0) {
+        html += '<div class="section-header">Solid</div><div class="icon-grid" id="fa-solid-grid"></div>';
+      }
+
+      // Regular icons
+      const regularFiltered = faIcons.regular.filter(name => name.includes(filterLower));
+      if (regularFiltered.length > 0) {
+        html += '<div class="section-header">Regular</div><div class="icon-grid" id="fa-regular-grid"></div>';
+      }
+
+      // Brands icons
+      const brandsFiltered = faIcons.brands.filter(name => name.includes(filterLower));
+      if (brandsFiltered.length > 0) {
+        html += '<div class="section-header">Brands</div><div class="icon-grid" id="fa-brands-grid"></div>';
+      }
+
+      count = solidFiltered.length + regularFiltered.length + brandsFiltered.length;
+
+      if (count === 0) {
+        faSectionEl.innerHTML = '<div class="no-results">No icons found matching your search</div>';
+        return 0;
+      }
+
+      faSectionEl.innerHTML = html;
+
+      // Populate grids
+      const solidGrid = document.getElementById('fa-solid-grid');
+      const regularGrid = document.getElementById('fa-regular-grid');
+      const brandsGrid = document.getElementById('fa-brands-grid');
+
+      solidFiltered.forEach(name => {
+        const usage = `fa6solid:${name}`;
+        solidGrid?.appendChild(createIconCard(`fa-solid fa-${name}`, name, usage));
+      });
+
+      regularFiltered.forEach(name => {
+        const usage = `fa6regular:${name}`;
+        regularGrid?.appendChild(createIconCard(`fa-regular fa-${name}`, name, usage));
+      });
+
+      brandsFiltered.forEach(name => {
+        const usage = `fa6brands:${name}`;
+        brandsGrid?.appendChild(createIconCard(`fa-brands fa-${name}`, name, usage));
+      });
+
+      return count;
+    }
+
+    // Render MDI icons
+    function renderMDI(filter = '') {
+      const filterLower = filter.toLowerCase();
+      const filtered = mdiIcons.filter(name => name.includes(filterLower));
+
+      if (filtered.length === 0) {
+        mdiSectionEl.innerHTML = '<div class="no-results">No icons found matching your search</div>';
+        return 0;
+      }
+
+      mdiSectionEl.innerHTML = '<div class="icon-grid" id="mdi-grid"></div>';
+      const grid = document.getElementById('mdi-grid');
+
+      filtered.forEach(name => {
+        const usage = `mdi:${name}`;
+        grid.appendChild(createIconCard(`mdi mdi-${name}`, name, usage));
+      });
+
+      return filtered.length;
+    }
+
+    // Render all icons
+    function renderIcons() {
+      const filter = searchInput.value.trim();
+
+      if (currentTab === 'fontawesome') {
+        renderFontAwesome(filter);
+      } else {
+        renderMDI(filter);
+      }
+
+      updateStats();
+    }
+
+    // Update stats
+    function updateStats() {
+      const filter = searchInput.value.trim().toLowerCase();
+
+      if (currentTab === 'fontawesome') {
+        const total = faIcons.solid.length + faIcons.regular.length + faIcons.brands.length;
+        if (filter) {
+          const filtered =
+            faIcons.solid.filter(n => n.includes(filter)).length +
+            faIcons.regular.filter(n => n.includes(filter)).length +
+            faIcons.brands.filter(n => n.includes(filter)).length;
+          statsEl.textContent = `Showing ${filtered} of ${total} FontAwesome icons`;
+        } else {
+          statsEl.textContent = `${total} FontAwesome icons (${faIcons.solid.length} solid, ${faIcons.regular.length} regular, ${faIcons.brands.length} brands)`;
+        }
+      } else {
+        const total = mdiIcons.length;
+        if (filter) {
+          const filtered = mdiIcons.filter(n => n.includes(filter)).length;
+          statsEl.textContent = `Showing ${filtered} of ${total} Material Design icons`;
+        } else {
+          statsEl.textContent = `${total} Material Design icons`;
+        }
+      }
+    }
+
+    // Load FontAwesome icons from metadata
+    async function loadFontAwesomeIcons() {
+      try {
+        const response = await fetch('lib/fontawesome/metadata/icons.json');
+        const data = await response.json();
+
+        for (const [name, info] of Object.entries(data)) {
+          const styles = info.styles || [];
+          if (styles.includes('solid')) faIcons.solid.push(name);
+          if (styles.includes('regular')) faIcons.regular.push(name);
+          if (styles.includes('brands')) faIcons.brands.push(name);
+        }
+
+        // Sort alphabetically
+        faIcons.solid.sort();
+        faIcons.regular.sort();
+        faIcons.brands.sort();
+
+        renderFontAwesome();
+        updateStats();
+      } catch (err) {
+        console.error('Failed to load FontAwesome icons:', err);
+        faSectionEl.innerHTML = '<div class="no-results">Failed to load FontAwesome icons</div>';
+      }
+    }
+
+    // Load MDI icons from CSS
+    async function loadMDIIcons() {
+      try {
+        const response = await fetch('lib/mdi/css/materialdesignicons.css');
+        const css = await response.text();
+
+        // Extract icon names from CSS rules like .mdi-account:before
+        const regex = /\.mdi-([a-z0-9-]+):before/g;
+        let match;
+        const iconSet = new Set();
+
+        while ((match = regex.exec(css)) !== null) {
+          iconSet.add(match[1]);
+        }
+
+        mdiIcons = Array.from(iconSet).sort();
+        renderMDI();
+        updateStats();
+      } catch (err) {
+        console.error('Failed to load MDI icons:', err);
+        mdiSectionEl.innerHTML = '<div class="no-results">Failed to load Material Design icons</div>';
+      }
+    }
+
+    // Initialize
+    loadFontAwesomeIcons();
+    loadMDIIcons();
+  </script>
+</body>
+</html>
