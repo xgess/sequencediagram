@@ -120,7 +120,19 @@ export function render(ast) {
   });
 
   // Render fragments (as background boxes)
-  fragments.forEach(fragment => {
+  // Sort fragments so outer ones render first (bottom of z-order) and inner ones render last (top)
+  // This ensures nested fragments are visible on top of their parents
+  const sortedFragments = [...fragments].sort((a, b) => {
+    const aLayout = layout.get(a.id);
+    const bLayout = layout.get(b.id);
+    if (!aLayout || !bLayout) return 0;
+    // First sort by y position (earlier y renders first)
+    if (aLayout.y !== bLayout.y) return aLayout.y - bLayout.y;
+    // For same y, larger fragments (taller) render first so smaller ones appear on top
+    return bLayout.height - aLayout.height;
+  });
+
+  sortedFragments.forEach(fragment => {
     const layoutInfo = layout.get(fragment.id);
     if (layoutInfo) {
       const fragmentEl = renderFragment(fragment, layoutInfo);

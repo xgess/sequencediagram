@@ -286,9 +286,7 @@ body {
 }
 
 .fragment rect {
-  fill: #f0f0f0;
-  stroke: black;
-  stroke-width: 1;
+  /* fill, stroke set inline by renderer to support custom colors */
 }
 
 .fragment text {
