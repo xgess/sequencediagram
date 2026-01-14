@@ -1,4 +1,4 @@
-// EditNoteText Command - BACKLOG-128
+// EditNoteText Command
 // Changes the text of a note, box, abox, or rbox
 
 import { Command } from './Command.js';

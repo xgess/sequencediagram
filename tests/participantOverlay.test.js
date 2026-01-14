@@ -1,4 +1,4 @@
-// Tests for participant overlay on scroll (BACKLOG-113)
+// Tests for participant overlay on scroll
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
@@ -12,7 +12,7 @@ import {
 import { parse } from '../public/src/ast/parser.js';
 import { render } from '../public/src/rendering/renderer.js';
 
-describe('Participant Overlay on Scroll (BACKLOG-113)', () => {
+describe('Participant Overlay on Scroll', () => {
   let diagramPane;
 
   beforeEach(() => {

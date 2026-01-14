@@ -1,11 +1,11 @@
-// Tests for frame directive (BACKLOG-135)
+// Tests for frame directive
 
 import { describe, it, expect } from 'vitest';
 import { parse } from '../public/src/ast/parser.js';
 import { serialize } from '../public/src/ast/serializer.js';
 import { render } from '../public/src/rendering/renderer.js';
 
-describe('Frame Directive (BACKLOG-135)', () => {
+describe('Frame Directive', () => {
 
   describe('Parsing frame directive', () => {
     it('should parse frame with title only', () => {

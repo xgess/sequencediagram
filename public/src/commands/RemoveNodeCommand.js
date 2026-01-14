@@ -1,4 +1,4 @@
-// RemoveNode Command - BACKLOG-071
+// RemoveNode Command
 // Removes a node from the AST
 
 import { Command } from './Command.js';

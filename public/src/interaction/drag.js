@@ -1,4 +1,4 @@
-// Drag interaction handling (BACKLOG-073, 074, 075, 078, 081, 082, 083)
+// Drag interaction handling
 // Provides drag-to-reorder and endpoint drag functionality for messages
 // Also handles participant reordering and fragment boundary adjustment
 

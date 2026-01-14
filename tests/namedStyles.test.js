@@ -1,11 +1,11 @@
-// Tests for named styles system (BACKLOG-140)
+// Tests for named styles system
 
 import { describe, it, expect } from 'vitest';
 import { parse } from '../public/src/ast/parser.js';
 import { serialize } from '../public/src/ast/serializer.js';
 import { render } from '../public/src/rendering/renderer.js';
 
-describe('Named Styles System (BACKLOG-140)', () => {
+describe('Named Styles System', () => {
 
   describe('Parsing style definitions', () => {
     it('should parse style directive with fill color only', () => {
@@ -198,7 +198,7 @@ Server-[##success]->User:Success response`);
     });
   });
 
-  describe('Style property mapping consistency (BUG-027)', () => {
+  describe('Style property mapping consistency', () => {
     it('should map fill to stroke color for messages', () => {
       const ast = parse(`style red #ff0000
 participant A

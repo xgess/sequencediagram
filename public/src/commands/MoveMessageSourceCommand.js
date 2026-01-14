@@ -1,4 +1,4 @@
-// MoveMessageSource Command - BACKLOG-075
+// MoveMessageSource Command
 // Changes the source (from) of a message
 
 import { Command } from './Command.js';

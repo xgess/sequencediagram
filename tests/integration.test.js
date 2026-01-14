@@ -7,7 +7,7 @@ import { serialize } from '../public/src/ast/serializer.js';
 import { render } from '../public/src/rendering/renderer.js';
 import { calculateLayout } from '../public/src/rendering/layout.js';
 
-describe('Integration Tests (BACKLOG-052)', () => {
+describe('Integration Tests', () => {
   describe('Participant types', () => {
     it('should handle all participant types: participant, actor, database', () => {
       const text = `

@@ -1,4 +1,4 @@
-// Dialog for adding participants from context menu (BACKLOG-089)
+// Dialog for adding participants from context menu
 
 // Dialog state
 let dialogElement = null;

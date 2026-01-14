@@ -249,9 +249,12 @@ export function calculateLayout(ast) {
 
   // Track linear/parallel mode state
   let linearMode = false;
+  let linearLineY = null;        // Y position of current line in linear mode
+  let linearLineHeight = 0;      // Max height of current line
+  let linearOccupiedRanges = []; // Horizontal ranges occupied on current line [{min, max}]
   let parallelMode = false;
-  let parallelStartY = null; // Y position where parallel section starts
-  let parallelMaxHeight = 0; // Track max height in parallel section
+  let parallelStartY = null;     // Y position where parallel section starts
+  let parallelMaxHeight = 0;     // Track max height in parallel section
 
   // Track the Y position of the last message for activate/deactivate alignment
   let lastMessageY = currentY;
@@ -274,7 +277,22 @@ export function calculateLayout(ast) {
 
     // Handle linear directive
     if (node.type === 'directive' && node.directiveType === 'linear') {
-      linearMode = node.value;
+      if (node.value) {
+        // Starting linear mode
+        linearMode = true;
+        linearLineY = currentY;
+        linearLineHeight = 0;
+        linearOccupiedRanges = [];
+      } else {
+        // Ending linear mode - move currentY past the last line
+        linearMode = false;
+        if (linearLineHeight > 0) {
+          currentY = linearLineY + linearLineHeight;
+        }
+        linearLineY = null;
+        linearLineHeight = 0;
+        linearOccupiedRanges = [];
+      }
       continue;
     }
 
@@ -409,8 +427,31 @@ export function calculateLayout(ast) {
       const totalHeight = messageSpacing + delayHeight + labelHeight;
 
       // In parallel mode, all messages are at the same Y position
-      // Offset Y by labelHeight so multiline labels don't overlap previous element
-      const messageY = parallelMode ? parallelStartY + labelHeight : currentY + labelHeight;
+      // In linear mode, messages are on the same line only if they don't overlap horizontally
+      let messageY;
+      if (parallelMode) {
+        messageY = parallelStartY + labelHeight;
+      } else if (linearMode) {
+        // Check if this message overlaps with any occupied range on current line
+        const msgMin = Math.min(fromX, toX);
+        const msgMax = Math.max(fromX, toX);
+        const overlaps = linearOccupiedRanges.some(range =>
+          msgMin < range.max && msgMax > range.min
+        );
+
+        if (overlaps) {
+          // Start a new line - advance past current line
+          linearLineY += linearLineHeight;
+          linearLineHeight = 0;
+          linearOccupiedRanges = [];
+        }
+
+        // Add this message's range to occupied
+        linearOccupiedRanges.push({ min: msgMin, max: msgMax });
+        messageY = linearLineY + labelHeight;
+      } else {
+        messageY = currentY + labelHeight;
+      }
 
       layout.set(node.id, {
         y: messageY,
@@ -429,6 +470,9 @@ export function calculateLayout(ast) {
       if (parallelMode) {
         // Track the max height in the parallel section
         parallelMaxHeight = Math.max(parallelMaxHeight, totalHeight);
+      } else if (linearMode) {
+        // Track the max height of the current line
+        linearLineHeight = Math.max(linearLineHeight, totalHeight);
       } else {
         currentY += totalHeight;
       }
@@ -448,13 +492,19 @@ export function calculateLayout(ast) {
         ? Math.max(...allParticipants.map(p => p.x + PARTICIPANT_WIDTH)) + 20
         : PARTICIPANT_START_X + PARTICIPANT_WIDTH + 20;
 
+      // Calculate height based on number of lines
+      const textContent = node.text || '';
+      const lines = textContent.split('\\n');
+      const lineHeight = 14;
+      const dividerHeight = Math.max(DIVIDER_HEIGHT, lines.length * lineHeight + 12);
+
       layout.set(node.id, {
         x: minX,
         y: currentY,
         width: maxX - minX,
-        height: DIVIDER_HEIGHT
+        height: dividerHeight
       });
-      currentY += DIVIDER_HEIGHT + NOTE_MARGIN;
+      currentY += dividerHeight + NOTE_MARGIN;
     } else if (node.type === 'fragment') {
       const fragmentStart = currentY;
       currentY += FRAGMENT_HEADER_HEIGHT; // Space for label box

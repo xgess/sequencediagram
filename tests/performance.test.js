@@ -1,4 +1,4 @@
-// Performance baseline tests (BACKLOG-055)
+// Performance baseline tests
 // Measures parse and render time for diagrams of varying sizes
 
 import { describe, it, expect } from 'vitest';
@@ -70,7 +70,7 @@ function measureTime(fn, iterations = 1) {
   return (end - start) / iterations;
 }
 
-describe('Performance Baseline (BACKLOG-055)', () => {
+describe('Performance Baseline', () => {
   const sizes = [10, 25, 50, 100];
 
   for (const size of sizes) {
@@ -120,7 +120,7 @@ describe('Performance Baseline (BACKLOG-055)', () => {
     });
   }
 
-  // Critical performance requirement from BACKLOG-055
+  // Performance requirement: render under 100ms for 100 entries
   it('should render 50-entry diagram in under 50ms', () => {
     const diagram = generateDiagram(50);
     const ast = parse(diagram);

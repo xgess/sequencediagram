@@ -1,0 +1,198 @@
+// Syntax Reference: All features demonstrated
+// Use this as a reference for available syntax
+
+title **Sequence Diagram** Syntax Reference
+
+// ========================================
+// PARTICIPANTS
+// ========================================
+
+// Types: participant, rparticipant, actor, database, boundary, control, entity
+actor User
+participant "Service\nName" as Service #lightblue #darkblue;2
+rparticipant "Rounded Box" as RBox
+database DB #lightyellow
+boundary API
+control Handler
+entity Model
+
+// Participant groups
+participantgroup #e8f4f8 Frontend
+  participant Browser
+end
+
+// ========================================
+// MESSAGES
+// ========================================
+
+// Arrow types: -> sync, ->> async, --> response, -->> async response
+User->Service: Sync request
+Service->>Handler: Async request
+Handler-->Service: Sync response
+Service-->>User: Async response
+
+// Boundary messages
+[->User: External input
+User->]: External output
+
+// Delayed messages
+Service->(2)DB: Slow call
+DB-->(1)Service: Delayed response
+
+// Lost message
+Service-xAPI: Failed call
+
+// Colored arrows
+User-[#red]->Service: Red arrow
+Service-[#green]->User: Green arrow
+
+// Self-message
+Service->Service: Internal call
+
+// ========================================
+// FRAGMENTS
+// ========================================
+
+// Alt/else for conditionals
+alt condition A
+  User->Service: Path A
+else condition B
+  User->Service: Path B
+else default
+  User->Service: Default path
+end
+
+// Loop
+loop 3 times
+  Service->DB: Retry
+end
+
+// Other fragment types: opt, break, critical, par, group
+
+// Nested fragments
+opt has data
+  loop each item
+    Service->DB: Process
+  end
+end
+
+// Styled fragments
+alt#yellow #lightblue success
+  Service-->User: OK
+else#red failed
+  Service-->User: Error
+end
+
+// ========================================
+// NOTES
+// ========================================
+
+note over Service: Note over participant
+note over User,Service: Spanning multiple
+note left of User: Left note
+note right of Service: Right note
+
+// Note variants
+box over DB: Box style
+abox over DB: Angular box
+rbox over DB: Rounded box
+
+// Styled notes
+note over Service #lightgreen #darkgreen;2: Styled note
+
+// ========================================
+// ACTIVATIONS
+// ========================================
+
+activate User
+User->Service: Start
+activate Service #lightblue
+Service-->User: Done
+deactivate Service
+deactivate User
+
+// Auto-activation mode
+autoactivation on
+User->Service: Auto-activates
+Service-->User: Done
+autoactivation off
+
+// ========================================
+// LIFECYCLE
+// ========================================
+
+// Create participant dynamically
+participant Worker
+Service->*Worker: <<create>>
+Worker-->Service: Ready
+destroy Worker
+
+// ========================================
+// DIVIDERS AND SPACING
+// ========================================
+
+== Section Divider ==
+
+space 2
+
+==Styled Divider==#lightblue #darkblue;6
+
+
+// ========================================
+// TEXT MARKUP
+// ========================================
+
+User->Service: **Bold** and //italic//
+Service-->User: __underline__ and ~~strike~~
+User->Service: <color:#red>Colored</color> text
+Service-->User: Line 1\nLine 2
+
+// ========================================
+// STYLING
+// ========================================
+
+// Named styles
+style error #red
+style success #green
+
+User-[##error]->Service: Error style
+Service-[##success]->User: Success style
+
+// Type-based defaults
+messagestyle #333333
+notestyle #ffffcc
+dividerstyle #lightgray
+
+// Lifeline styling
+lifelinestyle #gray;1;dashed
+lifelinestyle Service #blue;2;solid
+
+// ========================================
+// NUMBERING
+// ========================================
+
+autonumber 1
+User->Service: Message 1
+Service-->User: Message 2
+autonumber off
+
+// ========================================
+// LAYOUT MODES
+// ========================================
+
+linear
+User->Service: Same Y level
+Service->DB: As this one
+linear off
+
+parallel
+User->Service: Simultaneous
+User->DB: Messages
+parallel off
+
+// ========================================
+// DIAGRAM OPTIONS
+// ========================================
+
+frame SD My Diagram
+fontfamily sans-serif

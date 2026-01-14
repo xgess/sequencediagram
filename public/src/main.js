@@ -26,6 +26,7 @@ import { EditFragmentConditionCommand } from './commands/EditFragmentConditionCo
 import { EditElseConditionCommand } from './commands/EditElseConditionCommand.js';
 import { ChangeEntrySpacingCommand } from './commands/ChangeEntrySpacingCommand.js';
 import { EditNoteTextCommand } from './commands/EditNoteTextCommand.js';
+import { EditDividerTextCommand } from './commands/EditDividerTextCommand.js';
 import { ToggleExpandableCommand } from './commands/ToggleExpandableCommand.js';
 import { MoveNoteToParticipantCommand } from './commands/MoveNoteToParticipantCommand.js';
 import { showInlineEdit, showParticipantEdit, hideInlineEdit, isInlineEditVisible } from './interaction/inlineEdit.js';
@@ -47,6 +48,7 @@ import { initSplitter } from './interaction/splitter.js';
 import { initZoom, getZoomLevel, shrinkToFit as applyShrinkToFit, updateZoom, onZoomChange } from './interaction/zoom.js';
 import { initPresentation, enterPresentationMode, exitPresentationMode, togglePresentationMode, isInPresentationMode, enterReadOnlyMode, exitReadOnlyMode, toggleReadOnlyMode, isInReadOnlyMode } from './interaction/presentation.js';
 import { initParticipantOverlay, updateParticipantData, onZoomChange as overlayZoomChange } from './interaction/participantOverlay.js';
+import { initExamplesDropdown } from './interaction/examples.js';
 
 // App state
 let currentAst = [];
@@ -840,6 +842,9 @@ function handleDoubleClick(nodeId, element, extra) {
   } else if (node.type === 'note') {
     // Show inline edit for note text
     showInlineEdit(element, nodeId, node.text || '', handleNoteTextEditComplete);
+  } else if (node.type === 'divider') {
+    // Show inline edit for divider text
+    showInlineEdit(element, nodeId, node.text || '', handleDividerTextEditComplete);
   }
 }
 
@@ -1089,6 +1094,41 @@ function handleNoteTextEditComplete(nodeId, newText) {
   renderCurrentAst();
 
   console.log(`Changed note ${nodeId} text to "${newText}"`);
+}
+
+/**
+ * Handle completion of divider text edit
+ * @param {string} nodeId - ID of the edited node
+ * @param {string|null} newText - New text or null if cancelled
+ */
+function handleDividerTextEditComplete(nodeId, newText) {
+  // Cancelled
+  if (newText === null) return;
+
+  // Find the node
+  const node = findNodeById(nodeId);
+  if (!node || node.type !== 'divider') return;
+
+  // Don't create command if text unchanged
+  if (node.text === newText) return;
+
+  // Create and execute edit command
+  const cmd = new EditDividerTextCommand(nodeId, node.text || '', newText);
+  currentAst = commandHistory.execute(cmd, currentAst);
+
+  // Update text and re-render
+  const newText2 = serialize(currentAst);
+  previousText = newText2;
+
+  // Update editor without creating another command
+  isUndoRedoInProgress = true;
+  editor.setValue(newText2);
+  isUndoRedoInProgress = false;
+
+  // Re-render
+  renderCurrentAst();
+
+  console.log(`Changed divider ${nodeId} text to "${newText}"`);
 }
 
 /**
@@ -1836,6 +1876,9 @@ function initToolbar() {
       updateReadOnlyButton();
     });
   }
+
+  // Examples dropdown
+  initExamplesDropdown(loadTextIntoEditor);
 }
 
 /**
@@ -1889,7 +1932,7 @@ async function handleExportPNG() {
 }
 
 /**
- * Handle Copy PNG to clipboard button click (BACKLOG-094)
+ * Handle Copy PNG to clipboard button click
  * Uses zoom level to determine export scale
  */
 async function handleCopyPNG() {

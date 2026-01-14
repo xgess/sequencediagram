@@ -1,11 +1,11 @@
-// Tests for arrow types (BACKLOG-120) and message delays (BACKLOG-121)
+// Tests for arrow types and message delays
 
 import { describe, it, expect } from 'vitest';
 import { parse } from '../public/src/ast/parser.js';
 import { serialize } from '../public/src/ast/serializer.js';
 import { render } from '../public/src/rendering/renderer.js';
 
-describe('Arrow Types (BACKLOG-120)', () => {
+describe('Arrow Types', () => {
 
   describe('Parsing forward arrows', () => {
     it('should parse -> (synchronous)', () => {
@@ -213,7 +213,7 @@ describe('Arrow Types (BACKLOG-120)', () => {
   });
 });
 
-describe('Message Styling (BACKLOG-123)', () => {
+describe('Message Styling', () => {
 
   describe('Parsing styled messages', () => {
     it('should parse message with color', () => {
@@ -327,7 +327,7 @@ describe('Message Styling (BACKLOG-123)', () => {
   });
 });
 
-describe('Boundary Messages (BACKLOG-122)', () => {
+describe('Boundary Messages', () => {
 
   describe('Parsing boundary messages', () => {
     it('should parse incoming from left [->A', () => {
@@ -436,7 +436,7 @@ describe('Boundary Messages (BACKLOG-122)', () => {
   });
 });
 
-describe('Message Delays (BACKLOG-121)', () => {
+describe('Message Delays', () => {
 
   describe('Parsing delays', () => {
     it('should parse message with delay', () => {

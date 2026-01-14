@@ -1,4 +1,4 @@
-// AdjustFragmentBoundary Command - BACKLOG-081, BACKLOG-082
+// AdjustFragmentBoundary Command
 // Moves entries in/out of a fragment by adjusting its top or bottom boundary
 
 import { Command } from './Command.js';

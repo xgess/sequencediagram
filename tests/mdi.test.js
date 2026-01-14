@@ -1,11 +1,11 @@
-// Tests for Material Design Icons participant types (BACKLOG-118)
+// Tests for Material Design Icons participant types
 
 import { describe, it, expect } from 'vitest';
 import { parse } from '../public/src/ast/parser.js';
 import { serialize } from '../public/src/ast/serializer.js';
 import { render } from '../public/src/rendering/renderer.js';
 
-describe('Material Design Icons Participant Types (BACKLOG-118)', () => {
+describe('Material Design Icons Participant Types', () => {
 
   describe('Parsing', () => {
     it('should parse materialdesignicons participant with hex code', () => {

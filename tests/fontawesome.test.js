@@ -1,11 +1,11 @@
-// Tests for Font Awesome 7 participant types (BACKLOG-117)
+// Tests for Font Awesome 7 participant types
 
 import { describe, it, expect } from 'vitest';
 import { parse } from '../public/src/ast/parser.js';
 import { serialize } from '../public/src/ast/serializer.js';
 import { render } from '../public/src/rendering/renderer.js';
 
-describe('Font Awesome 7 Participant Types (BACKLOG-117)', () => {
+describe('Font Awesome 7 Participant Types', () => {
 
   describe('Parsing', () => {
     it('should parse fontawesome6solid participant', () => {

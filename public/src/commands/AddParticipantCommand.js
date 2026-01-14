@@ -1,4 +1,4 @@
-// AddParticipant Command - BACKLOG-089
+// AddParticipant Command
 // Adds a new participant to the AST
 
 import { Command } from './Command.js';

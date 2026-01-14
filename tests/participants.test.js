@@ -1,11 +1,11 @@
-// Tests for participant types (BACKLOG-115, BACKLOG-116)
+// Tests for participant types
 
 import { describe, it, expect } from 'vitest';
 import { parse } from '../public/src/ast/parser.js';
 import { serialize } from '../public/src/ast/serializer.js';
 import { render } from '../public/src/rendering/renderer.js';
 
-describe('Participant Types (BACKLOG-115, BACKLOG-116)', () => {
+describe('Participant Types', () => {
 
   describe('Parsing participant types', () => {
     it('should parse participant (default)', () => {

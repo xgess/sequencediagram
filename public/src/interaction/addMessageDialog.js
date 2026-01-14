@@ -1,4 +1,4 @@
-// Dialog for adding messages from context menu (BACKLOG-090)
+// Dialog for adding messages from context menu
 
 // Dialog state
 let dialogElement = null;

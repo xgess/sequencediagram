@@ -13,7 +13,7 @@ describe('Serializer', () => {
     });
   });
 
-  describe('participant serialization (BACKLOG-006)', () => {
+  describe('participant serialization', () => {
     it('should serialize basic participant', () => {
       const ast = parse('participant Alice');
       const text = serialize(ast);
@@ -66,7 +66,7 @@ describe('Serializer', () => {
     });
   });
 
-  describe('message serialization (BACKLOG-012)', () => {
+  describe('message serialization', () => {
     it('should serialize sync message (->)', () => {
       const ast = parse('Alice->Bob:Hello');
       const text = serialize(ast);
@@ -126,7 +126,7 @@ describe('Serializer', () => {
     });
   });
 
-  describe('participant styling serialization (BACKLOG-016)', () => {
+  describe('participant styling serialization', () => {
     it('should serialize participant with fill color', () => {
       const ast = parse('participant Alice #lightblue');
       const text = serialize(ast);
@@ -164,7 +164,7 @@ describe('Serializer', () => {
     });
   });
 
-  describe('participant alias serialization (BACKLOG-019)', () => {
+  describe('participant alias serialization', () => {
     it('should serialize simple participant without alias syntax', () => {
       const ast = parse('participant Alice');
       const text = serialize(ast);
@@ -228,7 +228,7 @@ describe('Serializer', () => {
     });
   });
 
-  describe('fragment serialization (BACKLOG-036)', () => {
+  describe('fragment serialization', () => {
     it('should serialize basic alt fragment', () => {
       const ast = parse('alt success\nend');
       const text = serialize(ast);
@@ -282,7 +282,7 @@ describe('Serializer', () => {
     });
   });
 
-  describe('fragment styling serialization (BACKLOG-037)', () => {
+  describe('fragment styling serialization', () => {
     it('should serialize fragment with operator color', () => {
       const ast = parse('alt#yellow condition\nend');
       const text = serialize(ast);
@@ -365,7 +365,7 @@ describe('Serializer', () => {
     });
   });
 
-  describe('blank line serialization (BACKLOG-039)', () => {
+  describe('blank line serialization', () => {
     it('should serialize blank line as empty line', () => {
       const ast = parse('participant Alice\n\nparticipant Bob');
       const text = serialize(ast);
@@ -393,7 +393,7 @@ describe('Serializer', () => {
     });
   });
 
-  describe('comment serialization (BACKLOG-038)', () => {
+  describe('comment serialization', () => {
     it('should serialize // comment', () => {
       const ast = parse('// This is a comment');
       const text = serialize(ast);
@@ -428,7 +428,7 @@ describe('Serializer', () => {
     });
   });
 
-  describe('title directive serialization (BACKLOG-042, BACKLOG-044)', () => {
+  describe('title directive serialization', () => {
     it('should serialize title directive', () => {
       const ast = parse('title My Diagram');
       const text = serialize(ast);
@@ -458,7 +458,7 @@ describe('Serializer', () => {
     });
   });
 
-  describe('entryspacing directive serialization (BACKLOG-086)', () => {
+  describe('entryspacing directive serialization', () => {
     it('should serialize entryspacing directive', () => {
       const ast = parse('entryspacing 1.5');
       const text = serialize(ast);
@@ -481,7 +481,7 @@ describe('Serializer', () => {
     });
   });
 
-  describe('error node serialization (BACKLOG-051)', () => {
+  describe('error node serialization', () => {
     it('should serialize error node as comment', () => {
       const ast = parse('invalidSyntax!!!');
       const text = serialize(ast);

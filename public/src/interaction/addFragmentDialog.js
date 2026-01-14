@@ -1,4 +1,4 @@
-// Dialog for adding fragments from context menu (BACKLOG-091)
+// Dialog for adding fragments from context menu
 
 // Dialog state
 let dialogElement = null;

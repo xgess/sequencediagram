@@ -1,11 +1,11 @@
-// Tests for lifecycle - create, destroy (BACKLOG-129)
+// Tests for lifecycle - create, destroy
 
 import { describe, it, expect } from 'vitest';
 import { parse } from '../public/src/ast/parser.js';
 import { serialize } from '../public/src/ast/serializer.js';
 import { render } from '../public/src/rendering/renderer.js';
 
-describe('Lifecycle - Create and Destroy (BACKLOG-129)', () => {
+describe('Lifecycle - Create and Destroy', () => {
 
   describe('Parsing destroy directives', () => {
     it('should parse destroy directive', () => {

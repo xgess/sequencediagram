@@ -1,4 +1,4 @@
-// ToggleExpandable Command - BACKLOG-125
+// ToggleExpandable Command
 // Toggles the collapsed state of an expandable fragment
 
 import { Command } from './Command.js';

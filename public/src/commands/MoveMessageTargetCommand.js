@@ -1,4 +1,4 @@
-// MoveMessageTarget Command - BACKLOG-074
+// MoveMessageTarget Command
 // Changes the target (to) of a message
 
 import { Command } from './Command.js';

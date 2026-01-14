@@ -1,12 +1,12 @@
 // Markup parser tests
 // See DESIGN.md for markup syntax
-// Tests for advanced text markup (BACKLOG-139)
+// Tests for advanced text markup
 
 import { describe, it, expect } from 'vitest';
 import { parseMarkup, serializeMarkup, hasMarkup } from '../public/src/markup/parser.js';
 import { renderMarkupText, isMultiline, getLineCount } from '../public/src/markup/renderer.js';
 
-describe('Markup Parser (BACKLOG-045)', () => {
+describe('Markup Parser', () => {
   describe('parseMarkup', () => {
     it('should return empty array for empty input', () => {
       expect(parseMarkup('')).toEqual([]);
@@ -181,7 +181,7 @@ describe('Markup Parser (BACKLOG-045)', () => {
   });
 });
 
-describe('Markup Renderer (BACKLOG-046)', () => {
+describe('Markup Renderer', () => {
   describe('renderMarkupText', () => {
     it('should render plain text as text element', () => {
       const textEl = renderMarkupText('Hello world', { x: 10, y: 20 });
@@ -269,7 +269,7 @@ describe('Markup Renderer (BACKLOG-046)', () => {
   });
 });
 
-describe('Advanced Text Markup (BACKLOG-139)', () => {
+describe('Advanced Text Markup', () => {
 
   describe('Parse __underline__', () => {
     it('should parse underline text', () => {

@@ -1,4 +1,4 @@
-// Tests for example diagrams (BACKLOG-054)
+// Tests for example diagrams
 // Verifies all examples in examples/ directory parse and render without errors
 
 import { describe, it, expect } from 'vitest';
@@ -10,14 +10,14 @@ import path from 'path';
 
 const examplesDir = path.join(import.meta.dirname, '../examples');
 
-describe('Example Diagrams (BACKLOG-054)', () => {
+describe('Example Diagrams', () => {
   // Get all .txt files in examples directory
   const exampleFiles = fs.readdirSync(examplesDir)
     .filter(f => f.endsWith('.txt'))
     .sort();
 
-  it('should have at least 5 example files', () => {
-    expect(exampleFiles.length).toBeGreaterThanOrEqual(5);
+  it('should have at least 3 example files', () => {
+    expect(exampleFiles.length).toBeGreaterThanOrEqual(3);
   });
 
   for (const filename of exampleFiles) {

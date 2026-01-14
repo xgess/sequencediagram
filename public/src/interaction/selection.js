@@ -1,4 +1,4 @@
-// Selection handling for diagram elements (BACKLOG-069, BACKLOG-076, BACKLOG-088, BACKLOG-125)
+// Selection handling for diagram elements
 // Provides click-to-select, double-click-to-edit, right-click context menu, and expandable toggle functionality
 
 // Currently selected element ID

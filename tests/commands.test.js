@@ -1,4 +1,4 @@
-// Tests for Command pattern implementation (BACKLOG-066, BACKLOG-067, BACKLOG-071, BACKLOG-074, BACKLOG-075)
+// Tests for Command pattern implementation
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Command, CommandHistory } from '../public/src/commands/Command.js';
@@ -92,7 +92,7 @@ class ModifyItemCommand extends Command {
   }
 }
 
-describe('Command Base Class (BACKLOG-066)', () => {
+describe('Command Base Class', () => {
   it('should throw if do() not implemented', () => {
     const cmd = new Command('test');
     expect(() => cmd.do([])).toThrow('must be implemented');
@@ -109,7 +109,7 @@ describe('Command Base Class (BACKLOG-066)', () => {
   });
 });
 
-describe('CommandHistory (BACKLOG-066)', () => {
+describe('CommandHistory', () => {
   let history;
   let initialAst;
 
@@ -397,7 +397,7 @@ describe('Example Commands', () => {
   });
 });
 
-describe('ReplaceASTCommand (BACKLOG-067)', () => {
+describe('ReplaceASTCommand', () => {
   let history;
 
   beforeEach(() => {
@@ -543,7 +543,7 @@ describe('ReplaceASTCommand (BACKLOG-067)', () => {
   });
 });
 
-describe('RemoveNodeCommand (BACKLOG-071)', () => {
+describe('RemoveNodeCommand', () => {
   let history;
   let initialAst;
 
@@ -685,7 +685,7 @@ describe('RemoveNodeCommand (BACKLOG-071)', () => {
   });
 });
 
-describe('ReorderNodeCommand (BACKLOG-073)', () => {
+describe('ReorderNodeCommand', () => {
   let history;
   let initialAst;
 
@@ -819,7 +819,7 @@ describe('ReorderNodeCommand (BACKLOG-073)', () => {
     });
   });
 
-  describe('Divider reordering (BACKLOG-087)', () => {
+  describe('Divider reordering', () => {
     let dividerAst;
 
     beforeEach(() => {
@@ -886,7 +886,7 @@ describe('ReorderNodeCommand (BACKLOG-073)', () => {
   });
 });
 
-describe('MoveMessageTargetCommand (BACKLOG-074)', () => {
+describe('MoveMessageTargetCommand', () => {
   let history;
   let initialAst;
 
@@ -993,7 +993,7 @@ describe('MoveMessageTargetCommand (BACKLOG-074)', () => {
   });
 });
 
-describe('MoveMessageSourceCommand (BACKLOG-075)', () => {
+describe('MoveMessageSourceCommand', () => {
   let history;
   let initialAst;
 
@@ -1100,7 +1100,7 @@ describe('MoveMessageSourceCommand (BACKLOG-075)', () => {
   });
 });
 
-describe('EditMessageLabelCommand (BACKLOG-076)', () => {
+describe('EditMessageLabelCommand', () => {
   let history;
   let initialAst;
 
@@ -1220,7 +1220,7 @@ describe('EditMessageLabelCommand (BACKLOG-076)', () => {
   });
 });
 
-describe('EditNoteTextCommand (BACKLOG-128)', () => {
+describe('EditNoteTextCommand', () => {
   let history;
   let initialAst;
 
@@ -1332,7 +1332,7 @@ describe('EditNoteTextCommand (BACKLOG-128)', () => {
   });
 });
 
-describe('ToggleExpandableCommand (BACKLOG-125)', () => {
+describe('ToggleExpandableCommand', () => {
   let history;
   let initialAst;
 
@@ -1421,7 +1421,7 @@ describe('ToggleExpandableCommand (BACKLOG-125)', () => {
   });
 });
 
-describe('AddMessageCommand (BACKLOG-077)', () => {
+describe('AddMessageCommand', () => {
   let history;
   let initialAst;
 
@@ -1584,7 +1584,7 @@ describe('AddMessageCommand (BACKLOG-077)', () => {
   });
 });
 
-describe('ReorderParticipantCommand (BACKLOG-078)', () => {
+describe('ReorderParticipantCommand', () => {
   let history;
   let initialAst;
 
@@ -1678,7 +1678,7 @@ describe('ReorderParticipantCommand (BACKLOG-078)', () => {
   });
 });
 
-describe('EditParticipantCommand (BACKLOG-079)', () => {
+describe('EditParticipantCommand', () => {
   let history;
   let initialAst;
 
@@ -1804,7 +1804,7 @@ describe('EditParticipantCommand (BACKLOG-079)', () => {
   });
 });
 
-describe('AdjustFragmentBoundaryCommand (BACKLOG-081, BACKLOG-082)', () => {
+describe('AdjustFragmentBoundaryCommand', () => {
   let ast;
 
   beforeEach(() => {
@@ -1995,7 +1995,7 @@ describe('AdjustFragmentBoundaryCommand (BACKLOG-081, BACKLOG-082)', () => {
   });
 });
 
-describe('MoveEntryBetweenClausesCommand (BACKLOG-083)', () => {
+describe('MoveEntryBetweenClausesCommand', () => {
   let ast;
 
   beforeEach(() => {
@@ -2149,7 +2149,7 @@ describe('MoveEntryBetweenClausesCommand (BACKLOG-083)', () => {
   });
 });
 
-describe('EditFragmentConditionCommand (BACKLOG-084)', () => {
+describe('EditFragmentConditionCommand', () => {
   let ast;
 
   beforeEach(() => {
@@ -2231,7 +2231,7 @@ describe('EditFragmentConditionCommand (BACKLOG-084)', () => {
   });
 });
 
-describe('EditElseConditionCommand (BACKLOG-085)', () => {
+describe('EditElseConditionCommand', () => {
   let ast;
 
   beforeEach(() => {
@@ -2331,7 +2331,7 @@ describe('EditElseConditionCommand (BACKLOG-085)', () => {
   });
 });
 
-describe('ChangeEntrySpacingCommand (BACKLOG-086)', () => {
+describe('ChangeEntrySpacingCommand', () => {
   let ast;
 
   beforeEach(() => {
@@ -2408,10 +2408,10 @@ describe('ChangeEntrySpacingCommand (BACKLOG-086)', () => {
 });
 
 // ============================================================================
-// AddParticipantCommand Tests (BACKLOG-089)
+// AddParticipantCommand Tests
 // ============================================================================
 
-describe('AddParticipantCommand (BACKLOG-089)', () => {
+describe('AddParticipantCommand', () => {
   let ast;
 
   beforeEach(() => {
@@ -2541,10 +2541,10 @@ describe('AddParticipantCommand (BACKLOG-089)', () => {
 });
 
 // ============================================================================
-// AddFragmentCommand Tests (BACKLOG-091)
+// AddFragmentCommand Tests
 // ============================================================================
 
-describe('AddFragmentCommand (BACKLOG-091)', () => {
+describe('AddFragmentCommand', () => {
   let ast;
 
   beforeEach(() => {

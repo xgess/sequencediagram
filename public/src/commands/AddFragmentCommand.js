@@ -1,4 +1,4 @@
-// AddFragment Command - BACKLOG-091
+// AddFragment Command
 // Adds a new fragment to the AST
 
 import { Command } from './Command.js';

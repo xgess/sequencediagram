@@ -1,0 +1,28 @@
+// Quick Start: Your first sequence diagram
+// Demonstrates the essential features
+
+title User Login Flow
+
+// Participants - different types available
+actor User
+participant "Web App" as App #lightblue
+database DB
+
+// Messages between participants
+User->App: Enter credentials
+App->DB: Validate user
+
+// Conditional logic
+alt valid credentials
+  DB-->App: User found
+  App-->User: Login success
+else invalid
+  DB-->App: Not found
+  App-->User: Login failed
+end
+
+// Notes add context
+note over App: Session created
+
+// Response back
+App-->User: Welcome!

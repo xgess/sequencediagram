@@ -1,4 +1,4 @@
-// Context menu for diagram elements (BACKLOG-088)
+// Context menu for diagram elements
 // Shows right-click menu with options to add/edit elements
 
 // Menu state

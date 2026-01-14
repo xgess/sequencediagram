@@ -2,89 +2,16 @@
 
 A web-based sequence diagram editor inspired by [sequencediagram.org](https://sequencediagram.org). Create, edit, and export UML sequence diagrams with a simple text-based syntax.
 
-## Features
-
-### Core Functionality
-- **Text-based syntax** - Write diagrams using simple, readable text
-- **Live preview** - See changes instantly as you type
-- **Full round-trip** - Edit in text or diagram, both stay in sync
-- **Undo/Redo** - 100-level history with Ctrl+Z/Ctrl+Y
-
-### Participant Types
-- `participant` - Standard rectangle box
-- `rparticipant` - Rounded rectangle
-- `actor` - Stick figure (for humans/users)
-- `database` - Cylinder shape
-- `boundary` - Boundary UML stereotype
-- `control` - Control UML stereotype
-- `entity` - Entity UML stereotype
-
-### Message Types
-- `->` Synchronous call
-- `->>` Asynchronous call
-- `-->` Dashed return
-- `-->>` Async dashed return
-- `<-`, `<--` Reversed arrows
-- `<->`, `<->>` Bidirectional
-- `-x`, `--x` Lost messages
-
-### Fragments
-All standard UML combined fragments:
-- `alt/else` - Alternative branches
-- `opt` - Optional
-- `loop` - Iteration
-- `par` - Parallel
-- `break` - Break out
-- `critical` - Critical section
-- And 9 more: `ref`, `seq`, `strict`, `neg`, `ignore`, `consider`, `assert`, `region`, `group`
-
-### Notes and Annotations
-- `note over A:text` - Note spanning participants
-- `note left of A:text` - Note to the left
-- `note right of A:text` - Note to the right
-- `box`, `abox`, `rbox` - Different note shapes
-- `==Title==` - Section dividers
-
-### Styling
-- Participant colors: `participant A #lightblue`
-- Border styling: `participant A #fill #border;width;style`
-- Message colors: `A-[#red]->B:message`
-- Named styles: `style error #red` then `A-[##error]->B:msg`
-- Type-based defaults: `messagestyle #blue`
-- Text markup: `**bold**`, `//italic//`, `<color:#red>text</color>`
-
-### Lifecycle
-- Create participants dynamically: `A->*B:<<create>>`
-- Destroy participants: `destroy A`
-- Activations: `activate A`, `deactivate A`
-- Auto-activation mode
-
-### Layout Controls
-- `space` / `space N` - Add vertical spacing
-- `entryspacing N` - Set default message spacing
-- `participantspacing N` - Set participant spacing
-- `linear` / `parallel` - Control message positioning
-- `autonumber` - Automatic message numbering
-- `frame SD Name` - Add diagram frame
-
-### Export Options
-- **PNG** - High-resolution image (2x scale for retina)
-- **Copy PNG** - Copy to clipboard
-- **SVG** - Vector format with embedded source
-- **TXT** - Plain text source
-
-### UI Features
-- Resizable editor/diagram panes
-- Zoom controls (+/- and fit-to-view)
-- Presentation mode (Ctrl+M)
-- Read-only view mode
-- URL sharing with compressed source
-- Local storage autosave
-
 ## Quick Start
 
-1. Open `public/index.html` in a browser
-2. Start typing in the editor:
+```bash
+# Serve the public folder
+npx serve public
+
+# Open http://localhost:3000
+```
+
+Type in the editor:
 ```
 participant User
 participant Server
@@ -92,92 +19,104 @@ participant Server
 User->Server:Request
 Server-->User:Response
 ```
-3. See the diagram update in real-time
 
-## Development Setup
+See the diagram update in real-time.
 
-```bash
-# Clone the repository
-git clone <repo-url>
-cd sequencediagram
+## Features
 
-# Install dependencies
-npm install
+### Participants
+- `participant`, `rparticipant` (rounded), `actor`, `database`
+- `boundary`, `control`, `entity` (UML stereotypes)
+- Styling: `participant A #fill #border;width;style`
+- Groups: `participantgroup #color Label ... end`
 
-# Run tests
-npm test
+### Messages
+- `->` sync, `->>` async, `-->` return, `-->>` async return
+- `<->` bidirectional, `-x` lost message
+- `[->` incoming, `->]` outgoing boundary messages
+- `->(N)` delayed messages
+- Colored: `A-[#red]->B:message`
 
-# Start development server (optional)
-npx serve .
+### Fragments
+`alt/else`, `opt`, `loop`, `par`, `break`, `critical`, `ref`, `group`, and more.
+
+### Notes
+`note over A:text`, `note left of A:text`, `note right of A:text`
+Box variants: `box`, `abox`, `rbox`
+
+### Lifecycle
+- Create: `A->*B:<<create>>`
+- Destroy: `destroy A`
+- Activations: `activate A`, `deactivate A`, `autoactivation on`
+
+### Styling
+- Named styles: `style error #red` then `A-[##error]->B:msg`
+- Type defaults: `messagestyle #blue`, `notestyle #yellow`
+- Text markup: `**bold**`, `//italic//`, `<color:#red>text</color>`
+- Dividers: `==Section Title==`
+
+### Layout
+- `space N` - vertical spacing
+- `entryspacing N`, `participantspacing N`
+- `linear`, `parallel` - message positioning
+- `autonumber N` - automatic numbering
+- `frame SD Name` - diagram frame
+
+### Export
+- PNG (2x for retina), SVG, TXT
+- Copy to clipboard
+- URL sharing with compressed source
+
+### UI
+- Resizable panes, zoom controls
+- Presentation mode (Ctrl+M)
+- Undo/redo (100 levels)
+- Autosave to local storage
+
+## Project Structure
+
 ```
-
-### Project Structure
-```
-sequencediagram/
-├── public/           # HTML and CSS
+public/               # Deployable folder
+├── index.html
+├── styles.css
 ├── src/
 │   ├── ast/          # Parser and serializer
 │   ├── rendering/    # SVG renderer
-│   ├── commands/     # Edit commands (undo/redo)
-│   ├── interaction/  # UI interactions
+│   ├── commands/     # Undo/redo
+│   ├── interaction/  # UI handlers
 │   ├── export/       # PNG/SVG export
-│   └── storage/      # Local storage and URL sharing
-├── lib/              # Vendored dependencies (CodeMirror)
-├── tests/            # Test suite (1300+ tests)
-├── examples/         # Example diagrams
-└── docs/             # Documentation
+│   └── storage/      # Autosave, URL sharing
+└── lib/              # CodeMirror, lz-string
+tests/                # Vitest tests
+examples/             # Sample diagrams
+docs/                 # Documentation
 ```
 
-## Self-Hosting
+## Development
 
-### Static File Server
-The app is entirely client-side. Serve these directories:
-- `public/` - HTML and CSS
-- `src/` - JavaScript modules
-- `lib/` - CodeMirror dependencies
-
-### Using Docker
 ```bash
-# Build the image
-docker build -t sequence-diagram .
-
-# Run the container
-docker run -p 8080:80 sequence-diagram
-
-# Access at http://localhost:8080
-```
-
-### Using Docker Compose
-```bash
-docker-compose up
-# Access at http://localhost:8080
+npm install
+npm test
 ```
 
 ## Documentation
 
-- [REQUIREMENTS.md](docs/REQUIREMENTS.md) - Full syntax specification
+- [SYNTAX.md](docs/SYNTAX.md) - Full syntax reference
 - [ARCHITECTURE.md](docs/ARCHITECTURE.md) - System design
-- [DESIGN.md](docs/DESIGN.md) - Implementation details
-- [BACKLOG.md](docs/BACKLOG.md) - Development backlog
 
 ## Browser Support
 
-Works in modern browsers with ES modules support:
-- Chrome/Edge 80+
-- Firefox 80+
-- Safari 14+
+Chrome/Edge 80+, Firefox 80+, Safari 14+
 
-## Contributing
+## Differences from sequencediagram.org
 
-1. Read the documentation in `docs/`
-2. Check `docs/BACKLOG.md` for open tasks
-3. Run tests before submitting: `npm test`
-4. Follow existing code style
+This tool is nearly feature-complete with [sequencediagram.org](https://sequencediagram.org). The following features are not implemented:
+
+| Feature | Syntax | Description |
+|---------|--------|-------------|
+| `<difference>` | `<difference>text</difference>` | Blend mode text effect |
+| `<wordwrap>` | `<wordwrap:50>text</wordwrap>` | Force word wrap at N characters |
 
 ## License
 
-MIT License - See LICENSE file for details.
-
-## Acknowledgments
-
-Inspired by [sequencediagram.org](https://sequencediagram.org) - a fantastic sequence diagram tool.
+MIT

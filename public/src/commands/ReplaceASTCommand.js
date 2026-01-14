@@ -1,4 +1,4 @@
-// ReplaceAST Command - BACKLOG-067
+// ReplaceAST Command
 // Used for text edits - replaces entire AST
 
 import { Command } from './Command.js';

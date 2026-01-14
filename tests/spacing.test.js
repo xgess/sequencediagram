@@ -1,4 +1,4 @@
-// Tests for spacing controls (BACKLOG-131)
+// Tests for spacing controls
 
 import { describe, it, expect } from 'vitest';
 import { parse } from '../public/src/ast/parser.js';
@@ -6,7 +6,7 @@ import { serialize } from '../public/src/ast/serializer.js';
 import { render } from '../public/src/rendering/renderer.js';
 import { calculateLayout } from '../public/src/rendering/layout.js';
 
-describe('Spacing Controls (BACKLOG-131)', () => {
+describe('Spacing Controls', () => {
 
   describe('Parsing space directive', () => {
     it('should parse space without value (default 1)', () => {

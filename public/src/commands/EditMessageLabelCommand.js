@@ -1,4 +1,4 @@
-// EditMessageLabel Command - BACKLOG-076
+// EditMessageLabel Command
 // Changes the label text of a message
 
 import { Command } from './Command.js';

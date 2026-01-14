@@ -1,4 +1,4 @@
-// EditElseCondition Command - BACKLOG-085
+// EditElseCondition Command
 // Edits an else clause's condition text
 
 import { Command } from './Command.js';

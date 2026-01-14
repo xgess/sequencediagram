@@ -1,4 +1,4 @@
-// Zoom controls for diagram (BACKLOG-110)
+// Zoom controls for diagram
 
 let currentZoom = 1;
 const ZOOM_STEP = 0.1;
@@ -161,7 +161,7 @@ export function setZoomLevel(level) {
 }
 
 /**
- * Shrink to fit - scale diagram to fit available viewport (BACKLOG-114)
+ * Shrink to fit - scale diagram to fit available viewport
  * Calculates the optimal zoom level to fit the entire diagram in the viewport
  */
 export function shrinkToFit() {

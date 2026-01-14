@@ -1,9 +1,9 @@
-// Tests for zoom controls (BACKLOG-110)
+// Tests for zoom controls
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { initZoom, getZoomLevel, setZoomLevel, zoomIn, zoomOut, resetZoom, shrinkToFit } from '../public/src/interaction/zoom.js';
 
-describe('Zoom Controls (BACKLOG-110)', () => {
+describe('Zoom Controls', () => {
   let diagramEl;
   let zoomLevelEl;
   let zoomInBtn;
@@ -205,7 +205,7 @@ describe('Zoom Controls (BACKLOG-110)', () => {
     });
   });
 
-  describe('Shrink to fit (BACKLOG-114)', () => {
+  describe('Shrink to fit', () => {
     it('should not crash if no viewBox', () => {
       diagramEl.removeAttribute('viewBox');
       expect(() => shrinkToFit()).not.toThrow();

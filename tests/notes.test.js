@@ -1,12 +1,12 @@
-// Tests for notes and dividers (BACKLOG-126)
-// Tests for note and box styling (BACKLOG-127)
+// Tests for notes and dividers
+// Tests for note and box styling
 
 import { describe, it, expect } from 'vitest';
 import { parse } from '../public/src/ast/parser.js';
 import { serialize } from '../public/src/ast/serializer.js';
 import { render } from '../public/src/rendering/renderer.js';
 
-describe('Notes and Dividers (BACKLOG-126)', () => {
+describe('Notes and Dividers', () => {
 
   describe('Note Parsing', () => {
     it('should parse note over single participant', () => {
@@ -218,7 +218,7 @@ describe('Notes and Dividers (BACKLOG-126)', () => {
   });
 });
 
-describe('Note and Box Styling (BACKLOG-127)', () => {
+describe('Note and Box Styling', () => {
 
   describe('Parsing Note Fill Color', () => {
     it('should parse note with fill color', () => {

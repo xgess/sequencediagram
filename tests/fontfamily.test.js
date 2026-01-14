@@ -1,11 +1,11 @@
-// Tests for font family directive (BACKLOG-138)
+// Tests for font family directive
 
 import { describe, it, expect } from 'vitest';
 import { parse } from '../public/src/ast/parser.js';
 import { serialize } from '../public/src/ast/serializer.js';
 import { render } from '../public/src/rendering/renderer.js';
 
-describe('Font Family Directive (BACKLOG-138)', () => {
+describe('Font Family Directive', () => {
 
   describe('Parsing fontfamily directive', () => {
     it('should parse fontfamily with simple value', () => {

@@ -1,0 +1,85 @@
+// REST API Flow: Realistic microservices example
+// Shows activations, error handling, and async patterns
+
+title Order Processing API
+
+// Service architecture
+participantgroup #e8f4f8 Client
+  actor Customer
+  participant "Mobile App" as App
+end
+
+participantgroup #e8ffe8 Backend
+  boundary "API Gateway" as Gateway
+  control "Order Service" as Orders
+  entity "Inventory" as Inv
+end
+
+participantgroup #fff8e8 Data
+  database "Orders DB" as DB
+  participant "Payment API" as Pay
+end
+
+// Request flow
+Customer->App: Place order
+activate App
+
+autonumber 1
+App->Gateway: POST /orders
+activate Gateway
+
+Gateway->Orders: createOrder(items)
+activate Orders #lightblue
+
+// Validation
+Orders->Inv: checkStock(items)
+activate Inv
+Inv-->Orders: Available
+deactivate Inv
+
+// Database operation
+Orders->DB: INSERT order
+activate DB
+DB-->Orders: order_id: 12345
+deactivate DB
+
+note right of Orders: Order created\nStatus: PENDING
+
+// Payment processing
+Orders->Pay: processPayment(amount)
+activate Pay
+
+Pay-->(2)Orders: Payment authorized
+deactivate Pay
+
+// Handle payment result
+alt payment successful
+  Orders->DB: UPDATE status='PAID'
+  Orders-[#green]->Gateway: 201 Created
+  Gateway-->App: Order confirmed
+  App-->Customer: Show confirmation
+else payment failed
+  Orders->DB: UPDATE status='FAILED'
+  Orders-[#red]->Gateway: 402 Payment Required
+  Gateway-->App: Payment error
+  App-->Customer: Show retry option
+end
+
+deactivate Orders
+deactivate Gateway
+deactivate App
+
+== Background Processing ==
+
+autonumber off
+
+// Async fulfillment
+loop every 5 minutes
+  Orders->DB: SELECT pending orders
+  opt has orders
+    Orders->Inv: reserveStock()
+    Orders->>App: Push notification
+  end
+end
+
+note over Customer,DB #e8ffe8: Order flow complete

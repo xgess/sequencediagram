@@ -1,4 +1,4 @@
-// Confirmation dialog for destructive actions (BACKLOG-080)
+// Confirmation dialog for destructive actions
 // Shows a warning dialog with OK/Cancel buttons
 
 /**

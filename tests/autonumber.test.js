@@ -1,11 +1,11 @@
-// Tests for autonumbering (BACKLOG-133)
+// Tests for autonumbering
 
 import { describe, it, expect } from 'vitest';
 import { parse } from '../public/src/ast/parser.js';
 import { serialize } from '../public/src/ast/serializer.js';
 import { render } from '../public/src/rendering/renderer.js';
 
-describe('Autonumbering (BACKLOG-133)', () => {
+describe('Autonumbering', () => {
 
   describe('Parsing autonumber directive', () => {
     it('should parse autonumber with start value', () => {

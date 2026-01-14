@@ -1,4 +1,4 @@
-// PNG export functionality (BACKLOG-092)
+// PNG export functionality
 // Converts SVG to PNG using Canvas
 
 import { embedFontsInSVG } from './fonts.js';
@@ -126,7 +126,7 @@ export async function downloadPNG(svgElement, filename = 'diagram.png', scale = 
 }
 
 /**
- * Copy PNG to clipboard (BACKLOG-094)
+ * Copy PNG to clipboard
  * @param {SVGElement} svgElement - The SVG element to export
  * @param {number} scale - Scale factor
  * @returns {Promise<void>}

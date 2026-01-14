@@ -1,4 +1,4 @@
-// Inline edit dialog for editing message labels and participants (BACKLOG-076, BACKLOG-079)
+// Inline edit dialog for editing message labels and participants
 // Shows a text input near the clicked element
 
 // Dialog state

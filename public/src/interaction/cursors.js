@@ -1,4 +1,4 @@
-// Context-sensitive cursor behavior (BACKLOG-072)
+// Context-sensitive cursor behavior
 // Changes cursor based on what element is being hovered
 
 /**

@@ -1,4 +1,4 @@
-// Tests for linear and parallel directives (BACKLOG-134)
+// Tests for linear and parallel directives
 
 import { describe, it, expect } from 'vitest';
 import { parse } from '../public/src/ast/parser.js';
@@ -6,7 +6,7 @@ import { serialize } from '../public/src/ast/serializer.js';
 import { render } from '../public/src/rendering/renderer.js';
 import { calculateLayout } from '../public/src/rendering/layout.js';
 
-describe('Linear and Parallel Directives (BACKLOG-134)', () => {
+describe('Linear and Parallel Directives', () => {
 
   describe('Parsing linear directive', () => {
     it('should parse linear (on)', () => {
@@ -65,6 +65,95 @@ describe('Linear and Parallel Directives (BACKLOG-134)', () => {
       const ast = parse('parallel off');
       const output = serialize(ast);
       expect(output).toBe('parallel off');
+    });
+  });
+
+  describe('Layout with linear directive', () => {
+    it('should place non-overlapping messages at same Y in linear mode', () => {
+      const input = `participant A
+participant B
+participant C
+linear
+A->B:first
+B->C:second
+linear off
+A->C:after`;
+      const ast = parse(input);
+      const { layout } = calculateLayout(ast);
+
+      const messages = ast.filter(n => n.type === 'message');
+      const firstY = layout.get(messages[0].id).y;
+      const secondY = layout.get(messages[1].id).y;
+      const afterY = layout.get(messages[2].id).y;
+
+      // A->B and B->C don't overlap, should be at the same Y
+      expect(firstY).toBe(secondY);
+
+      // After should be below the linear section
+      expect(afterY).toBeGreaterThan(firstY);
+    });
+
+    it('should place overlapping messages on different lines', () => {
+      const input = `participant A
+participant B
+participant C
+linear
+A->B:first
+A->C:second
+linear off`;
+      const ast = parse(input);
+      const { layout } = calculateLayout(ast);
+
+      const messages = ast.filter(n => n.type === 'message');
+      const firstY = layout.get(messages[0].id).y;
+      const secondY = layout.get(messages[1].id).y;
+
+      // A->B and A->C overlap at A, should be on different lines
+      expect(secondY).toBeGreaterThan(firstY);
+    });
+
+    it('should handle request/response pattern - going right then left', () => {
+      const input = `participant User
+participant Service
+participant DB
+linear
+User->Service:request1
+Service->DB:request2
+Service<--DB:response2
+User<--Service:response1
+linear off`;
+      const ast = parse(input);
+      const { layout } = calculateLayout(ast);
+
+      const messages = ast.filter(n => n.type === 'message');
+      const req1Y = layout.get(messages[0].id).y;  // User->Service
+      const req2Y = layout.get(messages[1].id).y;  // Service->DB
+      const resp2Y = layout.get(messages[2].id).y; // Service<--DB
+      const resp1Y = layout.get(messages[3].id).y; // User<--Service
+
+      // Request messages going right don't overlap
+      expect(req1Y).toBe(req2Y);
+
+      // Response messages going left don't overlap with each other
+      expect(resp2Y).toBe(resp1Y);
+
+      // But responses overlap with requests (share participants)
+      expect(resp2Y).toBeGreaterThan(req1Y);
+    });
+
+    it('should render diagram with linear messages', () => {
+      const input = `participant A
+participant B
+linear
+A->B:first
+A->B:second
+linear off`;
+      const ast = parse(input);
+      const svg = render(ast);
+
+      // Should have 2 messages
+      const messages = svg.querySelectorAll('.message');
+      expect(messages.length).toBe(2);
     });
   });
 

@@ -1,5 +1,5 @@
-// Presentation mode - fullscreen diagram view (BACKLOG-111)
-// Read-only presentation mode with pan/zoom (BACKLOG-112)
+// Presentation mode - fullscreen diagram view
+// Read-only presentation mode with pan/zoom
 
 let isPresentationMode = false;
 let isReadOnlyMode = false;

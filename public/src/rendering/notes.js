@@ -1,4 +1,4 @@
-// Render notes, boxes, and dividers (BACKLOG-126)
+// Render notes, boxes, and dividers
 // See DESIGN.md for note rendering details
 
 import { resolveColor } from './colors.js';
@@ -316,21 +316,36 @@ function renderStateShape(group, x, y, width, height, style) {
  * @returns {SVGGElement} Rendered divider group
  */
 export function renderDivider(node, layoutInfo) {
-  const { x, y, width } = layoutInfo;
+  const { x, y, width, height } = layoutInfo;
   const style = node.style || {};
 
   const group = document.createElementNS(SVG_NS, 'g');
   group.setAttribute('data-node-id', node.id);
   group.setAttribute('class', 'divider');
 
-  // Draw horizontal lines
-  const lineY = y + DIVIDER_HEIGHT / 2;
+  // Split text into lines
+  const textContent = node.text || '';
+  const lines = textContent.split('\\n');
+  const lineHeight = 14;
+
+  // Calculate text box size based on text
+  const charWidth = 7; // Approximate width per character at font-size 11
+  const maxLineLength = Math.max(...lines.map(l => l.length));
+  const textWidth = maxLineLength * charWidth;
+  const boxPaddingX = 16; // Horizontal padding on each side
+  const boxPaddingY = 8;  // Vertical padding
+  const boxWidth = Math.max(80, textWidth + boxPaddingX * 2);
+  const boxHeight = height - 2;
+  const halfBox = boxWidth / 2;
+
+  // Draw horizontal lines at vertical center
+  const lineY = y + height / 2;
 
   // Left line
   const leftLine = document.createElementNS(SVG_NS, 'line');
   leftLine.setAttribute('x1', x);
   leftLine.setAttribute('y1', lineY);
-  leftLine.setAttribute('x2', x + width / 2 - 40);
+  leftLine.setAttribute('x2', x + width / 2 - halfBox - 4);
   leftLine.setAttribute('y2', lineY);
   leftLine.setAttribute('stroke', resolveColor(style.border) || '#666');
   leftLine.setAttribute('stroke-width', style.borderWidth || 1);
@@ -339,7 +354,7 @@ export function renderDivider(node, layoutInfo) {
 
   // Right line
   const rightLine = document.createElementNS(SVG_NS, 'line');
-  rightLine.setAttribute('x1', x + width / 2 + 40);
+  rightLine.setAttribute('x1', x + width / 2 + halfBox + 4);
   rightLine.setAttribute('y1', lineY);
   rightLine.setAttribute('x2', x + width);
   rightLine.setAttribute('y2', lineY);
@@ -350,26 +365,36 @@ export function renderDivider(node, layoutInfo) {
 
   // Text box in center
   const textBox = document.createElementNS(SVG_NS, 'rect');
-  textBox.setAttribute('x', x + width / 2 - 38);
-  textBox.setAttribute('y', y + 2);
-  textBox.setAttribute('width', 76);
-  textBox.setAttribute('height', DIVIDER_HEIGHT - 4);
+  textBox.setAttribute('x', x + width / 2 - halfBox);
+  textBox.setAttribute('y', y + 1);
+  textBox.setAttribute('width', boxWidth);
+  textBox.setAttribute('height', boxHeight);
   textBox.setAttribute('fill', resolveColor(style.fill) || '#f8f8f8');
   textBox.setAttribute('stroke', resolveColor(style.border) || '#666');
   textBox.setAttribute('rx', 3);
   textBox.setAttribute('ry', 3);
   group.appendChild(textBox);
 
-  // Divider text
+  // Divider text (multiline support)
   const text = document.createElementNS(SVG_NS, 'text');
   text.setAttribute('class', 'divider-text');
   text.setAttribute('x', x + width / 2);
-  text.setAttribute('y', y + DIVIDER_HEIGHT / 2);
   text.setAttribute('text-anchor', 'middle');
-  text.setAttribute('dominant-baseline', 'middle');
   text.setAttribute('font-size', '11');
   text.setAttribute('font-weight', 'bold');
-  text.textContent = node.text || '';
+
+  // Calculate starting Y to center text block vertically
+  const textBlockHeight = lines.length * lineHeight;
+  const startY = y + (height - textBlockHeight) / 2 + lineHeight / 2 + 2;
+
+  lines.forEach((line, i) => {
+    const tspan = document.createElementNS(SVG_NS, 'tspan');
+    tspan.setAttribute('x', x + width / 2);
+    tspan.setAttribute('y', startY + i * lineHeight);
+    tspan.textContent = line;
+    text.appendChild(tspan);
+  });
+
   group.appendChild(text);
 
   return group;

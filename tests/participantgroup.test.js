@@ -1,11 +1,11 @@
-// Tests for participant groups (BACKLOG-136)
+// Tests for participant groups
 
 import { describe, it, expect } from 'vitest';
 import { parse } from '../public/src/ast/parser.js';
 import { serialize } from '../public/src/ast/serializer.js';
 import { render } from '../public/src/rendering/renderer.js';
 
-describe('Participant Groups (BACKLOG-136)', () => {
+describe('Participant Groups', () => {
 
   describe('Parsing participant groups', () => {
     it('should parse simple participant group', () => {

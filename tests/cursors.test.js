@@ -1,4 +1,4 @@
-// Tests for context-sensitive cursor behavior (BACKLOG-072)
+// Tests for context-sensitive cursor behavior
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { initCursors, removeCursors } from '../public/src/interaction/cursors.js';
@@ -53,7 +53,7 @@ function createMockSvg() {
   return svg;
 }
 
-describe('Context-sensitive Cursors (BACKLOG-072)', () => {
+describe('Context-sensitive Cursors', () => {
   let svg;
 
   beforeEach(() => {

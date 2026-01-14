@@ -1,4 +1,4 @@
-// Lifeline drag handling for creating messages (BACKLOG-077)
+// Lifeline drag handling for creating messages
 // Click and drag from one lifeline to another to create a new message
 
 // Drag state

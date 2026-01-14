@@ -1,4 +1,4 @@
-// EditParticipant Command - BACKLOG-079
+// EditParticipant Command
 // Changes the display name and/or alias of a participant
 
 import { Command } from './Command.js';

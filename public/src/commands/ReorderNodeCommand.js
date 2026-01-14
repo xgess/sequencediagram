@@ -1,4 +1,4 @@
-// ReorderNode Command - BACKLOG-073
+// ReorderNode Command
 // Moves a node to a different position in the AST
 
 import { Command } from './Command.js';

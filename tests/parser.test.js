@@ -19,7 +19,7 @@ describe('Parser', () => {
     });
   });
 
-  describe('participant (BACKLOG-004)', () => {
+  describe('participant', () => {
     it('should parse basic participant declaration', () => {
       const ast = parse('participant Alice');
       expect(ast).toHaveLength(1);
@@ -70,7 +70,7 @@ describe('Parser', () => {
     });
   });
 
-  describe('message (BACKLOG-008)', () => {
+  describe('message', () => {
     it('should parse basic sync message (->)', () => {
       const ast = parse('Alice->Bob:Hello');
       const messages = ast.filter(n => n.type === 'message');
@@ -135,7 +135,7 @@ describe('Parser', () => {
     });
   });
 
-  describe('participant styling (BACKLOG-014)', () => {
+  describe('participant styling', () => {
     it('should parse participant with fill color', () => {
       const ast = parse('participant Alice #lightblue');
       expect(ast[0].style.fill).toBe('#lightblue');
@@ -184,7 +184,7 @@ describe('Parser', () => {
     });
   });
 
-  describe('participant alias (BACKLOG-017)', () => {
+  describe('participant alias', () => {
     it('should parse quoted display name with alias', () => {
       const ast = parse('participant "Web Server" as WS');
       expect(ast[0].displayName).toBe('Web Server');
@@ -234,7 +234,7 @@ describe('Parser', () => {
     });
   });
 
-  describe('fragment parsing (BACKLOG-031)', () => {
+  describe('fragment parsing', () => {
     it('should parse basic alt fragment', () => {
       const ast = parse('alt success\nend');
       const fragment = ast.find(n => n.type === 'fragment');
@@ -327,7 +327,7 @@ end`;
     });
   });
 
-  describe('fragment styling (BACKLOG-037)', () => {
+  describe('fragment styling', () => {
     it('should parse fragment with operator color', () => {
       const ast = parse('alt#yellow condition\nend');
       const fragment = ast.find(n => n.type === 'fragment');
@@ -404,7 +404,7 @@ end`;
     });
   });
 
-  describe('blank line parsing (BACKLOG-039)', () => {
+  describe('blank line parsing', () => {
     it('should parse blank line as blankline node', () => {
       const ast = parse('\n');
       const blanklines = ast.filter(n => n.type === 'blankline');
@@ -441,7 +441,7 @@ end`;
     });
   });
 
-  describe('comment parsing (BACKLOG-038)', () => {
+  describe('comment parsing', () => {
     it('should parse // comment', () => {
       const ast = parse('// This is a comment');
       expect(ast).toHaveLength(1);
@@ -496,7 +496,7 @@ end`;
     });
   });
 
-  describe('title directive parsing (BACKLOG-042)', () => {
+  describe('title directive parsing', () => {
     it('should parse title directive', () => {
       const ast = parse('title My Diagram');
       const directive = ast.find(n => n.type === 'directive');
@@ -532,7 +532,7 @@ end`;
     });
   });
 
-  describe('entryspacing directive parsing (BACKLOG-086)', () => {
+  describe('entryspacing directive parsing', () => {
     it('should parse entryspacing directive with integer', () => {
       const ast = parse('entryspacing 2');
       const directive = ast.find(n => n.type === 'directive' && n.directiveType === 'entryspacing');
@@ -555,7 +555,7 @@ end`;
     });
   });
 
-  describe('error node creation (BACKLOG-048)', () => {
+  describe('error node creation', () => {
     it('should create error node for unrecognized syntax', () => {
       const ast = parse('this is not valid syntax');
       const error = ast.find(n => n.type === 'error');

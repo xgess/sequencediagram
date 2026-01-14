@@ -1,4 +1,4 @@
-// Participant overlay on scroll (BACKLOG-113, OVERLAY-001 to OVERLAY-007)
+// Participant overlay on scroll
 // Shows exact participant visuals at viewport top when scrolled down
 
 let diagramPane = null;

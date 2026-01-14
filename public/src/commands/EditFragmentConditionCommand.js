@@ -1,4 +1,4 @@
-// EditFragmentCondition Command - BACKLOG-084
+// EditFragmentCondition Command
 // Edits a fragment's condition text
 
 import { Command } from './Command.js';

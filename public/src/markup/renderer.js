@@ -1,6 +1,6 @@
 // Text markup renderer
 // See DESIGN.md for markup rendering strategy
-// BACKLOG-139: Advanced text markup support
+// Advanced text markup support
 
 import { parseMarkup, hasMarkup } from './parser.js';
 

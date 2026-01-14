@@ -1,6 +1,6 @@
 // Text markup parser
 // See DESIGN.md for markup syntax and rendering strategy
-// BACKLOG-139: Advanced text markup support
+// Advanced text markup support
 
 /**
  * Parse text with markup into an array of segments

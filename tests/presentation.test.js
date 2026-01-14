@@ -1,5 +1,5 @@
-// Tests for presentation mode (BACKLOG-111)
-// Tests for read-only presentation mode (BACKLOG-112)
+// Tests for presentation mode
+// Tests for read-only presentation mode
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
@@ -14,7 +14,7 @@ import {
   isInReadOnlyMode
 } from '../public/src/interaction/presentation.js';
 
-describe('Presentation Mode (BACKLOG-111)', () => {
+describe('Presentation Mode', () => {
   let exitCallbackCalled = false;
 
   beforeEach(() => {
@@ -135,7 +135,7 @@ describe('Presentation Mode (BACKLOG-111)', () => {
   });
 });
 
-describe('Read-Only Presentation Mode (BACKLOG-112)', () => {
+describe('Read-Only Presentation Mode', () => {
   let diagramPane;
 
   beforeEach(() => {

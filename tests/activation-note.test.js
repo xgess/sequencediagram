@@ -3,7 +3,7 @@ import { parse } from '../public/src/ast/parser.js';
 import { render } from '../public/src/rendering/renderer.js';
 import { calculateLayout } from '../public/src/rendering/layout.js';
 
-describe('Activation positioning with notes (BUG-035, BUG-036)', () => {
+describe('Activation positioning with notes', () => {
   it('should start activation at message Y, not at note Y', () => {
     const input = `participant Customer
 participant App
@@ -36,7 +36,7 @@ deactivate App`;
     expect(barY).not.toBe(noteLayout.y);
   });
 
-  it('should end activation at deactivate message Y (BUG-036)', () => {
+  it('should end activation at deactivate message Y', () => {
     const input = `participant User
 participant DB
 User->DB: Connect

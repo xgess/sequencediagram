@@ -1,4 +1,4 @@
-// ChangeEntrySpacing Command - BACKLOG-086
+// ChangeEntrySpacing Command
 // Changes the entryspacing directive value or adds one if not present
 
 import { Command } from './Command.js';

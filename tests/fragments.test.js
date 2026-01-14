@@ -1,4 +1,4 @@
-// Tests for all fragment types (BACKLOG-124)
+// Tests for all fragment types
 
 import { describe, it, expect } from 'vitest';
 import { parse } from '../public/src/ast/parser.js';
@@ -11,7 +11,7 @@ const FRAGMENT_TYPES = [
   'strict', 'neg', 'ignore', 'consider', 'assert', 'region', 'group'
 ];
 
-describe('Fragment Types (BACKLOG-124)', () => {
+describe('Fragment Types', () => {
 
   describe('Parsing all fragment types', () => {
     for (const type of FRAGMENT_TYPES) {
@@ -164,7 +164,7 @@ end`;
   });
 });
 
-describe('Expandable Fragments (BACKLOG-125)', () => {
+describe('Expandable Fragments', () => {
 
   describe('Parsing expandable+ (expanded)', () => {
     it('should parse expandable+ with condition', () => {

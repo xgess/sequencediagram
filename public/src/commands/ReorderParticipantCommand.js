@@ -1,4 +1,4 @@
-// ReorderParticipant Command - BACKLOG-078
+// ReorderParticipant Command
 // Moves a participant to a new position in the AST
 
 import { Command } from './Command.js';

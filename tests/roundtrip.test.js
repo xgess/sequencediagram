@@ -1,4 +1,4 @@
-// Round-trip property tests (BACKLOG-053)
+// Round-trip property tests
 // Verifies parse → serialize → parse produces identical AST
 
 import { describe, it, expect } from 'vitest';
@@ -94,7 +94,7 @@ function roundTrip(input) {
   return { original, serialized, reparsed, match };
 }
 
-describe('Round-Trip Property Tests (BACKLOG-053)', () => {
+describe('Round-Trip Property Tests', () => {
   describe('Basic elements', () => {
     it('should round-trip basic participant', () => {
       const { match } = roundTrip('participant Alice');

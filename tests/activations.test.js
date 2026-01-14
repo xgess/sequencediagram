@@ -1,11 +1,11 @@
-// Tests for activations (BACKLOG-130)
+// Tests for activations
 
 import { describe, it, expect } from 'vitest';
 import { parse } from '../public/src/ast/parser.js';
 import { serialize } from '../public/src/ast/serializer.js';
 import { render } from '../public/src/rendering/renderer.js';
 
-describe('Activations (BACKLOG-130)', () => {
+describe('Activations', () => {
 
   describe('Parsing activate directive', () => {
     it('should parse basic activate directive', () => {
@@ -151,7 +151,7 @@ B->A:response`;
       expect(activationBars.length).toBeGreaterThan(0);
     });
 
-    it('should start activation bar at the message position (BUG-FIX)', () => {
+    it('should start activation bar at the message position', () => {
       // The activate directive should align with the previous message,
       // not the position after the message
       const input = `participant User

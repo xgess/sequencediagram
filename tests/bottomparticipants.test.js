@@ -1,11 +1,11 @@
-// Tests for bottom participants (BACKLOG-137)
+// Tests for bottom participants
 
 import { describe, it, expect } from 'vitest';
 import { parse } from '../public/src/ast/parser.js';
 import { serialize } from '../public/src/ast/serializer.js';
 import { render } from '../public/src/rendering/renderer.js';
 
-describe('Bottom Participants (BACKLOG-137)', () => {
+describe('Bottom Participants', () => {
 
   describe('Parsing bottomparticipants directive', () => {
     it('should parse bottomparticipants directive', () => {

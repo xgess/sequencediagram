@@ -1,4 +1,4 @@
-// AddMessage Command - BACKLOG-077
+// AddMessage Command
 // Adds a new message to the AST
 
 import { Command } from './Command.js';

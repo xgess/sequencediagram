@@ -20,7 +20,7 @@ describe('Renderer', () => {
     });
   });
 
-  describe('participant rendering (BACKLOG-005)', () => {
+  describe('participant rendering', () => {
     it('should render single participant with rect and text', () => {
       const ast = parse('participant Alice');
       const svg = render(ast);
@@ -79,7 +79,7 @@ describe('Renderer', () => {
     });
   });
 
-  describe('message rendering (BACKLOG-010)', () => {
+  describe('message rendering', () => {
     it('should render message with line and label', () => {
       const ast = parse('participant Alice\nparticipant Bob\nAlice->Bob:Hello');
       const svg = render(ast);
@@ -135,7 +135,7 @@ describe('Renderer', () => {
     });
   });
 
-  describe('lifelines (BACKLOG-011)', () => {
+  describe('lifelines', () => {
     it('should render lifeline for each participant', () => {
       const ast = parse('participant Alice\nparticipant Bob');
       const svg = render(ast);
@@ -172,7 +172,7 @@ describe('Renderer', () => {
     });
   });
 
-  describe('SVG dimensions (BACKLOG-013)', () => {
+  describe('SVG dimensions', () => {
     it('should set viewBox with width and height matching SVG dimensions', () => {
       const ast = parse('participant Alice\nparticipant Bob\nAlice->Bob:Hello');
       const svg = render(ast);
@@ -213,7 +213,7 @@ describe('Renderer', () => {
     });
   });
 
-  describe('participant styling (BACKLOG-015)', () => {
+  describe('participant styling', () => {
     it('should apply fill color to participant rect', () => {
       const ast = parse('participant Alice #lightblue');
       const svg = render(ast);
@@ -267,7 +267,7 @@ describe('Renderer', () => {
     });
   });
 
-  describe('multiline participant names (BACKLOG-018)', () => {
+  describe('multiline participant names', () => {
     it('should render single line name as text content', () => {
       const ast = parse('participant Alice');
       const svg = render(ast);
@@ -311,7 +311,7 @@ describe('Renderer', () => {
     });
   });
 
-  describe('actor rendering (BACKLOG-027)', () => {
+  describe('actor rendering', () => {
     it('should render actor with stick figure elements', () => {
       const ast = parse('actor User');
       const svg = render(ast);
@@ -344,7 +344,7 @@ describe('Renderer', () => {
     });
   });
 
-  describe('database rendering (BACKLOG-029)', () => {
+  describe('database rendering', () => {
     it('should render database with cylinder elements', () => {
       const ast = parse('database DB');
       const svg = render(ast);
@@ -419,7 +419,7 @@ describe('Renderer', () => {
     });
   });
 
-  describe('unknown participant errors (BUG-032)', () => {
+  describe('unknown participant errors', () => {
     it('should render error indicator for unknown source participant', () => {
       const ast = parse('participant Alice\nUnknown->Alice:Hello');
       const svg = render(ast);
@@ -471,7 +471,7 @@ describe('Renderer', () => {
     });
   });
 
-  describe('fragment rendering (BACKLOG-033)', () => {
+  describe('fragment rendering', () => {
     it('should render fragment with box and label', () => {
       const ast = parse('participant Alice\nparticipant Bob\nalt success\nAlice->Bob:OK\nend');
       const svg = render(ast);
@@ -538,8 +538,8 @@ describe('Renderer', () => {
     });
   });
 
-  describe('blank line layout (BACKLOG-041)', () => {
-    it('should NOT add extra spacing for blank lines (BUG-010)', () => {
+  describe('blank line layout', () => {
+    it('should NOT add extra spacing for blank lines', () => {
       // Without blank line
       const ast1 = parse('participant Alice\nparticipant Bob\nAlice->Bob:First\nBob-->Alice:Second');
       const svg1 = render(ast1);
@@ -560,7 +560,7 @@ describe('Renderer', () => {
       expect(spacing2).toBe(spacing1);
     });
 
-    it('should NOT add spacing for blank lines inside fragments (BUG-010)', () => {
+    it('should NOT add spacing for blank lines inside fragments', () => {
       // Without blank line
       const ast1 = parse('participant Alice\nparticipant Bob\nalt test\nAlice->Bob:First\nBob-->Alice:Second\nend');
       const svg1 = render(ast1);
@@ -578,7 +578,7 @@ describe('Renderer', () => {
     });
   });
 
-  describe('title rendering (BACKLOG-043)', () => {
+  describe('title rendering', () => {
     it('should render title text', () => {
       const ast = parse('title My Diagram\nparticipant Alice');
       const svg = render(ast);
@@ -630,7 +630,7 @@ describe('Renderer', () => {
     });
   });
 
-  describe('error rendering (BACKLOG-049)', () => {
+  describe('error rendering', () => {
     it('should render error box for parse errors', () => {
       const ast = parse('participant Alice\ninvalid syntax here\nAlice->Alice:Test');
       const svg = render(ast);

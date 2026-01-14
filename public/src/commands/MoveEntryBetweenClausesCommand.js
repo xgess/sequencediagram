@@ -1,4 +1,4 @@
-// MoveEntryBetweenClauses Command - BACKLOG-083
+// MoveEntryBetweenClauses Command
 // Moves entries between fragment.entries and elseClauses[clauseIndex].entries
 
 import { Command } from './Command.js';

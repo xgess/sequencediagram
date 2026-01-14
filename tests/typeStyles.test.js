@@ -1,11 +1,11 @@
-// Tests for type-based styles system (BACKLOG-141)
+// Tests for type-based styles system
 
 import { describe, it, expect } from 'vitest';
 import { parse } from '../public/src/ast/parser.js';
 import { serialize } from '../public/src/ast/serializer.js';
 import { render } from '../public/src/rendering/renderer.js';
 
-describe('Type-Based Styles System (BACKLOG-141)', () => {
+describe('Type-Based Styles System', () => {
 
   describe('Parsing type style directives', () => {
     it('should parse participantstyle directive', () => {
@@ -235,7 +235,7 @@ Server->User:Response
     });
   });
 
-  describe('Type styles for participants (BUG-026)', () => {
+  describe('Type styles for participants', () => {
     it('should apply participantstyle fill to participants without explicit style', () => {
       const ast = parse(`participantstyle #lightgreen
 participant A
@@ -274,7 +274,7 @@ A->B:msg`);
     });
   });
 
-  describe('Type styles for notes (BUG-026)', () => {
+  describe('Type styles for notes', () => {
     it('should apply notestyle fill to notes without explicit style', () => {
       const ast = parse(`notestyle #lightyellow
 participant A
@@ -323,7 +323,7 @@ note over A #red:Styled note`);
     });
   });
 
-  describe('Type styles for dividers (BUG-026)', () => {
+  describe('Type styles for dividers', () => {
     it('should apply dividerstyle fill to dividers without explicit style', () => {
       const ast = parse(`dividerstyle #lightgray
 participant A

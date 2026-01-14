@@ -1,11 +1,11 @@
-// Tests for lifeline styling (BACKLOG-132)
+// Tests for lifeline styling
 
 import { describe, it, expect } from 'vitest';
 import { parse } from '../public/src/ast/parser.js';
 import { serialize } from '../public/src/ast/serializer.js';
 import { render } from '../public/src/rendering/renderer.js';
 
-describe('Lifeline Styling (BACKLOG-132)', () => {
+describe('Lifeline Styling', () => {
 
   describe('Parsing lifelinestyle directive', () => {
     it('should parse global lifelinestyle with color only', () => {
