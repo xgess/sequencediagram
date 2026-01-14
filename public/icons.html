@@ -106,7 +106,7 @@
 
     .icon-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 10px;
     }
 
@@ -133,26 +133,42 @@
     }
 
     .icon-preview {
-      font-size: 24px;
-      width: 32px;
+      font-size: 28px;
+      width: 40px;
       text-align: center;
       flex-shrink: 0;
+      color: #333;
     }
 
     .icon-info {
       overflow: hidden;
+      flex: 1;
+    }
+
+    .icon-header {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 2px;
+    }
+
+    .icon-code {
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'SF Mono', Monaco, Consolas, monospace;
+      color: #0066cc;
     }
 
     .icon-name {
       font-size: 12px;
-      font-weight: 500;
+      color: #666;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
     .icon-usage {
-      font-size: 10px;
+      font-size: 11px;
       color: #888;
       font-family: 'SF Mono', Monaco, Consolas, monospace;
       white-space: nowrap;
@@ -190,14 +206,34 @@
     .copy-hint.show {
       opacity: 1;
     }
+
+    .usage-hint {
+      background: #fff8e8;
+      border: 1px solid #f0e0c0;
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      font-size: 13px;
+    }
+
+    .usage-hint code {
+      background: #f0f0f0;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'SF Mono', Monaco, Consolas, monospace;
+    }
   </style>
 </head>
 <body>
   <h1>Icon Reference</h1>
   <p class="subtitle">Click an icon to copy its usage syntax to your clipboard</p>
 
+  <div class="usage-hint">
+    <strong>Usage:</strong> <code>fontawesome6solid f095 "Label" as Alias</code> or <code>materialdesignicons F0004 "Label" as Alias</code>
+  </div>
+
   <div class="search-container">
-    <input type="text" class="search-box" placeholder="Search icons..." id="search">
+    <input type="text" class="search-box" placeholder="Search by name or unicode..." id="search">
     <div class="stats" id="stats"></div>
   </div>
 
@@ -217,7 +253,7 @@
   <div class="copy-hint" id="copy-hint">Copied to clipboard!</div>
 
   <script>
-    // State
+    // State - now stores objects with {name, unicode}
     let faIcons = { solid: [], regular: [], brands: [] };
     let mdiIcons = [];
     let currentTab = 'fontawesome';
@@ -262,13 +298,16 @@
     }
 
     // Create icon card
-    function createIconCard(iconClass, name, usage) {
+    function createIconCard(iconClass, name, unicode, usage) {
       const card = document.createElement('div');
       card.className = 'icon-card';
       card.innerHTML = `
         <div class="icon-preview"><i class="${iconClass}"></i></div>
         <div class="icon-info">
-          <div class="icon-name">${name}</div>
+          <div class="icon-header">
+            <span class="icon-code">${unicode}</span>
+            <span class="icon-name">${name}</span>
+          </div>
           <div class="icon-usage">${usage}</div>
         </div>
       `;
@@ -276,31 +315,35 @@
       return card;
     }
 
+    // Filter icons by search term (matches name or unicode)
+    function filterIcons(icons, filter) {
+      if (!filter) return icons;
+      const filterLower = filter.toLowerCase();
+      return icons.filter(icon =>
+        icon.name.toLowerCase().includes(filterLower) ||
+        icon.unicode.toLowerCase().includes(filterLower)
+      );
+    }
+
     // Render FontAwesome icons
     function renderFontAwesome(filter = '') {
-      const filterLower = filter.toLowerCase();
       let html = '';
-      let count = 0;
 
-      // Solid icons
-      const solidFiltered = faIcons.solid.filter(name => name.includes(filterLower));
+      const solidFiltered = filterIcons(faIcons.solid, filter);
+      const regularFiltered = filterIcons(faIcons.regular, filter);
+      const brandsFiltered = filterIcons(faIcons.brands, filter);
+
       if (solidFiltered.length > 0) {
         html += '<div class="section-header">Solid</div><div class="icon-grid" id="fa-solid-grid"></div>';
       }
-
-      // Regular icons
-      const regularFiltered = faIcons.regular.filter(name => name.includes(filterLower));
       if (regularFiltered.length > 0) {
         html += '<div class="section-header">Regular</div><div class="icon-grid" id="fa-regular-grid"></div>';
       }
-
-      // Brands icons
-      const brandsFiltered = faIcons.brands.filter(name => name.includes(filterLower));
       if (brandsFiltered.length > 0) {
         html += '<div class="section-header">Brands</div><div class="icon-grid" id="fa-brands-grid"></div>';
       }
 
-      count = solidFiltered.length + regularFiltered.length + brandsFiltered.length;
+      const count = solidFiltered.length + regularFiltered.length + brandsFiltered.length;
 
       if (count === 0) {
         faSectionEl.innerHTML = '<div class="no-results">No icons found matching your search</div>';
@@ -309,24 +352,23 @@
 
       faSectionEl.innerHTML = html;
 
-      // Populate grids
       const solidGrid = document.getElementById('fa-solid-grid');
       const regularGrid = document.getElementById('fa-regular-grid');
       const brandsGrid = document.getElementById('fa-brands-grid');
 
-      solidFiltered.forEach(name => {
-        const usage = `fa6solid:${name}`;
-        solidGrid?.appendChild(createIconCard(`fa-solid fa-${name}`, name, usage));
+      solidFiltered.forEach(icon => {
+        const usage = `fontawesome6solid ${icon.unicode} Name`;
+        solidGrid?.appendChild(createIconCard(`fa-solid fa-${icon.name}`, icon.name, icon.unicode, usage));
       });
 
-      regularFiltered.forEach(name => {
-        const usage = `fa6regular:${name}`;
-        regularGrid?.appendChild(createIconCard(`fa-regular fa-${name}`, name, usage));
+      regularFiltered.forEach(icon => {
+        const usage = `fontawesome6regular ${icon.unicode} Name`;
+        regularGrid?.appendChild(createIconCard(`fa-regular fa-${icon.name}`, icon.name, icon.unicode, usage));
       });
 
-      brandsFiltered.forEach(name => {
-        const usage = `fa6brands:${name}`;
-        brandsGrid?.appendChild(createIconCard(`fa-brands fa-${name}`, name, usage));
+      brandsFiltered.forEach(icon => {
+        const usage = `fontawesome6brands ${icon.unicode} Name`;
+        brandsGrid?.appendChild(createIconCard(`fa-brands fa-${icon.name}`, icon.name, icon.unicode, usage));
       });
 
       return count;
@@ -334,8 +376,7 @@
 
     // Render MDI icons
     function renderMDI(filter = '') {
-      const filterLower = filter.toLowerCase();
-      const filtered = mdiIcons.filter(name => name.includes(filterLower));
+      const filtered = filterIcons(mdiIcons, filter);
 
       if (filtered.length === 0) {
         mdiSectionEl.innerHTML = '<div class="no-results">No icons found matching your search</div>';
@@ -345,9 +386,9 @@
       mdiSectionEl.innerHTML = '<div class="icon-grid" id="mdi-grid"></div>';
       const grid = document.getElementById('mdi-grid');
 
-      filtered.forEach(name => {
-        const usage = `mdi:${name}`;
-        grid.appendChild(createIconCard(`mdi mdi-${name}`, name, usage));
+      filtered.forEach(icon => {
+        const usage = `materialdesignicons ${icon.unicode} Name`;
+        grid.appendChild(createIconCard(`mdi mdi-${icon.name}`, icon.name, icon.unicode, usage));
       });
 
       return filtered.length;
@@ -368,15 +409,15 @@
 
     // Update stats
     function updateStats() {
-      const filter = searchInput.value.trim().toLowerCase();
+      const filter = searchInput.value.trim();
 
       if (currentTab === 'fontawesome') {
         const total = faIcons.solid.length + faIcons.regular.length + faIcons.brands.length;
         if (filter) {
           const filtered =
-            faIcons.solid.filter(n => n.includes(filter)).length +
-            faIcons.regular.filter(n => n.includes(filter)).length +
-            faIcons.brands.filter(n => n.includes(filter)).length;
+            filterIcons(faIcons.solid, filter).length +
+            filterIcons(faIcons.regular, filter).length +
+            filterIcons(faIcons.brands, filter).length;
           statsEl.textContent = `Showing ${filtered} of ${total} FontAwesome icons`;
         } else {
           statsEl.textContent = `${total} FontAwesome icons (${faIcons.solid.length} solid, ${faIcons.regular.length} regular, ${faIcons.brands.length} brands)`;
@@ -384,7 +425,7 @@
       } else {
         const total = mdiIcons.length;
         if (filter) {
-          const filtered = mdiIcons.filter(n => n.includes(filter)).length;
+          const filtered = filterIcons(mdiIcons, filter).length;
           statsEl.textContent = `Showing ${filtered} of ${total} Material Design icons`;
         } else {
           statsEl.textContent = `${total} Material Design icons`;
@@ -399,16 +440,17 @@
         const data = await response.json();
 
         for (const [name, info] of Object.entries(data)) {
+          const unicode = info.unicode;
           const styles = info.styles || [];
-          if (styles.includes('solid')) faIcons.solid.push(name);
-          if (styles.includes('regular')) faIcons.regular.push(name);
-          if (styles.includes('brands')) faIcons.brands.push(name);
+          if (styles.includes('solid')) faIcons.solid.push({ name, unicode });
+          if (styles.includes('regular')) faIcons.regular.push({ name, unicode });
+          if (styles.includes('brands')) faIcons.brands.push({ name, unicode });
         }
 
-        // Sort alphabetically
-        faIcons.solid.sort();
-        faIcons.regular.sort();
-        faIcons.brands.sort();
+        // Sort alphabetically by name
+        faIcons.solid.sort((a, b) => a.name.localeCompare(b.name));
+        faIcons.regular.sort((a, b) => a.name.localeCompare(b.name));
+        faIcons.brands.sort((a, b) => a.name.localeCompare(b.name));
 
         renderFontAwesome();
         updateStats();
@@ -424,16 +466,28 @@
         const response = await fetch('lib/mdi/css/materialdesignicons.css');
         const css = await response.text();
 
-        // Extract icon names from CSS rules like .mdi-account:before
-        const regex = /\.mdi-([a-z0-9-]+):before/g;
+        // Extract icon names and unicode from CSS rules
+        // Format spans multiple lines:
+        // .mdi-account::before {
+        //   content: "\F0004";
+        const regex = /\.mdi-([a-z0-9-]+)::before\s*\{[^}]*content:\s*"\\([A-F0-9]+)"/g;
         let match;
-        const iconSet = new Set();
+        const iconMap = new Map();
 
         while ((match = regex.exec(css)) !== null) {
-          iconSet.add(match[1]);
+          const name = match[1];
+          const unicode = match[2];
+          // Skip duplicates (some icons have multiple entries)
+          if (!iconMap.has(name)) {
+            iconMap.set(name, unicode);
+          }
         }
 
-        mdiIcons = Array.from(iconSet).sort();
+        // Convert to array and sort
+        mdiIcons = Array.from(iconMap.entries())
+          .map(([name, unicode]) => ({ name, unicode }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+
         renderMDI();
         updateStats();
       } catch (err) {

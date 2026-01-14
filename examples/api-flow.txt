@@ -6,7 +6,7 @@ title Order Processing API
 // Service architecture
 participantgroup #e8f4f8 Client
   actor Customer
-  participant "Mobile App" as App
+  fontawesome6solid f095 "Mobile App" as App
 end
 
 participantgroup #e8ffe8 Backend
