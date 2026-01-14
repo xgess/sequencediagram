@@ -576,6 +576,34 @@ describe('Renderer', () => {
       // Blank lines should NOT affect fragment height (use 'space' directive for that)
       expect(height2).toBe(height1);
     });
+
+    it('should render nested fragments', () => {
+      const ast = parse(`participant A
+participant B
+loop outer
+  A->B:first
+  opt inner
+    B->A:nested
+  end
+end`);
+      const svg = render(ast);
+
+      // Should have 2 fragment groups
+      const fragments = svg.querySelectorAll('.fragment');
+      expect(fragments.length).toBe(2);
+
+      // Both should have labels
+      const labels = svg.querySelectorAll('.fragment-label');
+      expect(labels.length).toBe(2);
+
+      const labelTexts = Array.from(labels).map(l => l.textContent);
+      expect(labelTexts).toContain('loop');
+      expect(labelTexts).toContain('opt');
+
+      // Both should have boxes
+      const boxes = svg.querySelectorAll('.fragment-box');
+      expect(boxes.length).toBe(2);
+    });
   });
 
   describe('title rendering', () => {
