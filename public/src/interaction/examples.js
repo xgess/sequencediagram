@@ -111,8 +111,9 @@ async function loadExample(name, filename) {
   if (!confirmed) return;
 
   try {
-    // Fetch the example file
-    const response = await fetch(`../examples/${filename}`);
+    // Fetch the example file (use base URL to handle subdirectory deployments)
+    const baseUrl = new URL('.', window.location.href).href;
+    const response = await fetch(`${baseUrl}examples/${filename}`);
     if (!response.ok) {
       throw new Error(`Failed to load ${filename}`);
     }
