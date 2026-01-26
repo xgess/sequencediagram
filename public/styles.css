@@ -173,6 +173,9 @@ body {
   border: 1px solid #ffcccc;
   border-radius: 4px;
   color: #cc0000;
+  max-height: 150px;
+  overflow-y: auto;
+  flex-shrink: 0;
 }
 
 .error-header {
