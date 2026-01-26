@@ -161,8 +161,19 @@ body {
   color: #666;
 }
 
+#error-splitter {
+  display: none;
+  height: 5px;
+  background: #ffcccc;
+  cursor: row-resize;
+  flex-shrink: 0;
+}
+
+#error-splitter.visible {
+  display: block;
+}
+
 #errors {
-  margin-top: 12px;
   display: none;
 }
 
@@ -173,7 +184,9 @@ body {
   border: 1px solid #ffcccc;
   border-radius: 4px;
   color: #cc0000;
-  max-height: 150px;
+  height: 120px;
+  min-height: 50px;
+  max-height: 50vh;
   overflow-y: auto;
   flex-shrink: 0;
 }

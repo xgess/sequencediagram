@@ -898,6 +898,15 @@ function parseFragment(lines, startLine, ast) {
       continue;
     }
 
+    // Try parsing as note (inside fragment)
+    const note = parseNote(line, i + 1);
+    if (note) {
+      ast.push(note);
+      currentEntries.push(note.id);
+      i++;
+      continue;
+    }
+
     // Try parsing as message
     const message = parseMessage(line, i + 1);
     if (message) {

@@ -516,7 +516,7 @@ export function calculateLayout(ast) {
       } else {
         // Layout entries in the main section
         for (const entryId of node.entries) {
-          currentY = layoutEntry(entryId, nodeById, participantLayout, layout, currentY, messageSpacing);
+          currentY = layoutEntry(entryId, nodeById, participantLayout, layout, currentY, messageSpacing, participantOrder);
         }
 
         // Layout else clauses
@@ -526,7 +526,7 @@ export function calculateLayout(ast) {
           currentY += ELSE_LABEL_HEIGHT; // Space for divider line and [else] label
 
           for (const entryId of elseClause.entries) {
-            currentY = layoutEntry(entryId, nodeById, participantLayout, layout, currentY, messageSpacing);
+            currentY = layoutEntry(entryId, nodeById, participantLayout, layout, currentY, messageSpacing, participantOrder);
           }
         }
       }
@@ -574,7 +574,7 @@ export function calculateLayout(ast) {
  * @param {number} messageSpacing - Spacing between messages
  * @returns {number} New Y position
  */
-function layoutEntry(entryId, nodeById, participantLayout, layout, currentY, messageSpacing) {
+function layoutEntry(entryId, nodeById, participantLayout, layout, currentY, messageSpacing, participantOrder) {
   const entry = typeof entryId === 'object' ? entryId : nodeById.get(entryId);
   if (!entry) return currentY;
 
@@ -584,6 +584,14 @@ function layoutEntry(entryId, nodeById, participantLayout, layout, currentY, mes
   // Skip blank lines - they don't add visual space (use 'space' directive for that)
   if (entry.type === 'blankline') {
     return currentY;
+  }
+
+  // Handle note nodes inside fragments
+  if (entry.type === 'note') {
+    const noteLayout = calculateNoteLayout(entry, participantLayout, participantOrder);
+    noteLayout.y = currentY;
+    layout.set(entry.id, noteLayout);
+    return currentY + noteLayout.height + NOTE_MARGIN;
   }
 
   // Handle error nodes inside fragments
@@ -675,14 +683,14 @@ function layoutEntry(entryId, nodeById, participantLayout, layout, currentY, mes
     currentY += FRAGMENT_HEADER_HEIGHT; // Space for label box
 
     for (const nestedEntryId of entry.entries) {
-      currentY = layoutEntry(nestedEntryId, nodeById, participantLayout, layout, currentY, messageSpacing);
+      currentY = layoutEntry(nestedEntryId, nodeById, participantLayout, layout, currentY, messageSpacing, participantOrder);
     }
 
     for (const elseClause of entry.elseClauses) {
       elseClause.dividerY = currentY;
       currentY += ELSE_LABEL_HEIGHT; // Space for divider line and [else] label
       for (const nestedEntryId of elseClause.entries) {
-        currentY = layoutEntry(nestedEntryId, nodeById, participantLayout, layout, currentY, messageSpacing);
+        currentY = layoutEntry(nestedEntryId, nodeById, participantLayout, layout, currentY, messageSpacing, participantOrder);
       }
     }
 

@@ -44,7 +44,7 @@ import { showShareDialog } from './interaction/share.js';
 import { showDiagramManager } from './interaction/diagramManager.js';
 import { startAutosave, recoverAutosave } from './storage/autosave.js';
 import { loadFromURL } from './storage/url.js';
-import { initSplitter } from './interaction/splitter.js';
+import { initSplitter, initErrorSplitter } from './interaction/splitter.js';
 import { initZoom, getZoomLevel, shrinkToFit as applyShrinkToFit, updateZoom, onZoomChange } from './interaction/zoom.js';
 import { initPresentation, enterPresentationMode, exitPresentationMode, togglePresentationMode, isInPresentationMode, enterReadOnlyMode, exitReadOnlyMode, toggleReadOnlyMode, isInReadOnlyMode } from './interaction/presentation.js';
 import { initParticipantOverlay, updateParticipantData, onZoomChange as overlayZoomChange } from './interaction/participantOverlay.js';
@@ -85,6 +85,7 @@ export function init() {
   errorsDiv = document.getElementById('errors');
   const splitter = document.getElementById('splitter');
   const editorPane = document.getElementById('editor-pane');
+  const errorSplitter = document.getElementById('error-splitter');
 
   if (!editorContainer || !diagramPane || !diagramContainer || !splitter || !editorPane) {
     console.error('Required DOM elements not found');
@@ -93,6 +94,11 @@ export function init() {
 
   // Initialize splitter
   initSplitter(splitter, editorPane, diagramPane);
+
+  // Initialize error splitter
+  if (errorSplitter && errorsDiv) {
+    initErrorSplitter(errorSplitter, editorContainer, errorsDiv);
+  }
 
   // Initialize CodeMirror
   initCodeMirror();
@@ -345,15 +351,18 @@ export function updateFromText(text, createCommand = false) {
 function displayErrors(ast) {
   if (!errorsDiv) return;
 
+  const errorSplitter = document.getElementById('error-splitter');
   const errors = ast.filter(node => node.type === 'error');
 
   if (errors.length === 0) {
     errorsDiv.innerHTML = '';
     errorsDiv.style.display = 'none';
+    if (errorSplitter) errorSplitter.classList.remove('visible');
     return;
   }
 
   errorsDiv.style.display = 'block';
+  if (errorSplitter) errorSplitter.classList.add('visible');
 
   // Build error list HTML
   const errorCount = errors.length === 1 ? '1 error' : `${errors.length} errors`;
