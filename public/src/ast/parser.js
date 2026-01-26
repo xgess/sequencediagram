@@ -665,7 +665,8 @@ function parseComment(line, lineNumber) {
  * @returns {boolean}
  */
 function isFragmentStart(trimmed) {
-  return /^(alt|loop|opt|par|break|critical|ref|seq|strict|neg|ignore|consider|assert|region|group|expandable[+\-])(\s|$|#)/.test(trimmed);
+  // Accept various dash characters: hyphen (-), en-dash (–), em-dash (—), minus (−)
+  return /^(alt|loop|opt|par|break|critical|ref|seq|strict|neg|ignore|consider|assert|region|group|expandable[+\-–—−])(\s|$|#)/.test(trimmed);
 }
 
 /**
@@ -783,16 +784,18 @@ function parseFragment(lines, startLine, ast) {
   const firstLine = lines[startLine].trim();
   // Match fragment type, optional styling, and optional condition
   // Syntax: fragmentType[#operatorColor] [#fill] [#border;width;style] [condition]
-  const match = firstLine.match(/^(alt|loop|opt|par|break|critical|ref|seq|strict|neg|ignore|consider|assert|region|group|expandable[+\-])(#[^\s#]+)?(.*)$/);
+  // Accept various dash characters: hyphen (-), en-dash (–), em-dash (—), minus (−)
+  const match = firstLine.match(/^(alt|loop|opt|par|break|critical|ref|seq|strict|neg|ignore|consider|assert|region|group|expandable[+\-–—−])(#[^\s#]+)?(.*)$/);
 
   let fragmentType = match[1];
 
   // Handle expandable+ and expandable- with collapsed state
+  // Check for any dash variant (hyphen, en-dash, em-dash, minus sign)
   let collapsed = false;
   if (fragmentType === 'expandable+') {
     fragmentType = 'expandable';
     collapsed = false;
-  } else if (fragmentType === 'expandable-') {
+  } else if (/^expandable[\-–—−]$/.test(fragmentType)) {
     fragmentType = 'expandable';
     collapsed = true;
   }
